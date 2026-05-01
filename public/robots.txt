@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://dover-designs.com/sitemap.xml

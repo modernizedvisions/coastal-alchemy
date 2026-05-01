@@ -1,0 +1,129 @@
+X [ERROR] Syntax error "n"
+
+    functions/api/admin/products.ts:165:54:
+      165 │ async function ensureProductSchema(_db: D1Database) {\n  return;\n}
+          ╵                                                       ^
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mFailed to build Functions at ./functions. Continuing to serve the last successfully built version of Functions.[0m
+
+
+X [ERROR] Syntax error "n"X [ERROR] 
+
+    functions/api/products.ts:217:54:
+      217 │ async function ensureProductSchema(_db: D1Database) {\n  return;\n}
+          ╵                                                       X [ERROR] Syntax error "n"
+
+    functions/api/products.ts:217:54:
+      217 │ async function ensureProductSchema(_db: D1Database) {\n  return;\n}
+          ╵                                                       ^
+
+^
+
+X [ERROR] [33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mFailed to build Functions at ./functions. Continuing to serve the last successfully built version of Functions.[0m
+
+
+Syntax error "n"
+
+    functions/api/products.ts:217:54:
+      217 │ async function ensureProductSchema(_db: D1Database) {\n  return;\n}
+          ╵                                                       [33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mFailed to build Functions at ./functions. Continuing to serve the last successfully built version of Functions.[0m
+
+
+^
+
+Syntax error "n"
+
+    functions/api/admin/products.ts:165:54:
+      165 │ async function ensureProductSchema(_db: D1Database) {\n  return;\n}
+          ╵                                                       [33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mFailed to build Functions at ./functions. Continuing to serve the last successfully built version of Functions.[0m
+
+
+^
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mFailed to build Functions at ./functions. Continuing to serve the last successfully built version of Functions.[0m
+
+
+X [ERROR] Syntax error "n"
+
+    functions/api/categories.ts:180:55:
+      180 │ async function ensureCategorySchema(_db: D1Database) {\n  return;\n}
+          ╵                                                        ^
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mFailed to build Functions at ./functions. Continuing to serve the last successfully built version of Functions.[0m
+
+
+X [ERROR] Syntax error "n"
+
+    functions/api/categories.ts:180:55:
+      180 │ async function ensureCategorySchema(_db: D1Database) {\n  return;\n}
+          ╵                                                        ^
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mFailed to build Functions at ./functions. Continuing to serve the last successfully built version of Functions.[0m
+
+
+X [ERROR] Syntax error "n"
+
+    functions/api/categories.ts:180:55:
+      180 │ async function ensureCategorySchema(_db: D1Database) {\n  return;\n}
+          ╵                                                        ^
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mFailed to build Functions at ./functions. Continuing to serve the last successfully built version of Functions.[0m
+
+
+X [ERROR] Syntax error "n"
+
+    functions/api/categories.ts:180:55:
+      180 │ async function ensureCategorySchema(_db: D1Database) {\n  return;\n}
+          ╵                                                        ^
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mFailed to build Functions at ./functions. Continuing to serve the last successfully built version of Functions.[0m
+
+
+X [ERROR] Syntax error "n"
+
+    functions/api/categories.ts:180:55:
+      180 │ async function ensureCategorySchema(_db: D1Database) {\n  return;\n}
+          ╵                                                        ^
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mFailed to build Functions at ./functions. Continuing to serve the last successfully built version of Functions.[0m
+
+
+X [ERROR] Syntax error "n"
+
+    functions/api/categories.ts:180:55:
+      180 │ async function ensureCategorySchema(_db: D1Database) {\n  return;\n}
+          ╵                                                        ^
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mFailed to build Functions at ./functions. Continuing to serve the last successfully built version of Functions.[0m
+
+
+X [ERROR] Expected ";" but found "n"
+
+    functions/api/admin/products.ts:197:46:
+      197 │ ...yId || rawImageIds.length) {`r`n    const ids = [rawPrimaryId,...
+          │                                   ^
+          ╵                                   ;
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mFailed to build Functions at ./functions. Continuing to serve the last successfully built version of Functions.[0m
+
+
+X [ERROR] Expected ";" but found "n"
+
+    functions/api/admin/products.ts:197:46:
+      197 │ ...yId || rawImageIds.length) {`r`n    const ids = [rawPrimaryId,...
+          │                                   ^
+          ╵                                   ;
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mFailed to build Functions at ./functions. Continuing to serve the last successfully built version of Functions.[0m
+
+
+X [ERROR] Expected ";" but found "n"
+
+    functions/api/admin/products/[id].ts:189:46:
+      189 │ ...yId || rawImageIds.length) {`r`n    const ids = [rawPrimaryId,...
+          │                                   ^
+          ╵                                   ;
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mFailed to build Functions at ./functions. Continuing to serve the last successfully built version of Functions.[0m
+
+

@@ -1,0 +1,14 @@
+name = "doverdesign"
+compatibility_date = "2026-02-15"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "doverdesign"
+database_id = "5a6da159-9736-4038-b8b7-a5c4e6e64256"
+preview_database_id = "5a6da159-9736-4038-b8b7-a5c4e6e64256"
+migrations_dir = "db/migrations"
+
+[[r2_buckets]]
+binding = "IMAGES_BUCKET"
+bucket_name = "mv-images"
+preview_bucket_name = "mv-images"

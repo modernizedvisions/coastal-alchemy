@@ -1,0 +1,9 @@
+const json = (data: unknown, status = 410) =>
+  new Response(JSON.stringify(data), {
+    status,
+    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+  });
+
+// Deprecated endpoint. Use GET /api/admin/auth/me.
+export const onRequestGet = async (): Promise<Response> =>
+  json({ ok: false, code: 'DEPRECATED_AUTH_ENDPOINT', use: '/api/admin/auth/me' });

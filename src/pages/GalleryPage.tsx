@@ -37,109 +37,85 @@ export function GalleryPage() {
   }, []);
 
   const isLoading = isLoadingGallery || isLoadingSold;
+  const combinedGallery = [
+    ...galleryImages.map((item, index) => ({
+      id: item.id,
+      imageUrl: item.imageUrl,
+      title: item.title || `Studio piece ${index + 1}`,
+      caption: item.title || 'Studio work',
+      ratio: index % 3 === 0 ? '3 / 4' : index % 3 === 1 ? '1 / 1' : '4 / 5',
+    })),
+    ...soldProducts.map((item, index) => ({
+      id: item.id,
+      imageUrl: item.imageUrl,
+      title: getSoldCardTitle(item),
+      caption: `${getSoldCardTitle(item)}${item.collection ? ` · ${formatCategoryLabel(item.collection)}` : ''}`,
+      ratio: index % 3 === 0 ? '4 / 5' : index % 3 === 1 ? '3 / 4' : '1 / 1',
+    })),
+  ].filter((item) => item.imageUrl);
+  const columns = [0, 1, 2].map((columnIndex) =>
+    combinedGallery.filter((_, index) => index % 3 === columnIndex)
+  );
 
   return (
-    <div className="py-14 bg-linen min-h-screen">
-      <div className="w-full max-w-[92vw] sm:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center space-y-3 mb-8">
-          <p className="text-[11px] uppercase tracking-[0.32em] text-deep-ocean/80">Gallery</p>
-          <h1 className="text-4xl md:text-5xl font-serif font-semibold tracking-[0.03em] text-deep-ocean">Gallery</h1>
-          <p className="text-center text-charcoal/80 text-base md:text-lg max-w-2xl mx-auto">
-            Explore our collection of art pieces and studio works.
-          </p>
-        </div>
-        <div className="flex justify-center mb-10">
-          <Link
-            to="/shop"
-            className="inline-flex items-center justify-center rounded-shell bg-deep-ocean px-6 py-3 text-[12px] font-semibold uppercase tracking-[0.22em] text-white shadow-md transition hover:-translate-y-0.5 hover:shadow-lg"
-          >
+    <div className="ca-page min-h-screen">
+      <header className="ca-page-head">
+        <div className="ca-eyebrow mb-4">Gallery</div>
+        <h1>A look through the studio.</h1>
+        <p className="ca-copy mx-auto mt-4 max-w-2xl">
+          A growing archive of finished pieces, custom commissions, and works in progress - pulled together so you can get a feel for the work before reaching out.
+        </p>
+      </header>
+
+      <section className="ca-section">
+        <div className="ca-container">
+        {isLoading ? (
+          <div className="py-12 text-center">
+            <p className="ca-copy">Loading gallery...</p>
+          </div>
+        ) : combinedGallery.length === 0 ? (
+          <div className="ca-copy">No images yet.</div>
+        ) : (
+          <div className="ca-gallery-cols">
+            {columns.map((column, columnIndex) => (
+              <div
+                className="ca-gallery-col"
+                key={`gallery-column-${columnIndex}`}
+                style={{ marginTop: columnIndex === 1 ? '5rem' : columnIndex === 2 ? '2rem' : '0rem' }}
+              >
+                {column.map((item) => (
+                  <figure className="ca-gallery-tile" key={item.id}>
+                    <button
+                      type="button"
+                      className="ca-gallery-tile-media block text-left"
+                      style={{ aspectRatio: item.ratio }}
+                      onClick={() => setSelectedImage(item.imageUrl)}
+                    >
+                      <ProgressiveImage
+                        src={withImageWidthHint(item.imageUrl || '', 700)}
+                        alt={item.title || 'Gallery item'}
+                        className="h-full w-full"
+                        imgClassName="h-full w-full object-cover"
+                        width={700}
+                        height={900}
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    </button>
+                    <figcaption className="ca-gallery-caption">{item.caption}</figcaption>
+                  </figure>
+                ))}
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="mt-12 text-center">
+          <Link to="/shop" className="ca-button">
             Shop The Collection
           </Link>
         </div>
-        <div className="mt-8"></div>
-
-        {isLoading ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500">Loading gallery...</p>
-          </div>
-        ) : (
-          <>
-            <section className="mb-12">
-              {galleryImages.length === 0 ? (
-                <div className="text-gray-500">No images yet.</div>
-              ) : (
-                <div className="gallery-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {galleryImages.map((item) => (
-                    <div key={item.id} className="relative group cursor-pointer rounded-2xl overflow-hidden">
-                      <div
-                        className="aspect-[4/3] overflow-hidden rounded-2xl"
-                        onClick={() => setSelectedImage(item.imageUrl)}
-                      >
-                        <ProgressiveImage
-                          src={withImageWidthHint(item.imageUrl, 600)}
-                          alt={item.title || 'Gallery item'}
-                          className="h-full w-full"
-                          imgClassName="w-full h-full object-contain"
-                          width={600}
-                          height={450}
-                          loading="lazy"
-                          decoding="async"
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </section>
-
-            <section>
-              <h2 className="text-center text-3xl font-semibold tracking-wide text-gray-900 uppercase mb-4">
-                Sold Products
-              </h2>
-              {soldProducts.length > 0 && (
-                <div className="sold-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {soldProducts.map((item) => (
-                    <div key={item.id} className="group rounded-2xl overflow-hidden transition-all">
-                      <div
-                        className="relative aspect-square overflow-hidden cursor-pointer"
-                        onClick={() => setSelectedImage(item.imageUrl)}
-                      >
-                        {item.imageUrl ? (
-                          <ProgressiveImage
-                            src={withImageWidthHint(item.imageUrl || '', 600)}
-                            alt={getSoldCardTitle(item)}
-                            className="h-full w-full"
-                            imgClassName="w-full h-full object-cover rounded-2xl"
-                            width={600}
-                            height={600}
-                            loading="lazy"
-                            decoding="async"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-400">
-                            No image
-                          </div>
-                        )}
-                      </div>
-                      <div className="p-3">
-                        <div className="flex items-center justify-between gap-3 mb-1">
-                          <h3 className="text-sm font-serif font-medium text-deep-ocean truncate">
-                            {getSoldCardTitle(item)}
-                          </h3>
-                          <span className="text-sm font-serif font-medium text-deep-ocean whitespace-nowrap">SOLD</span>
-                        </div>
-                        {item.collection && (
-                          <p className="text-xs text-charcoal/70">{formatCategoryLabel(item.collection)}</p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </section>
-          </>
-        )}
-      </div>
+        </div>
+      </section>
 
       {selectedImage && (
         <div

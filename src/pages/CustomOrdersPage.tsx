@@ -5,6 +5,28 @@ import type { CustomOrderExample } from '../lib/publicApi';
 import { ContactForm } from '../components/ContactForm';
 
 const skeletonExamples = Array.from({ length: 6 });
+const steps = [
+  {
+    n: '01',
+    title: 'Tell me the vibe',
+    body: "Send a note with the room, the palette, the mood. Inspiration photos, paint chips, or fabric snaps are welcome - anything that helps me see what you're imagining.",
+  },
+  {
+    n: '02',
+    title: 'I sketch and quote',
+    body: "Within about a week I'll come back with a small sketch or palette study, a recommended size, and a quote. We refine until it feels right.",
+  },
+  {
+    n: '03',
+    title: 'I paint, you wait',
+    body: 'Most pieces take 4-8 weeks. I share progress photos along the way so you stay in the loop without having to ask.',
+  },
+  {
+    n: '04',
+    title: 'It arrives',
+    body: 'Your piece is packed by hand and shipped from Naples, fully insured. Local clients are welcome to pick up at the studio.',
+  },
+];
 
 export default function CustomOrdersPage() {
   const galleryRef = useRef<HTMLDivElement | null>(null);
@@ -52,76 +74,98 @@ export default function CustomOrdersPage() {
   };
 
   return (
-    <div className="w-full bg-linen text-charcoal relative overflow-hidden">
-      <div className="pointer-events-none absolute inset-0 shell-pattern opacity-60" />
-      <section className="px-4 relative">
-        <div className="section-shell mx-auto w-full max-w-[92vw] sm:max-w-6xl py-12 md:py-16">
-          <div className="dd-card-shell bg-white p-8 sm:p-12 space-y-6 max-w-4xl mx-auto text-center rounded-shell-lg shadow-2xl border border-driftwood/70">
-            <div className="space-y-3">
-              <p className="section-eyebrow">Made with intention</p>
-              <h1 className="section-heading">Custom Orders</h1>
-              <p className="section-subtext">
-                Thoughtfully created, just for you. I'll share a proof before finishing so everything feels just right.
-              </p>
-            </div>
-            <div className="pt-1 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-              <button
-                type="button"
-                onClick={handleScrollToForm}
-                className="lux-button w-full sm:w-auto justify-center"
-              >
-                Start Your Request
-              </button>
-              <button
-                type="button"
-                onClick={handleScrollToGallery}
-                className="lux-button--ghost w-full sm:w-auto justify-center"
-              >
-                Browse Past Customs
-              </button>
-            </div>
+    <div className="ca-page w-full overflow-hidden">
+      <header className="ca-page-head">
+        <div className="ca-eyebrow mb-4">Custom Orders</div>
+        <h1>Made for your room.</h1>
+        <p className="ca-copy mx-auto mt-4 max-w-2xl">
+          Most of my favorite work has started with a single email. Tell me what you're imagining, and we'll build it from there.
+        </p>
+        <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <button type="button" onClick={handleScrollToForm} className="ca-button ca-button-filled w-full sm:w-auto">
+            Start Your Request
+          </button>
+          <button type="button" onClick={handleScrollToGallery} className="ca-button ca-button-ghost w-full sm:w-auto">
+            Browse Past Customs
+          </button>
+        </div>
+      </header>
+
+      <section className="ca-section">
+        <div className="ca-container">
+          <div className="mb-12 text-center">
+            <div className="ca-eyebrow mb-4">The Process</div>
+            <h2 className="ca-section-title">How a commission comes together</h2>
+          </div>
+          <div className="ca-grid ca-grid-4">
+            {steps.map((step) => (
+              <div key={step.n} className="border-t border-[var(--ca-border-strong)] pt-5">
+                <div className="mb-2 font-serif text-4xl tracking-[0.04em] text-[var(--ca-navy)]">{step.n}</div>
+                <h3 className="ca-card-title mb-2">{step.title}</h3>
+                <p className="ca-copy text-[0.95rem]">{step.body}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      <section className="px-4">
-        <div ref={galleryRef} className="section-shell mx-auto w-full max-w-[92vw] sm:max-w-6xl py-12 md:py-16 md:pt-10">
-          <div className="section-shell mx-auto max-w-2xl text-center space-y-3">
-            <p className="section-eyebrow">PREVIOUS WORK</p>
-            <h2 className="section-heading">Past Custom Pieces</h2>
+      <section className="ca-section border-y border-[var(--ca-border)]">
+        <div className="ca-container ca-split">
+          <div className="ca-media">
+            <img src="/images/large-shell-frame.png" alt="Large framed shell collection" loading="lazy" />
+          </div>
+          <div>
+            <div className="ca-eyebrow mb-4">Most Requested</div>
+            <h2 className="ca-section-title mb-5">What people commission</h2>
+            <ul className="grid list-none gap-4 p-0 text-[var(--ca-muted)]">
+              <li><strong className="font-serif text-[var(--ca-ink)]">Framed shell collections</strong> - sized to your wall, palette built to your room.</li>
+              <li><strong className="font-serif text-[var(--ca-ink)]">Wedding &amp; hostess gifts</strong> - painted oysters, scallops, or small framed pieces.</li>
+              <li><strong className="font-serif text-[var(--ca-ink)]">Tabletop sets</strong> - napkin rings, place cards, and small dishes for a dinner.</li>
+              <li><strong className="font-serif text-[var(--ca-ink)]">New build accents</strong> - sets of pieces sourced and painted for a whole project.</li>
+            </ul>
+            <p className="ca-copy mt-5">Don't see what you have in mind? It probably still works. Send a note and we'll figure it out together.</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="ca-section">
+        <div ref={galleryRef} className="ca-container">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="ca-eyebrow mb-4">Previous Work</p>
+            <h2 className="ca-section-title">Past Custom Pieces</h2>
           </div>
 
           {examplesError && (
-            <p className="mt-4 text-center text-xs text-slate-500">{examplesError}</p>
+            <p className="mt-4 text-center text-xs text-[var(--ca-muted)]">{examplesError}</p>
           )}
 
           {isLoadingExamples ? (
-            <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-6 items-start">
+            <div className="ca-grid ca-grid-3 mt-10 items-start">
               {skeletonExamples.map((_, idx) => (
                 <div key={`example-skeleton-${idx}`} className="space-y-3">
-                  <div className="aspect-[4/5] sm:aspect-square rounded-shell-lg bg-stone animate-pulse" />
-                  <div className="h-4 rounded bg-stone animate-pulse" />
-                  <div className="h-3 rounded bg-stone animate-pulse" />
+                  <div className="aspect-[4/5] bg-stone animate-pulse" />
+                  <div className="h-4 bg-stone animate-pulse" />
+                  <div className="h-3 bg-stone animate-pulse" />
                 </div>
               ))}
             </div>
           ) : examples.length ? (
-            <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-6 items-start">
+            <div className="ca-grid ca-grid-3 mt-10 items-start">
               {examples.map((item) => (
                 <button
                   key={item.id}
                   type="button"
                   onClick={() => setSelectedItem(item)}
-                  className="text-left w-full flex flex-col items-stretch"
+                  className="ca-card w-full text-left"
                 >
-                  <div className="relative w-full flex-none overflow-hidden rounded-shell-lg bg-white/85 border border-driftwood/50 lux-shadow aspect-[4/5] sm:aspect-square">
+                  <div className="ca-card-media relative w-full flex-none">
                     <img src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" loading="lazy" />
                   </div>
-                  <div className="mt-3 space-y-1">
-                    <h3 className="font-semibold font-serif text-deep-ocean line-clamp-1 min-h-[1.75rem]">
+                  <div className="ca-card-body">
+                    <h3 className="ca-card-title line-clamp-1 min-h-[1.75rem]">
                       {item.title}
                     </h3>
-                    <p className="text-sm text-charcoal/80 leading-6 line-clamp-3">
+                    <p className="ca-copy text-sm leading-6 line-clamp-3">
                       {item.description}
                     </p>
                     <div className="mt-2 min-h-[34px] flex flex-wrap gap-2">
@@ -129,13 +173,13 @@ export default function CustomOrdersPage() {
                         item.tags.map((tag) => (
                           <span
                             key={`${item.id}-${tag}`}
-                            className="lux-chip"
+                            className="border border-[var(--ca-border)] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-[var(--ca-muted)]"
                           >
                             {tag}
                           </span>
                         ))
                       ) : (
-                        <span className="lux-chip opacity-0" aria-hidden="true">
+                        <span className="border border-[var(--ca-border)] px-3 py-1 text-[10px] uppercase tracking-[0.2em] opacity-0" aria-hidden="true">
                           placeholder
                         </span>
                       )}
@@ -145,28 +189,27 @@ export default function CustomOrdersPage() {
               ))}
             </div>
           ) : (
-            <div className="mt-8 text-center text-sm text-charcoal/70">Examples coming soon.</div>
+            <div className="ca-copy mt-8 text-center text-sm">Examples coming soon.</div>
           )}
         </div>
       </section>
 
-      <section id="contact" className="relative py-16 sm:py-20" style={{ backgroundColor: contactBg }}>
+      <section id="contact" className="ca-section border-t border-[var(--ca-border)]" style={{ backgroundColor: contactBg }}>
         <div className="absolute inset-0" aria-hidden="true" />
-        <div ref={formRef} className="relative w-full max-w-[92vw] sm:max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
-          <div className="space-y-8">
-            <div className="space-y-3 max-w-3xl">
-              <p className="lux-eyebrow">Contact</p>
-              <h2 className="text-3xl sm:text-4xl font-serif tracking-[0.03em] text-deep-ocean">Send me a message</h2>
-              <p className="lux-subtitle">
+        <div ref={formRef} className="ca-container relative">
+          <div className="ca-split items-start">
+            <div>
+              <p className="ca-eyebrow mb-4">Custom Inquiry</p>
+              <h2 className="ca-section-title mb-5">Start a project.</h2>
+              <p className="ca-copy">
                 Tell me about your space, palette, or the story you want a shell to hold.
               </p>
+              <p className="ca-copy mt-8">
+                Typical timeline: <strong className="text-[var(--ca-ink)]">4-8 weeks</strong> from approved sketch to delivery, depending on scale and time of year.
+              </p>
             </div>
-            <div className="mt-10 lux-card bg-white">
-              <div className="flex justify-center">
-                <div className="p-6 sm:p-8 bg-white w-full max-w-4xl dd-form-serif">
-                  <ContactForm backgroundColor="transparent" variant="embedded" defaultInquiryType="custom_order" />
-                </div>
-              </div>
+            <div className="ca-form-skin">
+              <ContactForm backgroundColor="transparent" variant="embedded" defaultInquiryType="custom_order" />
             </div>
           </div>
         </div>
@@ -178,19 +221,19 @@ export default function CustomOrdersPage() {
           onClick={() => setSelectedItem(null)}
         >
           <div
-            className="relative w-full max-w-4xl rounded-shell-lg bg-white/95 shadow-2xl border border-driftwood/70"
+            className="relative w-full max-w-4xl bg-white/95 shadow-2xl border border-[var(--ca-border)]"
             onClick={(event) => event.stopPropagation()}
           >
             <button
               type="button"
               onClick={() => setSelectedItem(null)}
-              className="absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-sm hover:bg-sand"
+              className="absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center bg-white shadow-sm hover:bg-sand"
               aria-label="Close"
             >
               <X className="h-4 w-4 text-slate-700" />
             </button>
             <div className="grid gap-6 p-6 md:grid-cols-2 md:p-8">
-              <div className="rounded-shell-lg bg-linen p-4 border border-driftwood/50">
+              <div className="bg-white p-4 border border-[var(--ca-border)]">
                 <div className="relative aspect-[4/5] sm:aspect-square">
                   <img
                     src={selectedItem.imageUrl}
@@ -200,14 +243,14 @@ export default function CustomOrdersPage() {
                 </div>
               </div>
               <div className="flex flex-col">
-                <h3 className="text-xl font-semibold font-serif text-deep-ocean">{selectedItem.title}</h3>
-                <p className="mt-3 text-sm text-charcoal/80 leading-6">{selectedItem.description}</p>
+                <h3 className="ca-card-title">{selectedItem.title}</h3>
+                <p className="ca-copy mt-3 text-sm leading-6">{selectedItem.description}</p>
                 {selectedItem.tags?.length ? (
                   <div className="mt-4 flex flex-wrap gap-2">
                     {selectedItem.tags.map((tag) => (
                       <span
                         key={`${selectedItem.id}-modal-${tag}`}
-                        className="lux-chip"
+                        className="border border-[var(--ca-border)] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-[var(--ca-muted)]"
                       >
                         {tag}
                       </span>
@@ -217,7 +260,7 @@ export default function CustomOrdersPage() {
                 <button
                   type="button"
                   onClick={handleRequestFromModal}
-                  className="mt-6 lux-button"
+                  className="ca-button ca-button-filled mt-6"
                 >
                   Start a request like this
                 </button>

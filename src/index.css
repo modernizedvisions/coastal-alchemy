@@ -5,10 +5,17 @@
   --stone: #E6DFD4;
   --driftwood: #CBBFAF;
   --sea-glass: #9FBFBB;
-  --deep-ocean: #2F4F4F;
+  --deep-ocean: #243A5E;
   --charcoal: #1F2933;
   --gold-accent: #D9C7A1;
   --soft-gold: #D9C7A1;
+  --ca-paper: #ffffff;
+  --ca-border: #e6e6e6;
+  --ca-border-strong: #d8d8d8;
+  --ca-navy: #243A5E;
+  --ca-navy-deep: #15283F;
+  --ca-ink: #1F2530;
+  --ca-muted: #5B6470;
   --shell-noise: radial-gradient(circle at 1px 1px, rgba(47, 79, 79, 0.05) 1px, transparent 0);
 }
 
@@ -372,5 +379,387 @@
     @apply bg-transparent text-[var(--charcoal)];
     position: relative;
     z-index: 1;
+  }
+
+  /* Coastal Alchemy public skin. These classes are intentionally opt-in so admin
+     pages keep their existing behavior and utility styling. */
+  .ca-page {
+    background: var(--ca-paper);
+    color: var(--ca-ink);
+    font-weight: 300;
+    letter-spacing: 0;
+  }
+
+  .ca-container {
+    width: 100%;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding-left: clamp(1.25rem, 4vw, 2.5rem);
+    padding-right: clamp(1.25rem, 4vw, 2.5rem);
+  }
+
+  .ca-section {
+    padding-top: clamp(4.5rem, 9vw, 8rem);
+    padding-bottom: clamp(4.5rem, 9vw, 8rem);
+    background: var(--ca-paper);
+  }
+
+  .ca-section-tight {
+    padding-top: clamp(3rem, 6vw, 5rem);
+    padding-bottom: clamp(3rem, 6vw, 5rem);
+  }
+
+  .ca-page-head {
+    background: var(--ca-paper);
+    text-align: center;
+    padding: clamp(4rem, 8vw, 6.5rem) clamp(1.25rem, 4vw, 2.5rem) clamp(3rem, 6vw, 4.5rem);
+    border-bottom: 1px solid var(--ca-border);
+  }
+
+  .ca-page-head h1,
+  .ca-title {
+    font-family: "Cormorant Garamond", serif;
+    font-size: clamp(2.2rem, 5vw, 3.5rem);
+    line-height: 1.05;
+    font-weight: 300;
+    color: var(--ca-ink);
+    letter-spacing: 0.01em;
+    margin: 0;
+  }
+
+  .ca-hero-title {
+    font-family: "Cormorant Garamond", serif;
+    font-size: clamp(2.6rem, 6vw, 4.6rem);
+    line-height: 1.04;
+    font-weight: 300;
+    color: var(--ca-ink);
+    letter-spacing: 0.01em;
+  }
+
+  .ca-section-title {
+    font-family: "Cormorant Garamond", serif;
+    font-size: clamp(1.9rem, 4vw, 2.9rem);
+    line-height: 1.15;
+    font-weight: 400;
+    color: var(--ca-ink);
+    letter-spacing: 0.015em;
+  }
+
+  .ca-copy {
+    color: var(--ca-muted);
+    line-height: 1.75;
+    font-weight: 300;
+  }
+
+  .ca-eyebrow {
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.34em;
+    text-transform: uppercase;
+    color: var(--ca-navy);
+  }
+
+  .ca-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    padding: 0.95rem 1.85rem;
+    font-size: 0.74rem;
+    font-weight: 500;
+    letter-spacing: 0.26em;
+    text-transform: uppercase;
+    border: 1px solid var(--ca-navy);
+    background: transparent;
+    color: var(--ca-navy);
+    transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+  }
+
+  .ca-button:hover {
+    background: var(--ca-navy);
+    color: #fff;
+  }
+
+  .ca-button-filled {
+    background: var(--ca-navy);
+    color: #fff;
+  }
+
+  .ca-button-filled:hover {
+    background: var(--ca-navy-deep);
+    border-color: var(--ca-navy-deep);
+  }
+
+  .ca-button-ghost {
+    border-color: var(--ca-border-strong);
+    color: var(--ca-ink);
+  }
+
+  .ca-button-ghost:hover {
+    background: var(--ca-ink);
+    border-color: var(--ca-ink);
+    color: #fff;
+  }
+
+  .ca-split {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: clamp(2rem, 6vw, 5rem);
+    align-items: center;
+  }
+
+  .ca-media {
+    overflow: hidden;
+    background: #fff;
+  }
+
+  .ca-media img {
+    width: 100%;
+    height: 100%;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+  }
+
+  .ca-grid {
+    display: grid;
+    gap: clamp(1rem, 2.5vw, 2rem);
+  }
+
+  .ca-grid-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .ca-grid-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .ca-card {
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    border: 0;
+    box-shadow: none;
+  }
+
+  .ca-card-media {
+    aspect-ratio: 4 / 5;
+    overflow: hidden;
+    background: #fff;
+  }
+
+  .ca-card-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.7s ease;
+  }
+
+  .ca-card:hover .ca-card-media img {
+    transform: scale(1.03);
+  }
+
+  .ca-card-body {
+    padding-top: 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .ca-card-meta {
+    font-size: 0.68rem;
+    letter-spacing: 0.26em;
+    text-transform: uppercase;
+    color: var(--ca-navy);
+  }
+
+  .ca-card-title {
+    font-family: "Cormorant Garamond", serif;
+    font-size: 1.3rem;
+    line-height: 1.25;
+    color: var(--ca-ink);
+    letter-spacing: 0.01em;
+  }
+
+  .ca-card-price {
+    font-family: "Cormorant Garamond", serif;
+    font-size: 1.05rem;
+    color: var(--ca-ink);
+  }
+
+  .ca-tag-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-bottom: 3rem;
+  }
+
+  .ca-tag {
+    font-size: 0.68rem;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    padding: 0.6rem 1.15rem;
+    border: 1px solid var(--ca-border);
+    background: transparent;
+    color: var(--ca-muted);
+    transition: all 0.2s ease;
+  }
+
+  .ca-tag:hover,
+  .ca-tag.is-active {
+    background: var(--ca-navy);
+    color: #fff;
+    border-color: var(--ca-navy);
+  }
+
+  .ca-gallery-cols {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(1.5rem, 3.5vw, 3rem);
+    align-items: start;
+  }
+
+  .ca-gallery-col {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(2rem, 4vw, 3.5rem);
+  }
+
+  .ca-gallery-tile {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+
+  .ca-gallery-tile-media {
+    width: 100%;
+    overflow: hidden;
+    background: #fff;
+    cursor: zoom-in;
+  }
+
+  .ca-gallery-tile-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.7s ease;
+  }
+
+  .ca-gallery-tile:hover .ca-gallery-tile-media img {
+    transform: scale(1.03);
+  }
+
+  .ca-gallery-caption {
+    font-family: "Cormorant Garamond", serif;
+    font-size: 1rem;
+    font-style: italic;
+    letter-spacing: 0.02em;
+    color: var(--ca-muted);
+  }
+
+  .ca-callout {
+    text-align: center;
+    padding: clamp(3rem, 6vw, 5rem) clamp(1.25rem, 4vw, 2.5rem);
+    background: #fff;
+    border-top: 1px solid var(--ca-border);
+    border-bottom: 1px solid var(--ca-border);
+  }
+
+  .ca-form-skin label,
+  .ca-form-skin .lux-label {
+    font-size: 0.68rem !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.24em !important;
+    text-transform: uppercase;
+    color: var(--ca-muted) !important;
+  }
+
+  .ca-form-skin input,
+  .ca-form-skin textarea,
+  .ca-form-skin select,
+  .ca-form-skin .lux-input {
+    border-radius: 0 !important;
+    border-color: var(--ca-border) !important;
+    background: #fff !important;
+    font-weight: 300 !important;
+    letter-spacing: 0 !important;
+    color: var(--ca-ink) !important;
+  }
+
+  .ca-form-skin input:focus,
+  .ca-form-skin textarea:focus,
+  .ca-form-skin select:focus {
+    border-color: var(--ca-navy) !important;
+    box-shadow: none !important;
+  }
+
+  .ca-checkout-summary {
+    background: #fff;
+    border: 1px solid var(--ca-border);
+    padding: 1.75rem;
+    position: sticky;
+    top: 100px;
+  }
+
+  .ca-line {
+    display: grid;
+    grid-template-columns: 64px 1fr auto;
+    gap: 0.85rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--ca-border);
+    align-items: start;
+  }
+
+  .ca-line-media {
+    position: relative;
+    width: 64px;
+    height: 80px;
+    overflow: hidden;
+    background: #f8f8f8;
+  }
+
+  .ca-line-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  @media (max-width: 900px) {
+    .ca-grid-3,
+    .ca-grid-4 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .ca-gallery-cols {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1.5rem;
+    }
+
+    .ca-gallery-col {
+      margin-top: 0 !important;
+    }
+
+    .ca-checkout-summary {
+      position: static;
+    }
+  }
+
+  @media (max-width: 800px) {
+    .ca-split {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .ca-grid-3,
+    .ca-grid-4,
+    .ca-gallery-cols {
+      grid-template-columns: 1fr;
+    }
+
+    .ca-gallery-col {
+      margin-top: 0 !important;
+    }
   }
 }

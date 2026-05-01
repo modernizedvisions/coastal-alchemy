@@ -57,6 +57,7 @@ function SiteLayoutInner() {
       { to: '/gallery', label: 'Gallery' },
       { to: '/custom-orders', label: 'Custom Orders' },
       { to: '/about', label: 'About' },
+      { to: '/contact', label: 'Contact' },
     ],
     []
   );
@@ -131,9 +132,9 @@ function SiteLayoutInner() {
   }, [isNavDrawerOpen, isNavDrawerVisible]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-linen">
+    <div className="min-h-screen flex flex-col bg-white">
       <RouteSeo />
-      <header className="bg-linen/90 backdrop-blur border-b border-driftwood/70 sticky top-0 z-30 shadow-sm">
+      <header className="bg-white/95 backdrop-blur border-b border-[var(--ca-border)] sticky top-0 z-30">
         {bannerText && (
           <div className="bg-sea-glass/25 text-deep-ocean text-sm font-semibold text-center py-2 px-4 tracking-wide border-b border-driftwood/60">
             {bannerText}
@@ -144,7 +145,7 @@ function SiteLayoutInner() {
             <div className="flex items-center gap-3 flex-1 min-w-0">
               <button
                 type="button"
-                className="md:hidden p-2 rounded-shell hover:bg-sand/70 transition-colors border border-driftwood/70 bg-white/80"
+                className="md:hidden p-2 hover:bg-sand/70 transition-colors border border-[var(--ca-border)] bg-white/80"
                 aria-label="Open navigation menu"
                 onClick={() => setNavDrawerOpen(true)}
               >
@@ -152,11 +153,11 @@ function SiteLayoutInner() {
               </button>
               <Link
                 to="/"
-                className="text-2xl font-serif tracking-[0.08em] text-deep-ocean flex-1 text-center md:text-left truncate whitespace-nowrap inline-flex items-center gap-2 max-md:flex-row max-md:items-center max-md:justify-center"
+                className="font-serif text-xl tracking-[0.22em] text-[var(--ca-ink)] flex-1 text-center md:text-left truncate whitespace-nowrap inline-flex items-center gap-2 max-md:flex-row max-md:items-center max-md:justify-center"
               >
-                <img src="/logo.jpg" alt="Dover Designs logo" className="h-8 w-auto object-contain md:mr-1" />
-                <span className="md:hidden inline-block text-center">Dover Designs</span>
-                <span className="hidden md:inline">Dover Designs</span>
+                <img src="/images/logo.jpg" alt="Coastal Alchemy logo" className="h-8 w-auto object-contain md:mr-1" />
+                <span className="md:hidden inline-block text-center">Coastal Alchemy</span>
+                <span className="hidden md:inline">Coastal Alchemy</span>
               </Link>
             </div>
             <div className="hidden md:flex items-center gap-6">
@@ -164,7 +165,7 @@ function SiteLayoutInner() {
                 <Link
                   key={link.to}
                   to={link.to}
-                  className="text-xs font-semibold text-deep-ocean hover:text-charcoal transition-colors uppercase tracking-[0.24em] px-2 py-1 mx-1"
+                  className="text-[11px] font-medium text-[var(--ca-muted)] hover:text-[var(--ca-ink)] transition-colors uppercase tracking-[0.28em] px-1 py-1"
                 >
                   {link.label}
                 </Link>
@@ -184,12 +185,12 @@ function SiteLayoutInner() {
             className={`fixed inset-0 bg-charcoal/60 backdrop-blur-sm z-40 drawer-overlay motion-safe-only ${isNavDrawerActive ? 'is-open' : 'is-closed'}`}
             onClick={() => setNavDrawerOpen(false)}
           />
-          <div className={`fixed left-0 top-0 h-full w-full max-w-xs bg-linen shadow-xl z-50 flex flex-col menu-panel motion-safe-only ${isNavDrawerActive ? 'is-open' : 'is-closed'}`}>
-            <div className="p-4 border-b border-driftwood/70 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-deep-ocean uppercase tracking-[0.08em]">Menu</h2>
+          <div className={`fixed left-0 top-0 h-full w-full max-w-xs bg-white shadow-xl z-50 flex flex-col menu-panel motion-safe-only ${isNavDrawerActive ? 'is-open' : 'is-closed'}`}>
+            <div className="p-4 border-b border-[var(--ca-border)] flex items-center justify-between">
+              <h2 className="text-lg font-serif text-[var(--ca-ink)] tracking-[0.08em]">Menu</h2>
               <button
                 type="button"
-                className="p-2 rounded-shell hover:bg-sand/70 transition-colors border border-driftwood/70 bg-white/80"
+                className="p-2 hover:bg-sand/70 transition-colors border border-[var(--ca-border)] bg-white/80"
                 aria-label="Close navigation menu"
                 onClick={() => setNavDrawerOpen(false)}
               >
@@ -202,7 +203,7 @@ function SiteLayoutInner() {
                   key={link.to}
                   to={link.to}
                   onClick={() => setNavDrawerOpen(false)}
-                  className="block px-3 py-3 text-sm font-semibold text-deep-ocean hover:bg-sand/70 transition-colors uppercase tracking-[0.2em]"
+                  className="block px-3 py-3 text-sm font-medium text-[var(--ca-muted)] hover:text-[var(--ca-ink)] hover:bg-sand/70 transition-colors uppercase tracking-[0.24em]"
                 >
                   {link.label}
                 </Link>
@@ -212,7 +213,7 @@ function SiteLayoutInner() {
         </>
       )}
 
-      <main className="flex-1 bg-linen">
+      <main className="flex-1 bg-white">
         <Outlet />
       </main>
 
@@ -271,16 +272,17 @@ function SiteLayoutInner() {
         </div>
       )}
 
-      <footer className="bg-charcoal border-t border-driftwood/50 py-8 text-linen">
+      <footer className="bg-white border-t border-[var(--ca-border)] py-12 text-[var(--ca-ink)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col items-center gap-4 text-center">
-            <div className="flex items-center gap-3 text-linen/80">
+            <div className="font-serif text-2xl tracking-[0.2em]">Coastal Alchemy</div>
+            <div className="flex items-center gap-3 text-[var(--ca-muted)]">
               <a
                 href="https://www.instagram.com/dover_designs/"
                 target="_blank"
                 rel="noreferrer"
-                aria-label="Visit Dover Designs on Instagram"
-                className="p-2 rounded-full border border-linen/30 hover:border-gold-accent hover:text-gold-accent transition-colors"
+                aria-label="Visit Coastal Alchemy on Instagram"
+                className="p-2 rounded-full border border-[var(--ca-border)] hover:border-[var(--ca-navy)] hover:text-[var(--ca-navy)] transition-colors"
               >
                 <Instagram className="h-5 w-5" />
               </a>
@@ -288,13 +290,13 @@ function SiteLayoutInner() {
                 href="https://www.tiktok.com/@doverdesign"
                 target="_blank"
                 rel="noreferrer"
-                aria-label="Visit Dover Designs on TikTok"
-                className="p-2 rounded-full border border-linen/30 hover:border-gold-accent hover:text-gold-accent transition-colors"
+                aria-label="Visit Coastal Alchemy on TikTok"
+                className="p-2 rounded-full border border-[var(--ca-border)] hover:border-[var(--ca-navy)] hover:text-[var(--ca-navy)] transition-colors"
               >
                 <TikTokIcon className="h-5 w-5" />
               </a>
             </div>
-            <div className="flex items-center gap-4 text-sm font-serif text-linen/80">
+            <div className="flex items-center gap-4 text-sm font-serif text-[var(--ca-muted)]">
               <Link to="/terms" className="hover:text-linen transition-colors">
                 Terms
               </Link>
@@ -302,14 +304,14 @@ function SiteLayoutInner() {
                 Privacy
               </Link>
             </div>
-            <p className="text-sm font-serif text-linen/80">
-              &copy; 2026 Dover Designs. All rights reserved.
+            <p className="text-sm font-serif text-[var(--ca-muted)]">
+              &copy; 2026 Coastal Alchemy. All rights reserved.
             </p>
-            <p className="text-sm font-serif text-linen/80">
+            <p className="text-sm font-serif text-[var(--ca-muted)]">
               Built By{' '}
               <a
                 href="https://modernizedvisions.agency"
-                className="underline decoration-1 underline-offset-2 hover:text-gold-accent transition-colors"
+                className="underline decoration-1 underline-offset-2 hover:text-[var(--ca-navy)] transition-colors"
               >
                 Modernized Visions
               </a>

@@ -14,6 +14,7 @@ const GalleryPage = lazy(() => import('./pages/GalleryPage').then((m) => ({ defa
 const CustomOrdersPage = lazy(() => import('./pages/CustomOrdersPage'));
 const EmailListPage = lazy(() => import('./pages/EmailListPage').then((m) => ({ default: m.EmailListPage })));
 const AboutPage = lazy(() => import('./pages/AboutPage').then((m) => ({ default: m.AboutPage })));
+const ContactPage = lazy(() => import('./pages/ContactPage').then((m) => ({ default: m.ContactPage })));
 const TermsPage = lazy(() => import('./pages/TermsPage').then((m) => ({ default: m.TermsPage })));
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage').then((m) => ({ default: m.PrivacyPage })));
 const AdminPage = lazy(() => import('./pages/AdminPage').then((m) => ({ default: m.AdminPage })));
@@ -83,6 +84,14 @@ createRoot(document.getElementById('root')!).render(
             element={
               <Suspense fallback={<RouteLoading />}>
                 <AboutPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="contact"
+            element={
+              <Suspense fallback={<RouteLoading />}>
+                <ContactPage />
               </Suspense>
             }
           />

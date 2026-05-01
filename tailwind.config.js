@@ -14,7 +14,7 @@ export default {
         stone: '#E6DFD4',
         driftwood: '#CBBFAF',
         'sea-glass': '#9FBFBB',
-        'deep-ocean': '#2F4F4F',
+        'deep-ocean': '#243A5E',
         charcoal: '#1F2933',
         'gold-accent': '#D9C7A1',
         'soft-gold': '#D9C7A1',

@@ -312,48 +312,49 @@ export function ShopPage() {
   };
 
   return (
-    <div className="py-14 bg-linen min-h-screen">
-      <div className="w-full max-w-[92vw] sm:max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mt-10 mb-8 space-y-3">
-          <p className="text-[11px] uppercase tracking-[0.32em] text-deep-ocean/80">The Collection</p>
-          <h1 className="text-4xl sm:text-5xl font-serif font-semibold tracking-[0.04em] text-deep-ocean">
-            The Collection
-          </h1>
-          <p className="text-charcoal/80 text-lg mt-1 font-sans max-w-2xl mx-auto">
-            One-of-a-kind shell art, crafted for curated interiors.
-          </p>
-        </div>
+    <div className="ca-page min-h-screen">
+      <header className="ca-page-head">
+        <div className="ca-eyebrow mb-4">Shop</div>
+        <h1>The Collection</h1>
+        <p className="ca-copy mx-auto mt-4 max-w-2xl">
+          A rotating selection of one-of-a-kind framed pieces, painted shells, and tabletop accents. New work added throughout the season.
+        </p>
+      </header>
 
-        <div className="flex flex-wrap justify-center gap-3 mb-10">
-          {visibleCategories.map((category) => {
-            const isActive = activeCategorySlug === category.slug;
-            return (
-              <button
-                key={category.slug}
-                onClick={() => handleCategorySelect(category.slug)}
-                className={`px-4 py-2 rounded-shell border text-[11px] uppercase tracking-[0.22em] transition ${
-                  isActive
-                    ? 'bg-deep-ocean text-white border-deep-ocean shadow-md'
-                    : 'bg-white/80 text-deep-ocean border-driftwood/60 hover:bg-sand/70'
-                }`}
-              >
-                {category.name}
-              </button>
-            );
-          })}
-        </div>
-
-        {isLoading ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500">Loading products...</p>
+      <section className="ca-section">
+        <div className="ca-container">
+          <div className="ca-tag-row">
+            <button
+              type="button"
+              onClick={() => handleCategorySelect(undefined)}
+              className={`ca-tag ${!activeCategorySlug ? 'is-active' : ''}`}
+            >
+              All
+            </button>
+            {visibleCategories.map((category) => {
+              const isActive = activeCategorySlug === category.slug;
+              return (
+                <button
+                  key={category.slug}
+                  onClick={() => handleCategorySelect(category.slug)}
+                  className={`ca-tag ${isActive ? 'is-active' : ''}`}
+                >
+                  {category.name}
+                </button>
+              );
+            })}
           </div>
-        ) : (
-          sectionCategories.length === 0 ? (
-            <div className="text-center py-12 border border-dashed border-driftwood/60 rounded-shell-lg bg-white/60">
-              <p className="text-charcoal/70">No categories yet.</p>
+
+          {isLoading ? (
+            <div className="py-12 text-center">
+              <p className="ca-copy">Loading products...</p>
+            </div>
+          ) : sectionCategories.length === 0 ? (
+            <div className="border border-dashed border-[var(--ca-border)] bg-white py-12 text-center">
+              <p className="ca-copy">No categories yet.</p>
             </div>
           ) : (
-            <div className="space-y-12">
+            <div className="space-y-16">
               {sectionCategories.map((category) => {
                 const items = groupedProducts[category.slug] || [];
                 if (items.length === 0) return null;
@@ -367,29 +368,19 @@ export function ShopPage() {
                 const title = copy?.title || category.name;
 
                 return (
-                  <section
-                    key={category.slug}
-                    id={`category-section-${category.slug}`}
-                    className="mb-10"
-                  >
-                    <div className="text-center mb-6 space-y-2">
-                      <h2 className="text-2xl sm:text-3xl font-serif tracking-[0.03em] text-deep-ocean">
-                        {title}
-                      </h2>
-                      {subtitle && (
-                        <p className="mt-1 text-sm font-sans text-charcoal/70">{subtitle}</p>
-                      )}
+                  <section key={category.slug} id={`category-section-${category.slug}`}>
+                    <div className="mb-8 text-center">
+                      <div className="ca-eyebrow mb-3">{title}</div>
+                      {subtitle && <p className="ca-copy mx-auto max-w-2xl">{subtitle}</p>}
                     </div>
-                    <div className="rounded-2xl border border-driftwood/40 bg-linen/90 shadow-sm p-4 sm:p-6">
-                      <ProductGrid products={items} categoryOptionLookup={optionLookup} itemListName={title} />
-                    </div>
+                    <ProductGrid products={items} categoryOptionLookup={optionLookup} itemListName={title} />
                   </section>
                 );
               })}
             </div>
-          )
-        )}
-      </div>
+          )}
+        </div>
+      </section>
     </div>
   );
 }

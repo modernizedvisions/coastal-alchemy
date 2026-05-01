@@ -101,10 +101,12 @@ export function ProductCard({ product, categoryOptionLookup, itemListName }: Pro
   const requiresOption = !!optionGroup;
 
   return (
-    <div className="group lux-card bg-white/90 overflow-hidden transition-all duration-300 hover:-translate-y-0.5">
-      <div className="relative aspect-square overflow-hidden rounded-shell-lg bg-sand">
+    <div className="group ca-card">
+      <div className="ca-card-media relative">
         {inCart && (
-          <span className="absolute top-3 right-3 z-10 lux-pill--cart">In Your Cart</span>
+          <span className="absolute right-3 top-3 z-10 bg-[var(--ca-navy)] px-3 py-1 text-[0.62rem] font-medium uppercase tracking-[0.2em] text-white">
+            In Your Cart
+          </span>
         )}
         <Link
           to={productHref}
@@ -119,37 +121,43 @@ export function ProductCard({ product, categoryOptionLookup, itemListName }: Pro
               timeoutMs={2500}
               alt={product.name}
               className="h-full w-full"
-              imgClassName="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+              imgClassName="h-full w-full object-cover"
               width={640}
               height={640}
               loading="lazy"
               decoding="async"
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center text-charcoal/50">
+            <div className="flex h-full w-full items-center justify-center text-[var(--ca-muted)]">
               No image
             </div>
           )}
         </Link>
       </div>
-      <div className="p-4 space-y-3">
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-2">
-          <h3 className="text-base font-serif font-semibold text-deep-ocean truncate sm:whitespace-normal sm:overflow-visible sm:text-ellipsis">
+      <div className="ca-card-body">
+        <div className="flex flex-col gap-2">
+          <div className="ca-card-meta">{product.category || product.type || 'Coastal Piece'}</div>
+          <h3 className="ca-card-title">
             {product.name}
           </h3>
+          {product.description && (
+            <p className="ca-copy my-0 line-clamp-2 text-[0.92rem]">
+              {product.description}
+            </p>
+          )}
           {promoEligible && discountedCents !== basePriceCents && basePriceCents !== null ? (
-            <div className="sm:text-right whitespace-nowrap">
-              <div className="text-xs text-charcoal/60 line-through">{priceLabel}</div>
-              <div className="text-lg font-serif font-semibold text-deep-ocean">{discountedLabel}</div>
+            <div className="whitespace-nowrap">
+              <div className="text-xs text-[var(--ca-muted)] line-through">{priceLabel}</div>
+              <div className="ca-card-price">{discountedLabel}</div>
             </div>
           ) : (
-            <span className="text-lg font-serif font-semibold text-deep-ocean whitespace-nowrap">{priceLabel}</span>
+            <span className="ca-card-price whitespace-nowrap">{priceLabel}</span>
           )}
         </div>
 
         {isSold && (
           <div className="mb-1">
-            <span className="lux-pill bg-red-50 text-red-700 border-red-200">
+            <span className="inline-flex border border-red-200 bg-red-50 px-3 py-1 text-xs font-medium text-red-700">
               Sold
             </span>
           </div>
@@ -161,7 +169,7 @@ export function ProductCard({ product, categoryOptionLookup, itemListName }: Pro
               handleSelectItem();
               navigate(productHref);
             }}
-            className="lux-button--ghost w-full justify-center flex-1 min-w-0 px-3 sm:px-5"
+            className="ca-button ca-button-ghost w-full flex-1 px-3 py-3 text-[0.68rem]"
           >
             View
           </button>
@@ -175,7 +183,7 @@ export function ProductCard({ product, categoryOptionLookup, itemListName }: Pro
               handleAddToCart();
             }}
             disabled={!requiresOption && (isDisabled || !isPurchaseReady)}
-            className="lux-button w-full justify-center flex-1 min-w-0 px-3 sm:px-5 border border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+            className="ca-button ca-button-filled w-full flex-1 px-3 py-3 text-[0.68rem] disabled:cursor-not-allowed disabled:opacity-50"
             aria-label={requiresOption ? 'Choose options' : 'Add to Cart'}
           >
             {requiresOption ? (

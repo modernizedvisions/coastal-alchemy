@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ContactForm } from '../components/ContactForm';
+import { Link } from 'react-router-dom';
 import { getPublicSiteContentHome } from '../lib/publicApi';
 import type { HomeSiteContent } from '../lib/types';
 
@@ -24,68 +24,85 @@ export function AboutPage() {
     };
   }, []);
 
-  const aboutImage = homeContent?.aboutImages?.about || '/pictures/about_page.jpg';
+  const aboutImage = homeContent?.aboutImages?.about || '/images/shell-detail-pearls.png';
+
   return (
-    <div className="bg-linen text-charcoal">
-      <section className="py-16 sm:py-20">
-        <div className="w-full max-w-[92vw] sm:max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10 space-y-3">
-            <p className="text-[11px] uppercase tracking-[0.32em] text-deep-ocean/80">About Dover Designs</p>
-            <h1 className="text-4xl sm:text-5xl font-serif font-semibold tracking-[0.03em] text-deep-ocean">Hi, I&apos;m Rachel!</h1>
+    <div className="ca-page">
+      <header className="ca-page-head">
+        <div className="ca-eyebrow mb-4">About</div>
+        <h1>The studio, the shells, the why.</h1>
+      </header>
+
+      <section className="ca-section">
+        <div className="ca-container ca-split">
+          <div className="ca-media">
+            <img src={aboutImage} alt="A close detail of a hand-painted scallop" loading="lazy" />
           </div>
-
-          <div className="grid gap-10 lg:grid-cols-[1.05fr,0.95fr] items-center">
-            <div className="order-2 lg:order-1 space-y-5 text-[15px] sm:text-lg leading-relaxed font-sans text-center max-w-2xl mx-auto tracking-[0.01em]">
-              <p>
-                Hi, I'm Rachel, a self-taught artist and the creator of Dover Designs. I handpick most of my shells along the Boston shoreline and transform them into modern coastal pieces inspired by the sea.
-              </p>
-              <p>
-                Dover Designs crafts one-of-a-kind shell art for curated interiors, pairing natural shells with hand-applied finishes to bring calm, warm elegance into modern living spaces.
-              </p>
-              <p>
-                Inspired by shoreline textures and timeless design, each commission or limited collection is created with balance, intention, and a gallery-worthy finish meant to live beautifully for years.
-              </p>
-              <p>
-                From bespoke statements to cohesive sets, every piece is designed to layer effortlessly with heirloom objects and modern furnishings alike - quiet luxury that feels personal, collected, and enduring.
-              </p>
-            </div>
-
-            <div className="order-1 lg:order-2">
-              <div className="relative rounded-shell-lg overflow-hidden lux-shadow border border-driftwood/70 bg-white/70">
-                <div className="absolute inset-0 bg-gradient-to-br from-sand/70 via-transparent to-sea-glass/15 pointer-events-none" />
-                <img
-                  src={aboutImage}
-                  alt="Dover Designs studio"
-                  className="h-full w-full object-cover"
-                  loading="lazy"
-                />
-              </div>
-            </div>
+          <div>
+            <div className="ca-eyebrow mb-4">Made on the Gulf</div>
+            <h2 className="ca-section-title mb-5">A practice that started with a walk.</h2>
+            <p className="ca-copy">
+              Coastal Alchemy began the way most slow things do - on a long, quiet walk down a Naples beach with a pocketful of shells and nowhere to be.
+            </p>
+            <p className="ca-copy">
+              What started as a small series of painted scallops on a kitchen counter has grown into a studio practice: framed shell collections, hand-painted tabletop pieces, and custom commissions that live in front halls and on dining tables for a long time.
+            </p>
+            <p className="ca-copy">
+              Every shell is sourced by hand, almost always from the Gulf Coast of Florida. Each piece is painted, finished, and signed in the studio - one at a time, never in bulk.
+            </p>
           </div>
         </div>
       </section>
 
-      <section className="py-16 sm:py-20 bg-transparent">
-        <div className="w-full max-w-[92vw] sm:max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
-          <div className="space-y-8">
-            <div className="space-y-3 max-w-3xl">
-              <p className="text-xs uppercase tracking-[0.32em] text-deep-ocean/75">Contact</p>
-              <h2 className="text-3xl sm:text-4xl font-serif tracking-[0.03em] text-deep-ocean">Send me a message</h2>
-              <p className="text-base text-charcoal/80 leading-relaxed">
-                Tell me about your space, palette, or the story you want a shell to hold.
-              </p>
-            </div>
-            <div className="mt-10 rounded-shell-lg border border-driftwood/70 bg-white/80 lux-shadow">
-              <div className="flex justify-center">
-                <div className="p-6 sm:p-8 bg-white/90 w-full max-w-4xl">
-                  <ContactForm backgroundColor="transparent" variant="embedded" />
-                </div>
-              </div>
-            </div>
+      <section className="ca-section border-y border-[var(--ca-border)]">
+        <div className="ca-container ca-grid ca-grid-3">
+          <div>
+            <div className="ca-eyebrow mb-3">Sourced</div>
+            <h3 className="ca-card-title mb-3">Mostly Gulf Coast</h3>
+            <p className="ca-copy">Florida scallops, oysters, and the small, strange shells the tide leaves behind. A few traveled friends, but most are local.</p>
           </div>
+          <div>
+            <div className="ca-eyebrow mb-3">Painted</div>
+            <h3 className="ca-card-title mb-3">By hand, in layers</h3>
+            <p className="ca-copy">Soft washes built up slowly, finished in gold or left deliberately bare. No two pieces are exactly the same.</p>
+          </div>
+          <div>
+            <div className="ca-eyebrow mb-3">Made</div>
+            <h3 className="ca-card-title mb-3">In Naples, FL</h3>
+            <p className="ca-copy">Cured, painted, framed and packed in a small studio on the Gulf. Shipped, by hand, from here.</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="ca-section">
+        <div className="ca-container ca-split">
+          <div>
+            <div className="ca-eyebrow mb-4">Where you'll find the work</div>
+            <h2 className="ca-section-title mb-5">In a few places, on purpose.</h2>
+            <p className="ca-copy">
+              Coastal Alchemy isn't a wholesale brand. The work lives in private homes, a small handful of design projects with Naples and 30A interior designers, and the occasional pop-up.
+            </p>
+            <p className="ca-copy">
+              If you're a designer or a stylist with a project in mind, I'd love to hear about it.
+            </p>
+          </div>
+          <div className="ca-media">
+            <img src="/images/shell-frame-staged.png" alt="A styled console with a framed shell piece" loading="lazy" />
+          </div>
+        </div>
+      </section>
+
+      <section className="ca-callout">
+        <div className="ca-container">
+          <h3 className="ca-section-title mx-auto max-w-3xl italic">Want a piece that feels like your home?</h3>
+          <p className="ca-copy mx-auto mb-8 max-w-xl">
+            Custom orders are how most of my favorite work happens. Send a few photos, share the vibe, and we'll go from there.
+          </p>
+          <Link to="/custom-orders" className="ca-button">
+            Start a custom inquiry
+          </Link>
         </div>
       </section>
     </div>
   );
 }
-

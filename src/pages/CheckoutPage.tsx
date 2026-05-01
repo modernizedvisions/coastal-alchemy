@@ -406,24 +406,32 @@ export function CheckoutPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-linen flex items-center justify-center px-4">
-        <p className="text-charcoal/80">Preparing your checkout...</p>
+      <div className="ca-page flex min-h-screen items-center justify-center px-4">
+        <p className="ca-copy">Preparing your checkout...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-linen py-12">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between mb-6">
+    <div className="ca-page min-h-screen">
+      <header className="ca-page-head">
+        <div className="ca-eyebrow mb-4">Checkout</div>
+        <h1>Almost there.</h1>
+        <p className="ca-copy mx-auto mt-4 max-w-2xl">
+          Review your pieces, apply any promo code, and complete payment securely through Stripe.
+        </p>
+      </header>
+
+      <section className="ca-section">
+      <div className="ca-container">
+        <div className="mb-8 flex items-center justify-between gap-4">
           <div>
-            <p className="lux-eyebrow">Dover Designs</p>
-            <h1 className="text-3xl font-serif font-semibold text-deep-ocean">Secure Checkout</h1>
-            <p className="lux-subtitle mt-1">Complete your purchase safely and securely.</p>
+            <p className="ca-eyebrow">Coastal Alchemy</p>
+            <h2 className="ca-section-title mt-2">Secure Checkout</h2>
           </div>
           <button
             onClick={() => navigate('/shop')}
-            className="lux-button--ghost"
+            className="ca-button ca-button-ghost"
           >
             Back to Shop
           </button>
@@ -431,83 +439,77 @@ export function CheckoutPage() {
 
         {error && <BannerMessage message={error} type="error" />}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="md:col-span-1">
-            <div className="lux-card bg-white/90 p-4 space-y-4">
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-[1fr_1.6fr]">
+          <div>
+            <div className="ca-checkout-summary space-y-5">
               <div>
-                <p className="lux-eyebrow">Order Preview</p>
-                <h2 className="text-base font-serif font-semibold text-deep-ocean">Items in your cart</h2>
+                <p className="ca-eyebrow mb-2">Order Summary</p>
+                <h2 className="ca-card-title">Items in your cart</h2>
               </div>
 
-              <div className="space-y-3">
+              <div>
                 {previewItems.length === 0 && (
-                  <div className="text-sm text-charcoal/70">No items to display.</div>
+                  <div className="ca-copy text-sm">No items to display.</div>
                 )}
                 {previewItemsWithPricing.map((item) => (
-                  <div key={`${item.id}-${item.name}`} className="flex gap-3">
+                  <div key={`${item.id}-${item.name}`} className="ca-line">
                     {item.imageUrl ? (
-                      <img
-                        src={item.imageUrl}
-                        alt={item.name || 'Item'}
-                        className="w-14 h-14 rounded-shell object-cover bg-sand border border-driftwood/60"
-                        loading="lazy"
-                      />
+                      <div className="ca-line-media">
+                        <img src={item.imageUrl} alt={item.name || 'Item'} loading="lazy" />
+                      </div>
                     ) : (
-                      <div className="w-14 h-14 rounded-shell bg-sand border border-driftwood/60" />
+                      <div className="ca-line-media" />
                     )}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="text-sm font-semibold text-deep-ocean truncate">{item.name || 'Item'}</p>
-                        <span className="text-sm font-semibold text-deep-ocean">{formatMoney(item.lineTotal)}</span>
+                        <p className="ca-card-title truncate text-[1rem]">{item.name || 'Item'}</p>
                       </div>
                       {item.collection && (
-                        <p className="text-[11px] uppercase tracking-[0.24em] text-charcoal/60">{item.collection}</p>
+                        <p className="ca-card-meta">{item.collection}</p>
                       )}
                       {item.optionGroupLabel && item.optionValue && (
-                        <p className="text-xs text-charcoal/70 mt-1">
+                        <p className="ca-copy mt-1 text-xs">
                           {item.optionGroupLabel}: {item.optionValue}
                         </p>
                       )}
                       {item.description && (
-                        <p className="text-xs text-charcoal/70 line-clamp-2">{item.description}</p>
+                        <p className="ca-copy line-clamp-2 text-xs">{item.description}</p>
                       )}
-                      <div className="text-xs text-charcoal/70 mt-0.5 flex items-baseline gap-2">
+                      <div className="ca-copy mt-1 flex items-baseline gap-2 text-xs">
                         <span>Qty: {item.quantity || 1}</span>
                         {item.appliedPercent > 0 ? (
                           <>
-                            <span className="line-through text-charcoal/50">{formatMoney(item.priceCents)}</span>
-                            <span className="text-deep-ocean">{formatMoney(item.unitPrice)}</span>
+                            <span className="line-through">{formatMoney(item.priceCents)}</span>
+                            <span className="text-[var(--ca-ink)]">{formatMoney(item.unitPrice)}</span>
                           </>
                         ) : (
                           <span>{formatMoney(item.priceCents)}</span>
                         )}
                       </div>
                     </div>
+                    <div className="ca-card-price text-[0.95rem]">{formatMoney(item.lineTotal)}</div>
                   </div>
                 ))}
                 {qualifiedGiftProduct && (
-                  <div className="flex gap-3">
+                  <div className="ca-line">
                     {qualifiedGiftProduct.imageUrl ? (
-                      <img
-                        src={qualifiedGiftProduct.imageUrl}
-                        alt={qualifiedGiftProduct.name || 'Gift item'}
-                        className="w-14 h-14 rounded-shell object-cover bg-sand border border-driftwood/60"
-                        loading="lazy"
-                      />
+                      <div className="ca-line-media">
+                        <img src={qualifiedGiftProduct.imageUrl} alt={qualifiedGiftProduct.name || 'Gift item'} loading="lazy" />
+                      </div>
                     ) : (
-                      <div className="w-14 h-14 rounded-shell bg-sand border border-driftwood/60" />
+                      <div className="ca-line-media" />
                     )}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="text-sm font-semibold text-deep-ocean truncate">
+                        <p className="ca-card-title truncate text-[1rem]">
                           {qualifiedGiftProduct.name || 'Gift Item'}
                         </p>
                         <span className="text-sm font-semibold text-emerald-700">FREE</span>
                       </div>
                       {qualifiedGiftProduct.description ? (
-                        <p className="text-xs text-charcoal/70 line-clamp-2">{qualifiedGiftProduct.description}</p>
+                        <p className="ca-copy line-clamp-2 text-xs">{qualifiedGiftProduct.description}</p>
                       ) : null}
-                      <div className="text-xs text-charcoal/70 mt-0.5 flex items-baseline gap-2">
+                      <div className="ca-copy mt-1 flex items-baseline gap-2 text-xs">
                         <span>Qty: 1</span>
                         <span>$0.00</span>
                       </div>
@@ -516,14 +518,14 @@ export function CheckoutPage() {
                 )}
               </div>
 
-              <div className="border-t border-driftwood/70 pt-4 space-y-2">
+              <div className="border-t border-[var(--ca-border)] pt-5 space-y-3 ca-form-skin">
                 <div className="flex items-center justify-between">
-                  <label className="lux-label">Promo Code</label>
+                  <label className="ca-eyebrow">Promo Code</label>
                   {promoSummary?.code ? (
                     <button
                       type="button"
                       onClick={handleClearPromo}
-                      className="text-xs font-semibold text-deep-ocean hover:underline"
+                      className="text-xs font-medium uppercase tracking-[0.18em] text-[var(--ca-navy)] hover:underline"
                     >
                       Remove
                     </button>
@@ -535,22 +537,22 @@ export function CheckoutPage() {
                     value={promoInput}
                     onChange={(e) => setPromoInput(e.target.value)}
                     placeholder="Enter promo code"
-                    className="lux-input flex-1 capitalize"
+                    className="flex-1 border border-[var(--ca-border)] px-4 py-3 capitalize"
                   />
                   <button
                     type="button"
                     onClick={handleApplyPromo}
                     disabled={isApplyingPromo || !promoInput.trim()}
-                    className="lux-button--ghost px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="ca-button ca-button-ghost px-4 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isApplyingPromo ? 'Applying...' : 'Apply'}
                   </button>
                 </div>
                 {promoSummary?.code ? (
-                  <div className="text-xs text-charcoal/70">
-                    Applied: <span className="font-semibold text-deep-ocean">{promoSummary.code.toUpperCase()}</span>
+                  <div className="ca-copy text-xs">
+                    Applied: <span className="font-medium text-[var(--ca-ink)]">{promoSummary.code.toUpperCase()}</span>
                     {promoSummary.source ? (
-                      <span className="text-charcoal/60"> - {promoSummary.source}</span>
+                      <span> - {promoSummary.source}</span>
                     ) : null}
                   </div>
                 ) : null}
@@ -559,32 +561,32 @@ export function CheckoutPage() {
                 ) : null}
               </div>
 
-              <div className="border-t border-driftwood/70 pt-3 space-y-2 text-sm">
-                <div className="flex justify-between text-charcoal/80">
+              <div className="border-t border-[var(--ca-border)] pt-5 space-y-2 text-sm">
+                <div className="flex justify-between text-[var(--ca-muted)]">
                   <span>Subtotal</span>
-                  <span className="font-medium text-deep-ocean">{formatMoney(subtotalCents || 0)}</span>
+                  <span className="font-medium text-[var(--ca-ink)]">{formatMoney(subtotalCents || 0)}</span>
                 </div>
-                <div className="flex justify-between text-charcoal/80">
+                <div className="flex justify-between text-[var(--ca-muted)]">
                   <span>Shipping</span>
-                  <span className="font-medium text-deep-ocean">{formatShipping(effectiveShippingCents)}</span>
+                  <span className="font-medium text-[var(--ca-ink)]">{formatShipping(effectiveShippingCents)}</span>
                 </div>
-                <div className="flex justify-between text-charcoal/60 text-xs">
+                <div className="flex justify-between text-xs text-[var(--ca-muted)]">
                   <span>Tax</span>
                   <span>Calculated at checkout</span>
                 </div>
                 {promoSummary?.percentOff ? (
-                  <div className="flex justify-between text-charcoal/80">
+                  <div className="flex justify-between text-[var(--ca-muted)]">
                     <span>Promotion</span>
                     <span className="font-medium">{promoSummary.percentOff}% off</span>
                   </div>
                 ) : null}
                 {promoSummary?.freeShippingApplied ? (
-                  <div className="flex justify-between text-charcoal/80">
+                  <div className="flex justify-between text-[var(--ca-muted)]">
                     <span>Free shipping</span>
                     <span className="font-medium">Applied</span>
                   </div>
                 ) : null}
-                <div className="flex justify-between pt-2 border-t border-driftwood/70 text-base font-semibold text-deep-ocean">
+                <div className="flex justify-between pt-3 border-t border-[var(--ca-border)] font-serif text-xl text-[var(--ca-ink)]">
                   <span>Total</span>
                   <span>{formatMoney(totalCents)}</span>
                 </div>
@@ -592,18 +594,18 @@ export function CheckoutPage() {
             </div>
           </div>
 
-          <div className="md:col-span-2">
-            <div className="lux-card bg-white/92 p-4 sm:p-6 space-y-4">
+          <div>
+            <div className="border border-[var(--ca-border)] bg-white p-4 sm:p-6 space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-serif font-semibold text-deep-ocean">Payment</h2>
-                {isMountingStripe && <p className="text-sm text-charcoal/70">Loading Stripe...</p>}
+                <h2 className="ca-card-title">Payment</h2>
+                {isMountingStripe && <p className="ca-copy text-sm">Loading Stripe...</p>}
               </div>
               <div
                 id="embedded-checkout"
                 ref={stripeContainerRef}
-                className="rounded-shell-lg border border-driftwood/70 border-dashed bg-white/80 min-h-[360px]"
+                className="min-h-[360px] border border-dashed border-[var(--ca-border)] bg-white"
               />
-              <p className="text-xs text-charcoal/70">
+              <p className="ca-copy text-xs">
                 Secure payment is handled by Stripe. You’ll receive a confirmation as soon as the purchase completes.
               </p>
             </div>
@@ -611,14 +613,15 @@ export function CheckoutPage() {
         </div>
 
         {!product && !error && (
-          <div className="lux-card bg-white/92 p-6 text-center mt-6">
-            <p className="text-charcoal/80">Select a product to begin checkout.</p>
-            <Link to="/shop" className="lux-button--ghost mt-3 inline-flex">
+          <div className="mt-6 border border-[var(--ca-border)] bg-white p-6 text-center">
+            <p className="ca-copy">Select a product to begin checkout.</p>
+            <Link to="/shop" className="ca-button ca-button-ghost mt-3 inline-flex">
               Back to Shop
             </Link>
           </div>
         )}
       </div>
+      </section>
     </div>
   );
 }

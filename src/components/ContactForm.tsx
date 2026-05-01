@@ -262,16 +262,18 @@ export function ContactForm({
   };
 
   return (
-    <div className="py-12" id="contact" style={{ backgroundColor }}>
+    <div className={variant === 'embedded' ? 'py-0' : 'py-12'} id="contact" style={{ backgroundColor }}>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-8 px-2 max-sm:space-y-2">
-          <h2 className="text-2xl md:text-3xl font-semibold text-slate-900 max-sm:text-xl max-sm:leading-tight max-sm:break-words">
-            GET IN TOUCH
-          </h2>
-          <p className="mt-3 text-[13px] sm:text-base text-slate-600 max-w-5xl mx-auto font-serif subtitle-text whitespace-nowrap max-sm:text-[12.5px] max-sm:leading-snug max-sm:whitespace-normal max-sm:break-words max-sm:max-w-full">
-            Interested in a custom piece or looking for something specific? Send a message and I'll reply shortly.
-          </p>
-        </div>
+        {variant !== 'embedded' && (
+          <div className="text-center mb-8 px-2 max-sm:space-y-2">
+            <h2 className="text-2xl md:text-3xl font-semibold text-slate-900 max-sm:text-xl max-sm:leading-tight max-sm:break-words">
+              GET IN TOUCH
+            </h2>
+            <p className="mt-3 text-[13px] sm:text-base text-slate-600 max-w-5xl mx-auto font-serif subtitle-text whitespace-nowrap max-sm:text-[12.5px] max-sm:leading-snug max-sm:whitespace-normal max-sm:break-words max-sm:max-w-full">
+              Interested in a custom piece or looking for something specific? Send a message and I'll reply shortly.
+            </p>
+          </div>
+        )}
         <div
           className={
             variant === 'embedded'

@@ -12,13 +12,13 @@ export function ProductGrid({ products, categoryOptionLookup, itemListName }: Pr
   if (products.length === 0) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500">No products found</p>
+        <p className="ca-copy">No products found</p>
       </div>
     );
   }
 
   return (
-    <div className="product-grid ca-grid ca-grid-3">
+    <div className="product-grid ca-shop-grid">
       {products.map((product) => (
         <ProductCard
           key={product.id}

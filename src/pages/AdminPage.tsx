@@ -1252,28 +1252,36 @@ export function AdminPage() {
 
   return (
     <>
-    <div className="admin-dashboard min-h-screen bg-gradient-to-b from-[var(--warm-linen)] via-[var(--sand)] to-[var(--linen)] text-charcoal py-12 overflow-x-hidden">
+    <div className="admin-dashboard ca-admin-shell py-10 overflow-x-hidden">
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="lux-heading text-3xl">Admin Dashboard</h1>
-          <div className="flex items-center gap-2">
+        <div className="ca-admin-card mb-8 p-5 sm:p-7">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <p className="ca-admin-eyebrow mb-2">Coastal Alchemy</p>
+              <h1 className="ca-admin-heading text-4xl sm:text-5xl leading-tight">Studio Admin</h1>
+              <p className="ca-admin-subheading mt-2 max-w-2xl text-sm sm:text-base">
+                Manage products, orders, custom requests, images, promotions, and site content.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={() => navigate('/admin/analytics')}
-              className="lux-button--ghost px-4 py-2 text-[10px]"
+              className="ca-admin-button-secondary px-4 py-2 text-[10px] uppercase"
             >
               Analytics
             </button>
             <button
               onClick={handleLogout}
-              className="lux-button--ghost px-4 py-2 text-[10px]"
+              className="ca-admin-button-secondary px-4 py-2 text-[10px] uppercase"
             >
               Logout
             </button>
+            </div>
           </div>
         </div>
 
-          <div className="mb-6 border-b border-driftwood/50 pb-2">
-          <nav className="flex gap-3 justify-start md:justify-center overflow-x-auto overflow-y-visible whitespace-nowrap -mx-4 px-4 py-2 md:mx-0 md:px-0">
+        <div className="ca-admin-card-soft mb-8 p-3">
+          <nav className="flex gap-2 justify-start overflow-x-auto overflow-y-visible whitespace-nowrap px-1 py-1">
             {ADMIN_TABS.map((tab) => {
               const isActive = activeTab === tab.key;
               const badge = tab.key === 'orders' ? unseenOrders : tab.key === 'messages' ? unreadMessages : tab.badge;
@@ -1281,11 +1289,7 @@ export function AdminPage() {
                 <button
                   key={tab.key}
                   onClick={() => navigate(ADMIN_TAB_TO_PATH[tab.key])}
-                  className={`relative inline-flex items-center gap-2 px-4 py-2 text-[10px] uppercase tracking-[0.24em] transition-all ${
-                    isActive
-                      ? 'lux-button shadow-none'
-                      : 'lux-button--ghost shadow-none'
-                  }`}
+                  className={`ca-admin-tab ${isActive ? 'is-active' : ''}`}
                 >
                   {tab.label}
                   <AdminTabBadge count={badge} isActive={isActive} />
@@ -1643,4 +1647,3 @@ function describeImageKinds(images: ManagedImage[]) {
 function findBase64Urls(urls: string[]) {
   return urls.filter((url) => isBlockedImageUrl(url));
 }
-

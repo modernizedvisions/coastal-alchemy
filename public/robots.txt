@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://dover-designs.com/sitemap.xml
+Sitemap: https://coastal-alchemy.pages.dev/sitemap.xml

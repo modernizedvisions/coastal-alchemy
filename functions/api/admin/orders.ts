@@ -51,6 +51,7 @@ type OrderItemRow = {
   custom_order_display_id?: string | null;
   option_group_label?: string | null;
   option_value?: string | null;
+  selected_options_json?: string | null;
 };
 
 type ShipmentEvidenceRow = {
@@ -252,6 +253,7 @@ export const onRequestGet = async (context: { env: { DB: D1Database }; request: 
           customOrderDisplayId: i.custom_order_display_id ?? null,
           optionGroupLabel: i.option_group_label ?? null,
           optionValue: i.option_value ?? null,
+          selectedOptions: safeParseSelectedOptions(i.selected_options_json),
         })),
       };
     });
@@ -282,6 +284,16 @@ function safeParseAddress(jsonString: string | null): Record<string, string | nu
     return null;
   } catch {
     return null;
+  }
+}
+
+function safeParseSelectedOptions(jsonString: string | null | undefined) {
+  if (!jsonString) return undefined;
+  try {
+    const parsed = JSON.parse(jsonString);
+    return Array.isArray(parsed) ? parsed : undefined;
+  } catch {
+    return undefined;
   }
 }
 

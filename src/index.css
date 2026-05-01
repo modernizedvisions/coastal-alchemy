@@ -219,7 +219,7 @@
       0 10px 30px rgba(47, 79, 79, 0.08);
   }
 
-  /* Dover Design System helpers (aligned to Home page) */
+  /* Coastal Alchemy design system helpers (aligned to Home page) */
   .lux-eyebrow {
     @apply text-[11px] uppercase tracking-[0.32em];
     color: rgba(47, 79, 79, 0.78);
@@ -327,6 +327,205 @@
   .admin-dashboard select.lux-input option {
     text-transform: uppercase;
     letter-spacing: 0.18em;
+  }
+
+  .ca-admin-shell {
+    min-height: 100vh;
+    background:
+      radial-gradient(circle at 12% 8%, rgba(159, 191, 187, 0.18), transparent 28%),
+      radial-gradient(circle at 85% 0%, rgba(217, 199, 161, 0.18), transparent 32%),
+      linear-gradient(180deg, #fbf9f5 0%, #f6f1e9 52%, #fbf9f5 100%);
+    color: var(--ca-ink);
+  }
+
+  .ca-admin-shell .lux-card,
+  .ca-admin-card {
+    border: 1px solid rgba(203, 191, 175, 0.68) !important;
+    background: rgba(255, 255, 255, 0.84) !important;
+    border-radius: 18px !important;
+    box-shadow: 0 22px 54px rgba(31, 41, 51, 0.1) !important;
+    backdrop-filter: blur(10px);
+  }
+
+  .ca-admin-shell .lux-panel,
+  .ca-admin-card-soft {
+    border: 1px solid rgba(203, 191, 175, 0.56) !important;
+    background: rgba(251, 249, 245, 0.78) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 12px 30px rgba(31, 41, 51, 0.07) !important;
+  }
+
+  .ca-admin-heading {
+    font-family: "Cormorant Garamond", serif;
+    color: var(--ca-ink);
+    font-weight: 400;
+    letter-spacing: 0.015em;
+  }
+
+  .ca-admin-subheading {
+    color: var(--ca-muted);
+    line-height: 1.65;
+    font-weight: 300;
+  }
+
+  .ca-admin-eyebrow,
+  .ca-admin-shell .lux-eyebrow,
+  .ca-admin-shell .lux-label {
+    color: var(--ca-navy) !important;
+    font-size: 0.68rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.24em !important;
+    text-transform: uppercase !important;
+  }
+
+  .ca-admin-shell .lux-heading {
+    font-family: "Cormorant Garamond", serif !important;
+    color: var(--ca-ink) !important;
+    font-weight: 400 !important;
+    letter-spacing: 0.015em !important;
+  }
+
+  .ca-admin-shell .lux-subtitle {
+    color: var(--ca-muted) !important;
+    font-weight: 300 !important;
+    line-height: 1.65 !important;
+  }
+
+  .ca-admin-button-primary,
+  .ca-admin-shell .lux-button {
+    border: 1px solid var(--ca-navy) !important;
+    background: var(--ca-navy) !important;
+    color: #fff !important;
+    border-radius: 999px !important;
+    box-shadow: 0 14px 30px rgba(36, 58, 94, 0.18) !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.22em !important;
+  }
+
+  .ca-admin-button-primary:hover,
+  .ca-admin-shell .lux-button:hover {
+    background: var(--ca-navy-deep) !important;
+    border-color: var(--ca-navy-deep) !important;
+    transform: translateY(-1px);
+  }
+
+  .ca-admin-button-secondary,
+  .ca-admin-shell .lux-button--ghost,
+  .ca-admin-shell .lux-button--outline {
+    border: 1px solid rgba(203, 191, 175, 0.88) !important;
+    background: rgba(255, 255, 255, 0.78) !important;
+    color: var(--ca-navy) !important;
+    border-radius: 999px !important;
+    box-shadow: none !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.22em !important;
+  }
+
+  .ca-admin-button-secondary:hover,
+  .ca-admin-shell .lux-button--ghost:hover,
+  .ca-admin-shell .lux-button--outline:hover {
+    background: rgba(246, 241, 233, 0.96) !important;
+    border-color: var(--ca-navy) !important;
+    transform: translateY(-1px);
+  }
+
+  .ca-admin-button-danger {
+    border: 1px solid rgba(190, 18, 60, 0.28) !important;
+    background: rgba(255, 241, 242, 0.95) !important;
+    color: #9f1239 !important;
+    border-radius: 999px !important;
+  }
+
+  .ca-admin-shell .lux-input,
+  .ca-admin-input {
+    border: 1px solid rgba(203, 191, 175, 0.8) !important;
+    background: rgba(255, 255, 255, 0.9) !important;
+    border-radius: 12px !important;
+    color: var(--ca-ink) !important;
+    font-size: 0.92rem !important;
+    font-weight: 400 !important;
+    letter-spacing: 0 !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  }
+
+  .ca-admin-shell .lux-input:focus,
+  .ca-admin-input:focus {
+    border-color: var(--ca-navy) !important;
+    box-shadow: 0 0 0 3px rgba(159, 191, 187, 0.22) !important;
+    outline: none !important;
+  }
+
+  .ca-admin-shell table {
+    border-color: rgba(203, 191, 175, 0.55) !important;
+  }
+
+  .ca-admin-shell thead {
+    background: rgba(246, 241, 233, 0.72) !important;
+    color: var(--ca-navy) !important;
+  }
+
+  .ca-admin-shell tbody tr {
+    transition: background 0.18s ease;
+  }
+
+  .ca-admin-shell tbody tr:hover {
+    background: rgba(251, 249, 245, 0.76);
+  }
+
+  .ca-admin-badge,
+  .ca-admin-shell .lux-chip,
+  .ca-admin-shell .lux-pill,
+  .ca-admin-shell .lux-pill--cart {
+    border: 1px solid rgba(203, 191, 175, 0.72) !important;
+    background: rgba(251, 249, 245, 0.94) !important;
+    color: var(--ca-navy) !important;
+    border-radius: 999px !important;
+    box-shadow: none !important;
+  }
+
+  .ca-admin-modal {
+    border: 1px solid rgba(203, 191, 175, 0.74) !important;
+    background: rgba(255, 255, 255, 0.96) !important;
+    border-radius: 22px !important;
+    box-shadow: 0 30px 80px rgba(21, 40, 63, 0.22) !important;
+  }
+
+  .ca-admin-empty-state {
+    border: 1px dashed rgba(203, 191, 175, 0.85);
+    background: rgba(251, 249, 245, 0.7);
+    border-radius: 16px;
+    color: var(--ca-muted);
+  }
+
+  .ca-admin-tab {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 42px;
+    border: 1px solid rgba(203, 191, 175, 0.7);
+    background: rgba(255, 255, 255, 0.64);
+    color: var(--ca-navy);
+    border-radius: 999px;
+    padding: 0.65rem 1rem;
+    font-size: 0.64rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    transition: all 0.18s ease;
+    white-space: nowrap;
+  }
+
+  .ca-admin-tab:hover {
+    border-color: var(--ca-navy);
+    background: rgba(255, 255, 255, 0.9);
+  }
+
+  .ca-admin-tab.is-active {
+    background: var(--ca-navy);
+    border-color: var(--ca-navy);
+    color: #fff;
+    box-shadow: 0 14px 26px rgba(36, 58, 94, 0.16);
   }
 
   .lux-chip {
@@ -591,17 +790,19 @@
     flex-wrap: wrap;
     gap: 0.5rem;
     justify-content: center;
-    margin-bottom: 3rem;
+    margin-bottom: clamp(2.25rem, 5vw, 4rem);
   }
 
   .ca-tag {
-    font-size: 0.68rem;
-    letter-spacing: 0.24em;
+    min-height: 27px;
+    font-size: 0.58rem;
+    font-weight: 600;
+    letter-spacing: 0.28em;
     text-transform: uppercase;
-    padding: 0.6rem 1.15rem;
+    padding: 0.45rem 1rem;
     border: 1px solid var(--ca-border);
     background: transparent;
-    color: var(--ca-muted);
+    color: var(--ca-navy);
     transition: all 0.2s ease;
   }
 
@@ -610,6 +811,48 @@
     background: var(--ca-navy);
     color: #fff;
     border-color: var(--ca-navy);
+  }
+
+  .ca-shop-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(2.25rem, 4vw, 3.25rem) clamp(1.5rem, 3vw, 2.25rem);
+    align-items: stretch;
+  }
+
+  .ca-shop-card {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    background: transparent;
+  }
+
+  .ca-shop-card .ca-card-media {
+    width: 100%;
+    aspect-ratio: 4 / 5;
+  }
+
+  .ca-shop-card-body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    padding-top: 1.1rem;
+  }
+
+  .ca-shop-description {
+    display: -webkit-box;
+    min-height: calc(1.75em * 2);
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .ca-shop-add-button {
+    min-height: 30px;
+    padding: 0.62rem 0.95rem;
+    font-size: 0.58rem;
+    letter-spacing: 0.22em;
+    white-space: nowrap;
   }
 
   .ca-gallery-cols {
@@ -726,6 +969,10 @@
   }
 
   @media (max-width: 900px) {
+    .ca-shop-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
     .ca-grid-3,
     .ca-grid-4 {
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -752,6 +999,7 @@
   }
 
   @media (max-width: 560px) {
+    .ca-shop-grid,
     .ca-grid-3,
     .ca-grid-4,
     .ca-gallery-cols {

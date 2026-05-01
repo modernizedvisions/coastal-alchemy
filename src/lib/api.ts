@@ -27,7 +27,7 @@ import {
   updateAdminGiftPromotion,
   deleteAdminGiftPromotion,
 } from './adminGiftPromotions';
-import type { Category, HomeSiteContent, ProductVideoStatus, ProductVideoSummary } from './types';
+import type { Category, HomeSiteContent, ProductVideoStatus, ProductVideoSummary, VariationPreset } from './types';
 import { normalizeImageUrl } from './images';
 import { optimizeImageForUpload } from './imageOptimization';
 import { adminFetch, notifyAdminAuthRequired } from './adminAuth';
@@ -249,6 +249,7 @@ export async function adminCreateCategory(payload: {
   sortOrder?: number;
   optionGroupLabel?: string | null;
   optionGroupOptions?: string[];
+  optionGroups?: Category['optionGroups'];
 }): Promise<Category | null> {
   const response = await adminFetch(ADMIN_CATEGORIES_PATH, {
     method: 'POST',
@@ -277,6 +278,51 @@ export async function adminDeleteCategory(id: string): Promise<void> {
     headers: { Accept: 'application/json' },
   });
   if (!response.ok) throw new Error(`Delete category failed: ${response.status}`);
+}
+
+const ADMIN_VARIATION_PRESETS_PATH = '/api/admin/variation-presets';
+
+export async function adminFetchVariationPresets(): Promise<VariationPreset[]> {
+  const response = await adminFetch(ADMIN_VARIATION_PRESETS_PATH, { headers: { Accept: 'application/json' } });
+  if (!response.ok) throw new Error(`Variation presets fetch failed: ${response.status}`);
+  const data = await response.json();
+  return Array.isArray(data.presets) ? (data.presets as VariationPreset[]) : [];
+}
+
+export async function adminCreateVariationPreset(payload: {
+  name: string;
+  groups: VariationPreset['groups'];
+}): Promise<VariationPreset | null> {
+  const response = await adminFetch(ADMIN_VARIATION_PRESETS_PATH, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) throw new Error(`Create variation preset failed: ${response.status}`);
+  const data = await response.json();
+  return (data as any).preset ?? null;
+}
+
+export async function adminUpdateVariationPreset(
+  id: string,
+  payload: { name: string; groups: VariationPreset['groups'] }
+): Promise<VariationPreset | null> {
+  const response = await adminFetch(`${ADMIN_VARIATION_PRESETS_PATH}?id=${encodeURIComponent(id)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) throw new Error(`Update variation preset failed: ${response.status}`);
+  const data = await response.json();
+  return (data as any).preset ?? null;
+}
+
+export async function adminDeleteVariationPreset(id: string): Promise<void> {
+  const response = await adminFetch(`${ADMIN_VARIATION_PRESETS_PATH}?id=${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    headers: { Accept: 'application/json' },
+  });
+  if (!response.ok) throw new Error(`Delete variation preset failed: ${response.status}`);
 }
 
 export async function adminUploadImage(

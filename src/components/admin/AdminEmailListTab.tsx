@@ -65,7 +65,7 @@ export function AdminEmailListTab() {
         <div className="relative">
           <AdminSectionHeader
             title="Email List"
-            subtitle="Emails collected from the public /join page."
+            subtitle="Emails collected from the public /join page and homepage signup forms."
             className="mb-0"
           />
           <div className="absolute right-0 top-0 hidden sm:flex flex-wrap items-center justify-end gap-2">

@@ -4,7 +4,7 @@ export function TermsPage() {
   return (
     <LegalPageLayout title="TERMS OF SERVICE" lastUpdated="January 25, 2026">
       <p>
-        Welcome to Dover Designs ("we," "us," "our"). By accessing or using our website (the "Site"), you agree to these
+        Welcome to Coastal Alchemy ("we," "us," "our"). By accessing or using our website (the "Site"), you agree to these
         Terms of Service (the "Terms"). If you do not agree, please do not use the Site.
       </p>
 
@@ -20,11 +20,11 @@ export function TermsPage() {
       <div>
         <h2 className="text-lg font-serif font-semibold text-gray-900 mb-2">2) PRODUCTS, ORDERS, AND PAYMENTS</h2>
         <p>
-          Dover Designs offers handcrafted products and custom design services. All prices, availability, and
+          Coastal Alchemy offers handcrafted products and custom design services. All prices, availability, and
           descriptions are subject to change without notice.
         </p>
         <p>
-          Payments are processed securely through third-party payment providers. Dover Designs does not store or retain
+          Payments are processed securely through third-party payment providers. Coastal Alchemy does not store or retain
           full payment card information on its servers.
         </p>
         <p>
@@ -61,7 +61,7 @@ export function TermsPage() {
       <div>
         <h2 className="text-lg font-serif font-semibold text-gray-900 mb-2">5) USER CONTENT AND COMMUNICATIONS</h2>
         <p>
-          If you submit content to us (including messages, photos, files, or design references), you grant Dover Designs
+          If you submit content to us (including messages, photos, files, or design references), you grant Coastal Alchemy
           permission to use that content solely to:
         </p>
         <ul className="list-disc list-inside space-y-1">
@@ -78,7 +78,7 @@ export function TermsPage() {
         <h2 className="text-lg font-serif font-semibold text-gray-900 mb-2">6) INTELLECTUAL PROPERTY</h2>
         <p>
           All content on this Site - including text, images, product designs, photography, branding, and layout - is
-          owned by Dover Designs or its licensors and is protected by intellectual property laws.
+          owned by Coastal Alchemy or its licensors and is protected by intellectual property laws.
         </p>
         <p>
           You may not copy, reproduce, distribute, sell, or create derivative works from our content without prior
@@ -90,7 +90,7 @@ export function TermsPage() {
         <h2 className="text-lg font-serif font-semibold text-gray-900 mb-2">7) THIRD-PARTY SERVICES AND LINKS</h2>
         <p>
           The Site may use or link to third-party services such as payment processors, email platforms, hosting
-          providers, or analytics tools. Dover Designs is not responsible for the content, policies, or practices of
+          providers, or analytics tools. Coastal Alchemy is not responsible for the content, policies, or practices of
           third-party services. Your use of those services is governed by their respective terms.
         </p>
       </div>
@@ -107,7 +107,7 @@ export function TermsPage() {
       <div>
         <h2 className="text-lg font-serif font-semibold text-gray-900 mb-2">9) LIMITATION OF LIABILITY</h2>
         <p>
-          To the fullest extent permitted by law, Dover Designs shall not be liable for any indirect, incidental,
+          To the fullest extent permitted by law, Coastal Alchemy shall not be liable for any indirect, incidental,
           consequential, special, or punitive damages, including loss of profits or data, arising out of your use of the
           Site or purchases made through the Site.
         </p>
@@ -116,7 +116,7 @@ export function TermsPage() {
       <div>
         <h2 className="text-lg font-serif font-semibold text-gray-900 mb-2">10) INDEMNIFICATION</h2>
         <p>
-          You agree to indemnify and hold harmless Dover Designs from any claims, damages, losses, and expenses
+          You agree to indemnify and hold harmless Coastal Alchemy from any claims, damages, losses, and expenses
           (including reasonable attorneys' fees) arising from your misuse of the Site or violation of these Terms.
         </p>
       </div>
@@ -132,7 +132,7 @@ export function TermsPage() {
       <div>
         <h2 className="text-lg font-serif font-semibold text-gray-900 mb-2">12) GOVERNING LAW</h2>
         <p>
-          These Terms are governed by the laws of the jurisdiction in which Dover Designs operates, without regard to
+          These Terms are governed by the laws of the jurisdiction in which Coastal Alchemy operates, without regard to
           conflict of law principles.
         </p>
       </div>
@@ -140,7 +140,7 @@ export function TermsPage() {
       <div>
         <h2 className="text-lg font-serif font-semibold text-gray-900 mb-2">13) CONTACT</h2>
         <p>If you have questions about these Terms, contact us at:</p>
-        <p>Email: doverdesignsshells@gmail.com</p>
+        <p>Email: hello@coastalalchemy.com</p>
         <p>Or use the contact form on the Site.</p>
       </div>
     </LegalPageLayout>

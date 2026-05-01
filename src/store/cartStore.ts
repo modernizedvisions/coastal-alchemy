@@ -51,6 +51,9 @@ const loadCartFromStorage = (): CartItem[] => {
             shippingOverrideAmountCents: (item as CartItem).shippingOverrideAmountCents ?? null,
             optionGroupLabel: (item as CartItem).optionGroupLabel ?? null,
             optionValue: (item as CartItem).optionValue ?? null,
+            selectedOptions: Array.isArray((item as CartItem).selectedOptions)
+              ? (item as CartItem).selectedOptions
+              : undefined,
           }))
       : [];
   } catch (error) {

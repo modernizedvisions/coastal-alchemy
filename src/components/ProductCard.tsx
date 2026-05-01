@@ -101,11 +101,11 @@ export function ProductCard({ product, categoryOptionLookup, itemListName }: Pro
   const requiresOption = !!optionGroup;
 
   return (
-    <div className="group ca-card">
+    <article className="group ca-shop-card">
       <div className="ca-card-media relative">
         {inCart && (
           <span className="absolute right-3 top-3 z-10 bg-[var(--ca-navy)] px-3 py-1 text-[0.62rem] font-medium uppercase tracking-[0.2em] text-white">
-            In Your Cart
+            Added
           </span>
         )}
         <Link
@@ -134,17 +134,28 @@ export function ProductCard({ product, categoryOptionLookup, itemListName }: Pro
           )}
         </Link>
       </div>
-      <div className="ca-card-body">
+      <div className="ca-shop-card-body">
         <div className="flex flex-col gap-2">
           <div className="ca-card-meta">{product.category || product.type || 'Coastal Piece'}</div>
-          <h3 className="ca-card-title">
+          <Link to={productHref} onClick={handleSelectItem} className="ca-card-title transition hover:text-[var(--ca-navy)]">
             {product.name}
-          </h3>
+          </Link>
           {product.description && (
-            <p className="ca-copy my-0 line-clamp-2 text-[0.92rem]">
+            <p className="ca-copy ca-shop-description my-0 text-[0.92rem]">
               {product.description}
             </p>
           )}
+        </div>
+
+        {isSold && (
+          <div className="mt-3">
+            <span className="inline-flex border border-rose-200 bg-rose-50 px-3 py-1 text-[10px] font-medium uppercase tracking-[0.2em] text-rose-700">
+              Sold
+            </span>
+          </div>
+        )}
+
+        <div className="mt-auto flex items-end justify-between gap-4 pt-5">
           {promoEligible && discountedCents !== basePriceCents && basePriceCents !== null ? (
             <div className="whitespace-nowrap">
               <div className="text-xs text-[var(--ca-muted)] line-through">{priceLabel}</div>
@@ -153,26 +164,6 @@ export function ProductCard({ product, categoryOptionLookup, itemListName }: Pro
           ) : (
             <span className="ca-card-price whitespace-nowrap">{priceLabel}</span>
           )}
-        </div>
-
-        {isSold && (
-          <div className="mb-1">
-            <span className="inline-flex border border-red-200 bg-red-50 px-3 py-1 text-xs font-medium text-red-700">
-              Sold
-            </span>
-          </div>
-        )}
-
-        <div className="flex flex-col sm:flex-row gap-2 mt-2">
-          <button
-            onClick={() => {
-              handleSelectItem();
-              navigate(productHref);
-            }}
-            className="ca-button ca-button-ghost w-full flex-1 px-3 py-3 text-[0.68rem]"
-          >
-            View
-          </button>
           <button
             onClick={() => {
               if (requiresOption) {
@@ -183,20 +174,22 @@ export function ProductCard({ product, categoryOptionLookup, itemListName }: Pro
               handleAddToCart();
             }}
             disabled={!requiresOption && (isDisabled || !isPurchaseReady)}
-            className="ca-button ca-button-filled w-full flex-1 px-3 py-3 text-[0.68rem] disabled:cursor-not-allowed disabled:opacity-50"
+            className="ca-button ca-button-filled ca-shop-add-button disabled:cursor-not-allowed disabled:opacity-50"
             aria-label={requiresOption ? 'Choose options' : 'Add to Cart'}
           >
             {requiresOption ? (
-              <>
-                <span className="hidden sm:inline">Choose</span>
-                <ShoppingCart className="h-5 w-5 sm:hidden" />
-              </>
+              <span>Choose Options</span>
+            ) : inCart && product.oneoff ? (
+              <span>Added</span>
             ) : (
-              <ShoppingCart className="h-5 w-5" />
+              <>
+                <ShoppingCart className="h-3.5 w-3.5" />
+                <span>Add to Cart</span>
+              </>
             )}
           </button>
         </div>
       </div>
-    </div>
+    </article>
   );
 }

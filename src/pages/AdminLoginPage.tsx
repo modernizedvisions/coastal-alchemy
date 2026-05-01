@@ -66,12 +66,16 @@ export function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="lux-card w-full max-w-md p-8 text-charcoal">
-        <h2 className="lux-heading text-2xl mb-6 text-center">Admin Login</h2>
+    <div className="ca-admin-shell flex min-h-screen items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
+      <div className="ca-admin-card w-full max-w-md p-8 text-[var(--ca-ink)]">
+        <div className="mb-7 text-center">
+          <p className="ca-admin-eyebrow mb-2">Coastal Alchemy</p>
+          <h2 className="ca-admin-heading text-4xl leading-tight">Studio Admin</h2>
+          <p className="ca-admin-subheading mt-2 text-sm">Sign in to manage the shop, orders, images, and custom requests.</p>
+        </div>
         <form onSubmit={handleLogin}>
           <div className="mb-4">
-            <label htmlFor="admin-password" className="lux-label mb-2 block">
+            <label htmlFor="admin-password" className="ca-admin-eyebrow mb-2 block">
               Password
             </label>
             <input
@@ -80,19 +84,19 @@ export function AdminLoginPage() {
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               ref={passwordInputRef}
-              className="lux-input font-semibold tracking-[0.12em]"
+              className="ca-admin-input w-full px-4 py-3"
               autoComplete="current-password"
               required
             />
           </div>
 
           {error ? (
-            <div className="mb-4 rounded-shell border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">
+            <div className="mb-4 rounded-[14px] border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">
               {error}
             </div>
           ) : null}
 
-          <button type="submit" disabled={isLoading} className="lux-button w-full justify-center disabled:opacity-50">
+          <button type="submit" disabled={isLoading} className="ca-admin-button-primary inline-flex w-full items-center justify-center px-5 py-3 text-[11px] uppercase disabled:opacity-50">
             {isLoading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>

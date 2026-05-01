@@ -57,6 +57,7 @@ export interface CartItem {
   shippingOverrideAmountCents?: number | null;
   optionGroupLabel?: string | null;
   optionValue?: string | null;
+  selectedOptions?: SelectedVariationOption[];
 }
 
 export interface CartItemLegacy {
@@ -153,6 +154,8 @@ export type HomeSiteContent = {
   homeGallery?: HomeGalleryItem[];
   // About images shared by homepage + About page.
   aboutImages?: AboutImages;
+  // Main image shared by homepage and Custom Orders page.
+  customOrdersMainImage?: string;
   heroRotationEnabled?: boolean;
   shopCategoryCards?: Array<{
     slotIndex: number;
@@ -177,6 +180,42 @@ export interface Category {
   sortOrder?: number;
   optionGroupLabel?: string | null;
   optionGroupOptions?: string[];
+  optionGroups?: VariationGroup[];
+}
+
+export interface VariationOption {
+  id: string;
+  label: string;
+  value: string;
+  displayOrder?: number;
+  enabled?: boolean;
+}
+
+export interface VariationGroup {
+  id: string;
+  label: string;
+  inputType: 'select';
+  required: boolean;
+  displayOrder?: number;
+  enabled?: boolean;
+  presetId?: string | null;
+  options: VariationOption[];
+}
+
+export interface SelectedVariationOption {
+  groupId: string;
+  groupLabel: string;
+  optionId?: string | null;
+  optionLabel: string;
+  optionValue: string;
+}
+
+export interface VariationPreset {
+  id: string;
+  name: string;
+  groups: VariationGroup[];
+  createdAt?: string | null;
+  updatedAt?: string | null;
 }
 
 export type ShopCategoryTile = {
@@ -275,6 +314,7 @@ export interface AdminOrderItem {
   customOrderDisplayId?: string | null;
   optionGroupLabel?: string | null;
   optionValue?: string | null;
+  selectedOptions?: SelectedVariationOption[];
 }
 
 export interface AdminOrder {

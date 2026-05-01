@@ -84,6 +84,7 @@ export async function onRequest(context: { env: { DB: D1Database }; request: Req
         .map((item: any) => item?.imageUrl)
         .filter(Boolean) as string[];
       const aboutUrls = [aboutImages.home, aboutImages.about].filter(Boolean) as string[];
+      const customOrdersMainImage = incomingJson?.customOrdersMainImage;
 
       const urlValues = [
         heroImages.left,
@@ -91,6 +92,7 @@ export async function onRequest(context: { env: { DB: D1Database }; request: Req
         heroImages.right,
         ...homeGalleryUrls,
         ...aboutUrls,
+        customOrdersMainImage,
       ].filter(Boolean) as string[];
 
       const invalid = urlValues.find((url) => isDataUrl(url) || url.length > MAX_URL_LENGTH);
@@ -120,4 +122,3 @@ export async function onRequest(context: { env: { DB: D1Database }; request: Req
     return json({ error: 'Internal server error' }, 500);
   }
 }
-

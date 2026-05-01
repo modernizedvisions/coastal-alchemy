@@ -7,7 +7,7 @@ import { useCartStore } from '../store/cartStore';
 import { useUIStore } from '../store/uiStore';
 import { ProgressiveImage } from '@/components/ui/ProgressiveImage';
 import { getDiscountedCents, isPromotionEligible, usePromotions } from '@/lib/promotions';
-import { buildCategoryOptionLookup, resolveCategoryOptionGroup } from '../lib/categoryOptions';
+import { buildCategoryOptionLookup, flattenSelectedOptionsLabel, resolveCategoryOptionGroups } from '../lib/categoryOptions';
 import { CANONICAL_ORIGIN, toAbsoluteAssetUrl, toCanonicalUrl, useJsonLd, useSeo } from '../lib/seo';
 import {
   mapProductToAnalyticsItem,
@@ -29,12 +29,10 @@ export function ProductDetailPage() {
   const relatedRef = useRef<HTMLDivElement | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  const [selectedOptionsByGroup, setSelectedOptionsByGroup] = useState<Record<string, string>>({});
+  const [optionValidationMessage, setOptionValidationMessage] = useState<string | null>(null);
   const addItem = useCartStore((state) => state.addItem);
   const isOneOffInCart = useCartStore((state) => state.isOneOffInCart);
-  const qtyInCart = useCartStore((state) =>
-    product ? state.getQuantityForProduct(product.id, selectedOption) : 0
-  );
   const setCartDrawerOpen = useUIStore((state) => state.setCartDrawerOpen);
   const { promotion } = usePromotions();
 
@@ -77,20 +75,41 @@ export function ProductDetailPage() {
 
   useEffect(() => {
     setQuantity(1);
-    setSelectedOption(null);
+    setSelectedOptionsByGroup({});
+    setOptionValidationMessage(null);
   }, [productId]);
 
   const hasPrice = product?.priceCents !== undefined && product?.priceCents !== null;
   const isSold = product?.isSold || (product?.quantityAvailable !== undefined && (product.quantityAvailable ?? 0) <= 0);
   const canPurchase = !!product && hasPrice && !isSold;
   const optionLookup = useMemo(() => buildCategoryOptionLookup(categories), [categories]);
-  const optionGroup = useMemo(() => {
-    if (!product) return null;
+  const optionGroups = useMemo(() => {
+    if (!product) return [];
     const categoryKey = product.category || product.type || '';
-    return resolveCategoryOptionGroup(categoryKey, optionLookup);
+    return resolveCategoryOptionGroups(categoryKey, optionLookup).filter((group) => group.enabled !== false);
   }, [product, optionLookup]);
-  const requiresOption = !!optionGroup;
-  const hasSelectedOption = !requiresOption || !!selectedOption;
+  const selectedOptions = useMemo(() => {
+    return optionGroups
+      .map((group) => {
+        const selectedValue = selectedOptionsByGroup[group.id] || '';
+        const selected = group.options.find((option) => option.value === selectedValue || option.label === selectedValue);
+        if (!selected) return null;
+        return {
+          groupId: group.id,
+          groupLabel: group.label,
+          optionId: selected.id,
+          optionLabel: selected.label,
+          optionValue: selected.value,
+        };
+      })
+      .filter((option): option is NonNullable<typeof option> => Boolean(option));
+  }, [optionGroups, selectedOptionsByGroup]);
+  const selectedOptionsKey = flattenSelectedOptionsLabel(selectedOptions);
+  const missingRequiredGroups = optionGroups.filter((group) => group.required !== false && !selectedOptionsByGroup[group.id]);
+  const hasSelectedOption = missingRequiredGroups.length === 0;
+  const qtyInCart = useCartStore((state) =>
+    product ? state.getQuantityForProduct(product.id, selectedOptionsKey) : 0
+  );
   const promoEligible = product ? isPromotionEligible(promotion, product) : false;
   const discountedPriceCents =
     product?.priceCents !== undefined && product?.priceCents !== null && promoEligible && promotion
@@ -119,9 +138,12 @@ export function ProductDetailPage() {
   const handleAddToCart = () => {
     if (!product || !hasPrice || isSold) return;
     if (product.oneoff && isOneOffInCart(product.id)) return;
-    if (requiresOption && !selectedOption) return;
+    if (!hasSelectedOption) {
+      setOptionValidationMessage('Please choose all required options before adding this item to your cart.');
+      return;
+    }
     if (!product.oneoff && !hasSelectableStock) return;
-    const previousQty = useCartStore.getState().getQuantityForProduct(product.id, selectedOption);
+    const previousQty = useCartStore.getState().getQuantityForProduct(product.id, selectedOptionsKey);
     addItem({
       productId: product.id,
       name: product.name,
@@ -136,17 +158,18 @@ export function ProductDetailPage() {
       categories: product.categories ?? null,
       shippingOverrideEnabled: product.shippingOverrideEnabled ?? false,
       shippingOverrideAmountCents: product.shippingOverrideAmountCents ?? null,
-      optionGroupLabel: optionGroup?.label ?? null,
-      optionValue: selectedOption ?? null,
+      optionGroupLabel: selectedOptions[0]?.groupLabel ?? null,
+      optionValue: selectedOptionsKey || null,
+      selectedOptions,
     });
-    const nextQty = useCartStore.getState().getQuantityForProduct(product.id, selectedOption);
+    const nextQty = useCartStore.getState().getQuantityForProduct(product.id, selectedOptionsKey);
     const addedQuantity = Math.max(0, nextQty - previousQty);
     if (addedQuantity > 0) {
       trackAddToCart([
         mapProductToAnalyticsItem(product, {
           quantity: addedQuantity,
           itemListName: 'Product Detail',
-          itemVariant: selectedOption,
+          itemVariant: selectedOptionsKey,
         }),
       ]);
     }
@@ -160,14 +183,14 @@ export function ProductDetailPage() {
   const isMissingProduct = !loadingProduct && !product;
   const seoDescription = isMissingProduct
     ? 'This product is unavailable or no longer exists.'
-    : (product?.description || 'View handcrafted shell art details from Dover Designs.').replace(/\s+/g, ' ').trim();
+    : (product?.description || 'View hand-painted shell art details from Coastal Alchemy.').replace(/\s+/g, ' ').trim();
 
   useSeo({
     title: isMissingProduct
-      ? 'Product Not Found | Dover Designs'
+      ? 'Product Not Found | Coastal Alchemy'
       : product?.name
-      ? `${product.name} | Dover Designs`
-      : 'Product | Dover Designs',
+      ? `${product.name} | Coastal Alchemy`
+      : 'Product | Coastal Alchemy',
     description: seoDescription,
     canonicalPath,
     ogType: 'product',
@@ -179,7 +202,7 @@ export function ProductDetailPage() {
 
     const productUrl = toCanonicalUrl(canonicalPath);
     const primaryImage = product.imageUrls?.[0] || product.imageUrl || '';
-    const imageUrl = primaryImage ? toAbsoluteAssetUrl(primaryImage) : `${CANONICAL_ORIGIN}/logo.jpg`;
+    const imageUrl = primaryImage ? toAbsoluteAssetUrl(primaryImage) : `${CANONICAL_ORIGIN}/images/large-shell-frame.png`;
     const availability =
       product.isSold || (product.quantityAvailable !== undefined && product.quantityAvailable <= 0)
         ? 'https://schema.org/OutOfStock'
@@ -265,10 +288,10 @@ export function ProductDetailPage() {
 
   if (!loadingProduct && !product) {
     return (
-      <div className="py-16 bg-linen min-h-screen">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-4">
-          <h1 className="text-3xl font-serif text-deep-ocean">Product not found</h1>
-          <Link to="/shop" className="lux-button--ghost inline-flex">
+      <div className="ca-page min-h-screen py-16">
+        <div className="ca-container text-center space-y-4">
+          <h1 className="ca-section-title">Product not found</h1>
+          <Link to="/shop" className="ca-button ca-button-ghost inline-flex">
             Back to Shop
           </Link>
         </div>
@@ -287,17 +310,13 @@ export function ProductDetailPage() {
   };
 
   return (
-    <div className="bg-linen text-charcoal min-h-screen">
-      <div className="relative isolate overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 shell-pattern opacity-60" />
-        <div className="pointer-events-none absolute inset-x-0 -top-24 h-48 bg-[radial-gradient(circle_at_top,_rgba(159,191,187,0.18),_transparent_55%)]" />
-
-        <section className="pt-10 pb-14">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="ca-page min-h-screen">
+        <section className="ca-section">
+          <div className="ca-container">
             <div className="mb-6 flex items-center justify-between">
               <button
                 onClick={() => navigate(-1)}
-                className="lux-button--ghost px-4 py-2 uppercase tracking-[0.18em] text-[10px]"
+                className="ca-button ca-button-ghost px-4 py-2 text-[10px]"
               >
                 Back
               </button>
@@ -312,65 +331,73 @@ export function ProductDetailPage() {
                 productVideo={product?.productVideo}
               />
 
-              <div className="space-y-5 bg-white/75 border border-driftwood/60 rounded-shell-lg p-6 sm:p-8 lux-shadow">
+              <div className="ca-form-skin space-y-6 border border-[var(--ca-border)] bg-white p-6 sm:p-8">
                 <div className="space-y-3">
-                  <p className="lux-eyebrow">{product?.category || product?.type || 'Product'}</p>
-                  <h1 className="font-serif text-3xl sm:text-4xl leading-tight text-deep-ocean">
+                  <p className="ca-eyebrow">{product?.category || product?.type || 'Product'}</p>
+                  <h1 className="ca-section-title">
                     {loadingProduct ? 'Loading...' : product?.name}
                   </h1>
                   {product?.priceCents !== undefined && product?.priceCents !== null && (
-                    <div className="text-[22px] font-serif font-semibold text-deep-ocean flex items-baseline gap-3">
+                    <div className="ca-card-price flex items-baseline gap-3 text-[1.45rem]">
                       {promoEligible && discountedPriceCents !== product.priceCents ? (
                         <>
-                          <span className="text-sm text-charcoal/60 line-through">
+                          <span className="text-sm text-[var(--ca-muted)] line-through">
                             {formatPrice(product.priceCents)}
                           </span>
-                          <span className="text-[24px] text-deep-ocean">{formatPrice(discountedPriceCents)}</span>
+                          <span className="text-[1.6rem] text-[var(--ca-ink)]">{formatPrice(discountedPriceCents)}</span>
                         </>
                       ) : (
                         <span>{formatPrice(product.priceCents)}</span>
                       )}
                     </div>
                   )}
-                  <p className="text-base leading-relaxed text-charcoal/80">{product?.description}</p>
+                  <p className="ca-copy text-base">{product?.description}</p>
                 </div>
 
-                {optionGroup && (
-                  <div className="lux-panel bg-linen/80 px-5 py-4 space-y-3">
-                    <p className="lux-label text-[10px]">{optionGroup.label}</p>
-                    <div className="space-y-2">
-                      {optionGroup.options.map((opt) => (
-                        <label key={opt} className="flex items-center gap-3 text-sm text-charcoal/80">
-                          <input
-                            type="radio"
-                            name="option-group"
-                            value={opt}
-                            checked={selectedOption === opt}
-                            onChange={() => setSelectedOption(opt)}
-                            className="h-4 w-4 rounded-full border-driftwood/70 text-deep-ocean"
-                          />
-                          <span>{opt}</span>
+                {optionGroups.length > 0 && (
+                  <div className="border border-[var(--ca-border)] bg-white px-5 py-4 space-y-3">
+                    <p className="ca-eyebrow text-[10px]">Choose Options</p>
+                    {optionGroups.map((group) => (
+                      <div key={group.id}>
+                        <label className="mb-2 block">
+                          {group.label}
+                          {group.required !== false ? ' *' : ''}
                         </label>
-                      ))}
-                    </div>
-                    {!selectedOption && (
-                      <p className="text-xs text-rose-600">Please choose an option to continue.</p>
-                    )}
+                        <select
+                          value={selectedOptionsByGroup[group.id] || ''}
+                          onChange={(event) => {
+                            setSelectedOptionsByGroup((prev) => ({ ...prev, [group.id]: event.target.value }));
+                            setOptionValidationMessage(null);
+                          }}
+                          className="lux-input mt-1"
+                        >
+                          <option value="">Select {group.label}</option>
+                          {group.options
+                            .filter((option) => option.enabled !== false)
+                            .map((option) => (
+                              <option key={option.id} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                        </select>
+                      </div>
+                    ))}
+                    {optionValidationMessage && <p className="text-xs text-rose-700">{optionValidationMessage}</p>}
                   </div>
                 )}
 
                 {showQuantitySelector && (
                   <div className="grid grid-cols-2 gap-3 items-center">
                     <div className="w-full">
-                      <div className="lux-quantity w-full justify-between">
+                      <div className="inline-flex w-full items-center justify-between border border-[var(--ca-border)] bg-white px-3 py-2">
                         <button
                           onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
                           disabled={quantity <= 1}
-                          className="lux-button--ghost px-2 py-1 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="inline-flex h-9 w-9 items-center justify-center text-[var(--ca-ink)] hover:bg-[var(--ca-paper)] disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <Minus className="w-4 h-4" />
                         </button>
-                        <span className="w-8 text-center text-sm font-semibold text-deep-ocean">{quantity}</span>
+                        <span className="w-8 text-center text-sm text-[var(--ca-ink)]">{quantity}</span>
                         <button
                           onClick={() =>
                             setQuantity((prev) =>
@@ -378,14 +405,14 @@ export function ProductDetailPage() {
                             )
                           }
                           disabled={maxSelectable !== null && quantity >= maxSelectable}
-                          className="lux-button--ghost px-2 py-1 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="inline-flex h-9 w-9 items-center justify-center text-[var(--ca-ink)] hover:bg-[var(--ca-paper)] disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <Plus className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
                     <div className="flex w-full items-center justify-center">
-                      <span className="text-[20px] font-serif font-semibold text-deep-ocean text-center">
+                      <span className="ca-card-price text-center text-[1.15rem]">
                         {maxSelectable !== null ? `${maxSelectable} Left In Stock` : 'In Stock'}
                       </span>
                     </div>
@@ -401,29 +428,29 @@ export function ProductDetailPage() {
                       (!product?.oneoff && !hasSelectableStock) ||
                       !hasSelectedOption
                     }
-                    className="lux-button w-full justify-center"
+                    className="ca-button ca-button-filled w-full justify-center"
                   >
                     <ShoppingCart className="h-4 w-4" />
                     Add to Cart
                   </button>
                   <Link
                     to="/custom-orders"
-                    className="lux-button--ghost w-full justify-center"
+                    className="ca-button ca-button-ghost w-full justify-center"
                   >
                     Custom Request
                   </Link>
                 </div>
 
-                <div className="lux-panel bg-linen/80 px-5 py-4 space-y-2">
-                  <h3 className="text-lg font-serif font-semibold text-deep-ocean">Designed with intention</h3>
-                  <p className="text-sm leading-relaxed text-charcoal/80">
+                <div className="border border-[var(--ca-border)] bg-white px-5 py-4 space-y-2">
+                  <h3 className="ca-card-title">Designed with intention</h3>
+                  <p className="ca-copy text-sm">
                     Each shell is hand-finished and composed to reflect coastal calm and personal meaning. Subtle variations in shape, tone, and edge are part of what makes every piece one of a kind.
                   </p>
                 </div>
 
-                <div className="lux-divider-soft" />
-                <p className="text-xs uppercase tracking-[0.22em] text-deep-ocean/70 text-center">
-                  Crafted to order - Carefully packaged - Ships from Boston
+                <div className="border-t border-[var(--ca-border)]" />
+                <p className="text-center text-xs uppercase tracking-[0.22em] text-[var(--ca-muted)]">
+                  Crafted by hand - Carefully packaged - Ships from Naples
                 </p>
               </div>
             </div>
@@ -431,24 +458,24 @@ export function ProductDetailPage() {
         </section>
 
         {!loadingRelated && related.length > 0 && (
-          <section className="pb-14">
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <section className="ca-section border-t border-[var(--ca-border)]">
+            <div className="ca-container">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <p className="lux-eyebrow">More from this collection</p>
-                  <h2 className="lux-heading text-2xl sm:text-3xl">Curated for you</h2>
+                  <p className="ca-eyebrow">More from this collection</p>
+                  <h2 className="ca-section-title">Curated for you</h2>
                 </div>
                 <div className="flex gap-2">
                   <button
                     onClick={() => relatedRef.current?.scrollBy({ left: -260, behavior: 'smooth' })}
-                    className="lux-button--ghost px-3 py-2 rounded-full"
+                    className="ca-button ca-button-ghost px-3 py-2"
                     aria-label="Scroll left"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => relatedRef.current?.scrollBy({ left: 260, behavior: 'smooth' })}
-                    className="lux-button--ghost px-3 py-2 rounded-full"
+                    className="ca-button ca-button-ghost px-3 py-2"
                     aria-label="Scroll right"
                   >
                     <ChevronRight className="w-4 h-4" />
@@ -459,9 +486,9 @@ export function ProductDetailPage() {
                 {related.map((item) => (
                   <div
                     key={item.id}
-                    className="w-64 flex-shrink-0 lux-card overflow-hidden bg-white/90"
+                    className="ca-card w-64 flex-shrink-0"
                   >
-                    <div className="aspect-square overflow-hidden rounded-shell-lg bg-sand">
+                    <div className="ca-card-media aspect-square">
                       <ProgressiveImage
                         src={item.imageUrl || item.imageUrls?.[0]}
                         alt={item.name}
@@ -474,12 +501,12 @@ export function ProductDetailPage() {
                       />
                     </div>
                     <div className="p-4 space-y-2">
-                      <h3 className="text-lg font-serif font-semibold text-deep-ocean truncate">{item.name}</h3>
+                      <h3 className="ca-card-title truncate">{item.name}</h3>
                       {item.priceCents !== undefined && item.priceCents !== null && (
-                        <div className="text-sm font-semibold text-deep-ocean">
+                        <div className="ca-card-price text-sm">
                           {isPromotionEligible(promotion, item) ? (
                             <div className="flex items-baseline gap-2">
-                              <span className="text-xs text-charcoal/60 line-through">
+                              <span className="text-xs text-[var(--ca-muted)] line-through">
                                 {formatPrice(item.priceCents)}
                               </span>
                               <span>{formatPrice(getDiscountedCents(item.priceCents, promotion?.percentOff || 0))}</span>
@@ -495,15 +522,15 @@ export function ProductDetailPage() {
                             handleRelatedSelect(item);
                             navigate(`/product/${item.id}`);
                           }}
-                          className="lux-button--ghost w-full justify-center"
+                          className="ca-button ca-button-ghost w-full justify-center"
                         >
                           View
                         </button>
                         <button
                           onClick={() => {
                             const relatedCategoryKey = item.category || item.type || '';
-                            const relatedOptionGroup = resolveCategoryOptionGroup(relatedCategoryKey, optionLookup);
-                            const relatedRequiresOption = !!relatedOptionGroup;
+                            const relatedOptionGroups = resolveCategoryOptionGroups(relatedCategoryKey, optionLookup);
+                            const relatedRequiresOption = relatedOptionGroups.length > 0;
                             if (relatedRequiresOption) {
                               handleRelatedSelect(item);
                               navigate(`/product/${item.id}`);
@@ -543,7 +570,7 @@ export function ProductDetailPage() {
                             item.isSold ||
                             (item.oneoff && isOneOffInCart(item.id))
                           }
-                          className="lux-button w-full justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="ca-button ca-button-filled w-full justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <ShoppingCart className="w-4 h-4" />
                         </button>
@@ -555,15 +582,14 @@ export function ProductDetailPage() {
             </div>
           </section>
         )}
-      </div>
 
       {canPurchase && (
         <div className="fixed md:hidden bottom-0 inset-x-0 z-40 px-3 pb-4">
-          <div className="bg-white/95 border border-driftwood/70 rounded-shell-lg shadow-2xl p-3 flex items-center gap-3">
+          <div className="flex items-center gap-3 border border-[var(--ca-border)] bg-white p-3 shadow-2xl">
             {product?.priceCents !== undefined && product?.priceCents !== null && (
               <div className="flex-1">
-                <p className="text-xs uppercase tracking-[0.22em] text-charcoal/70">Total</p>
-                <p className="text-lg font-serif font-semibold text-deep-ocean">
+                <p className="text-xs uppercase tracking-[0.22em] text-[var(--ca-muted)]">Total</p>
+                <p className="ca-card-price text-lg">
                   {promoEligible && discountedPriceCents !== product.priceCents
                     ? formatPrice(discountedPriceCents)
                     : formatPrice(product.priceCents)}
@@ -578,7 +604,7 @@ export function ProductDetailPage() {
                 (!product?.oneoff && maxQty !== null && effectiveQty > maxQty) ||
                 !hasSelectedOption
               }
-              className="lux-button flex-1 justify-center"
+              className="ca-button ca-button-filled flex-1 justify-center"
             >
               Add to Cart
             </button>

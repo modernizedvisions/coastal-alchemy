@@ -42,6 +42,23 @@ type CategoryRow = {
   shipping_cents?: number | null;
   option_group_label?: string | null;
   option_group_options_json?: string | null;
+  option_groups_json?: string | null;
+};
+
+type SelectedOption = {
+  groupId: string;
+  groupLabel: string;
+  optionId?: string | null;
+  optionLabel: string;
+  optionValue: string;
+};
+
+type VariationGroup = {
+  id: string;
+  label: string;
+  required?: boolean;
+  enabled?: boolean;
+  options: Array<{ id: string; label: string; value: string; enabled?: boolean }>;
 };
 
 type PromotionRow = {
@@ -154,26 +171,100 @@ const normalizeOptionGroupOptions = (values: string[]): string[] => {
   return normalized;
 };
 
+const parseVariationGroups = (value?: string | null): VariationGroup[] => {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .map((group, groupIndex) => {
+        const label = typeof group?.label === 'string' ? group.label.trim() : '';
+        const options = Array.isArray(group?.options)
+          ? group.options
+              .map((option: any, optionIndex: number) => {
+                const optionLabel = typeof option?.label === 'string' ? option.label.trim() : '';
+                if (!optionLabel) return null;
+                return {
+                  id: typeof option?.id === 'string' ? option.id : `${groupIndex}-${optionIndex}`,
+                  label: optionLabel,
+                  value: typeof option?.value === 'string' && option.value.trim() ? option.value.trim() : normalizeCategoryKey(optionLabel),
+                  enabled: option?.enabled !== false,
+                };
+              })
+              .filter(Boolean)
+          : [];
+        if (!label || !options.length) return null;
+        return {
+          id: typeof group?.id === 'string' ? group.id : `${groupIndex}`,
+          label,
+          required: group?.required !== false,
+          enabled: group?.enabled !== false,
+          options,
+        };
+      })
+      .filter(Boolean) as VariationGroup[];
+  } catch {
+    return [];
+  }
+};
+
 const buildCategoryOptionGroupLookup = (categories: CategoryRow[]) => {
-  const map = new Map<string, { label: string; options: string[] }>();
+  const map = new Map<string, VariationGroup[]>();
   categories.forEach((cat) => {
-    const label = (cat.option_group_label || '').trim();
-    const options = normalizeOptionGroupOptions(parseOptionGroupOptions(cat.option_group_options_json));
-    if (!label || options.length === 0) return;
+    let groups = parseVariationGroups(cat.option_groups_json);
+    if (!groups.length) {
+      const label = (cat.option_group_label || '').trim();
+      const options = normalizeOptionGroupOptions(parseOptionGroupOptions(cat.option_group_options_json));
+      groups = label && options.length
+        ? [{
+            id: 'legacy',
+            label,
+            required: true,
+            enabled: true,
+            options: options.map((option, index) => ({
+              id: `legacy-${index}`,
+              label: option,
+              value: normalizeCategoryKey(option),
+              enabled: true,
+            })),
+          }]
+        : [];
+    }
+    if (!groups.length) return;
     const slugKey = cat.slug ? normalizeCategoryKey(cat.slug) : '';
     const nameKey = cat.name ? normalizeCategoryKey(cat.name) : '';
     [slugKey, nameKey].filter(Boolean).forEach((key) => {
-      if (!map.has(key)) map.set(key, { label, options });
+      if (!map.has(key)) map.set(key, groups);
     });
   });
   return map;
 };
 
-const resolveOptionValue = (options: string[], rawValue?: string | null): string | null => {
-  const trimmed = (rawValue || '').trim();
-  if (!trimmed || options.length === 0) return null;
-  const match = options.find((opt) => opt.toLowerCase() === trimmed.toLowerCase());
-  return match || null;
+const resolveSelectedOptions = (groups: VariationGroup[], rawSelected: unknown, legacyRawValue?: string | null): SelectedOption[] | null => {
+  const incoming = Array.isArray(rawSelected) ? rawSelected : [];
+  if (!groups.length) return [];
+  const selected: SelectedOption[] = [];
+  for (const group of groups.filter((item) => item.enabled !== false)) {
+    const raw = incoming.find((entry: any) => entry?.groupId === group.id || entry?.groupLabel === group.label);
+    const rawValue = typeof raw?.optionValue === 'string' ? raw.optionValue : typeof raw?.optionLabel === 'string' ? raw.optionLabel : '';
+    const fallbackValue = groups.length === 1 ? legacyRawValue || '' : '';
+    const lookupValue = (rawValue || fallbackValue).trim().toLowerCase();
+    const match = group.options.find(
+      (option) => option.enabled !== false && (option.value.toLowerCase() === lookupValue || option.label.toLowerCase() === lookupValue)
+    );
+    if (!match) {
+      if (group.required !== false) return null;
+      continue;
+    }
+    selected.push({
+      groupId: group.id,
+      groupLabel: group.label,
+      optionId: match.id,
+      optionLabel: match.label,
+      optionValue: match.value,
+    });
+  }
+  return selected;
 };
 
 const parseCategorySlugs = (value?: string | null): string[] => {
@@ -227,6 +318,7 @@ export const onRequestPost = async (context: {
         price?: number;
         optionGroupLabel?: string | null;
         optionValue?: string | null;
+        selectedOptions?: SelectedOption[] | null;
       }>;
       promoCode?: string;
     };
@@ -254,6 +346,7 @@ export const onRequestPost = async (context: {
         quantity: Math.max(1, Number(i.quantity || 1)),
         optionGroupLabel: typeof i.optionGroupLabel === 'string' ? i.optionGroupLabel.trim() : null,
         optionValue: typeof i.optionValue === 'string' ? i.optionValue.trim() : null,
+        selectedOptions: Array.isArray((i as any).selectedOptions) ? (i as any).selectedOptions : null,
       }))
       .filter((i) => i.productId);
 
@@ -263,7 +356,7 @@ export const onRequestPost = async (context: {
 
     const groupedByKey = new Map<
       string,
-      { productId: string; quantity: number; optionGroupLabel?: string | null; optionValue?: string | null }
+      { productId: string; quantity: number; optionGroupLabel?: string | null; optionValue?: string | null; selectedOptions?: SelectedOption[] | null }
     >();
     normalizedItems.forEach((item) => {
       if (!item.productId) return;
@@ -459,12 +552,10 @@ export const onRequestPost = async (context: {
       }
 
       const categoryKey = product.category ? normalizeCategoryKey(product.category) : '';
-      const optionGroup = categoryKey ? optionGroupLookup.get(categoryKey) : null;
-      const resolvedOptionValue = optionGroup
-        ? resolveOptionValue(optionGroup.options, item.optionValue)
-        : null;
+      const optionGroups = categoryKey ? optionGroupLookup.get(categoryKey) || [] : [];
+      const resolvedSelectedOptions = resolveSelectedOptions(optionGroups, item.selectedOptions, item.optionValue);
 
-      if (optionGroup && !resolvedOptionValue) {
+      if (optionGroups.length && resolvedSelectedOptions === null) {
         return json({ error: `Selection required for ${product.name || pid}` }, 400);
       }
       const autoEligible =
@@ -492,9 +583,10 @@ export const onRequestPost = async (context: {
       if (product.stripe_product_id) metadata.dd_stripe_product_id = product.stripe_product_id;
       if (product.stripe_price_id) metadata.dd_stripe_price_id = product.stripe_price_id;
       if (product.slug) metadata.dd_product_slug = product.slug;
-      if (optionGroup && resolvedOptionValue) {
-        metadata.option_group_label = optionGroup.label;
-        metadata.option_value = resolvedOptionValue;
+      if (resolvedSelectedOptions?.length) {
+        metadata.option_group_label = resolvedSelectedOptions.length > 1 ? 'Options' : resolvedSelectedOptions[0].groupLabel;
+        metadata.option_value = resolvedSelectedOptions.map((option) => `${option.groupLabel}: ${option.optionLabel}`).join(', ');
+        metadata.selected_options_json = JSON.stringify(resolvedSelectedOptions).slice(0, 500);
       }
 
       const imageUrls = resolveProductImages(product);
@@ -742,7 +834,7 @@ async function loadCategoryOptionGroups(db: D1Database, debug: boolean): Promise
   try {
     await ensureCategoryOptionColumns(db);
     const { results } = await db
-      .prepare(`SELECT id, name, slug, option_group_label, option_group_options_json FROM categories`)
+      .prepare(`SELECT id, name, slug, option_group_label, option_group_options_json, option_groups_json FROM categories`)
       .all<CategoryRow>();
     return results || [];
   } catch (error) {
@@ -757,6 +849,7 @@ async function ensureCategoryOptionColumns(db: D1Database) {
   const columns = [
     'option_group_label TEXT',
     'option_group_options_json TEXT',
+    'option_groups_json TEXT',
   ];
   for (const ddl of columns) {
     try {

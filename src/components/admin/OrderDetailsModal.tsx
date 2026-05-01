@@ -362,7 +362,15 @@ export function OrderDetailsModal({ open, order, onClose, onOrderPatched, onOpen
                         <div className="text-sm font-medium text-charcoal truncate">
                           {getDisplayItemName(item)}
                         </div>
-                        {item.optionGroupLabel && item.optionValue && (
+                        {Array.isArray(item.selectedOptions) && item.selectedOptions.length > 0 ? (
+                          <div className="mt-1 space-y-0.5">
+                            {item.selectedOptions.map((option) => (
+                              <div key={`${option.groupId}-${option.optionValue}`} className="text-xs text-charcoal/70">
+                                {option.groupLabel}: {option.optionLabel}
+                              </div>
+                            ))}
+                          </div>
+                        ) : item.optionGroupLabel && item.optionValue && (
                           <div className="text-xs text-charcoal/70">
                             {item.optionGroupLabel}: {item.optionValue}
                           </div>

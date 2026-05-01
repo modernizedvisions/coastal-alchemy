@@ -110,33 +110,6 @@ const resolveCategorySlugForProduct = (
   return { slug: null, matchedBy: 'none', candidateNames, normalizedCandidates };
 };
 
-const CATEGORY_COPY: Record<string, { title: string; description: string }> = {
-  ornaments: {
-    title: 'ORNAMENTS',
-    description: 'Hand-crafted coastal keepsakes for every season.',
-  },
-  'ring-dish': {
-    title: 'RING DISHES',
-    description: 'Functional coastal art designed for your jewelry & keepsakes.',
-  },
-  'ring dishes': {
-    title: 'RING DISHES',
-    description: 'Functional coastal art designed for your jewelry & keepsakes.',
-  },
-  decor: {
-    title: 'DECOR',
-    description: 'Coastal artistry to brighten your space with shoreline charm.',
-  },
-  'wine-stopper': {
-    title: 'WINE STOPPERS',
-    description: 'Hand-crafted shell stoppers for your favorite bottles.',
-  },
-  'wine stoppers': {
-    title: 'WINE STOPPERS',
-    description: 'Hand-crafted shell stoppers for your favorite bottles.',
-  },
-};
-
 export function ShopPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -231,11 +204,14 @@ export function ShopPage() {
     [categoryList, groupedProducts]
   );
 
-  const sectionCategories = useMemo(() => {
-    if (!activeCategorySlug) return visibleCategories;
-    const selected = visibleCategories.find((category) => category.slug === activeCategorySlug);
-    if (!selected) return visibleCategories;
-    return [selected, ...visibleCategories.filter((category) => category.slug !== activeCategorySlug)];
+  const displayedProducts = useMemo(() => {
+    if (!activeCategorySlug) return products;
+    return groupedProducts[activeCategorySlug] || [];
+  }, [activeCategorySlug, groupedProducts, products]);
+
+  const activeCategoryName = useMemo(() => {
+    if (!activeCategorySlug) return 'All Products';
+    return visibleCategories.find((category) => category.slug === activeCategorySlug)?.name || 'Shop Products';
   }, [activeCategorySlug, visibleCategories]);
 
   useEffect(() => {
@@ -262,16 +238,6 @@ export function ShopPage() {
   }, [searchParams, visibleCategories, activeCategorySlug, setSearchParams]);
 
   useEffect(() => {
-    if (!activeCategorySlug) return;
-    const id = `category-section-${activeCategorySlug}`;
-    const raf = requestAnimationFrame(() => {
-      const target = document.getElementById(id);
-      target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
-    return () => cancelAnimationFrame(raf);
-  }, [activeCategorySlug]);
-
-  useEffect(() => {
     if (!categoryList.length) return;
     if (isDev) {
       console.log(
@@ -283,20 +249,16 @@ export function ShopPage() {
 
   useEffect(() => {
     if (isLoading) return;
-    sectionCategories.forEach((category) => {
-      const items = groupedProducts[category.slug] || [];
-      if (!items.length) return;
-      const listName = category.name || category.slug || 'Shop Products';
+    if (!displayedProducts.length) return;
       trackViewItemList(
-        listName,
-        items.map((item) =>
+        activeCategoryName,
+        displayedProducts.map((item) =>
           mapProductToAnalyticsItem(item, {
-            itemListName: listName,
+            itemListName: activeCategoryName,
           })
         )
       );
-    });
-  }, [groupedProducts, isLoading, sectionCategories]);
+  }, [activeCategoryName, displayedProducts, isLoading]);
 
   const handleCategorySelect = (slug?: string) => {
     const nextParams = new URLSearchParams(searchParams);
@@ -349,35 +311,20 @@ export function ShopPage() {
             <div className="py-12 text-center">
               <p className="ca-copy">Loading products...</p>
             </div>
-          ) : sectionCategories.length === 0 ? (
+          ) : visibleCategories.length === 0 ? (
             <div className="border border-dashed border-[var(--ca-border)] bg-white py-12 text-center">
               <p className="ca-copy">No categories yet.</p>
             </div>
-          ) : (
-            <div className="space-y-16">
-              {sectionCategories.map((category) => {
-                const items = groupedProducts[category.slug] || [];
-                if (items.length === 0) return null;
-
-                const copyKey = category.slug.toLowerCase();
-                const copy =
-                  CATEGORY_COPY[copyKey] ||
-                  CATEGORY_COPY[(category.name || '').toLowerCase()] ||
-                  null;
-                const subtitle = (category.subtitle || copy?.description || '').trim();
-                const title = copy?.title || category.name;
-
-                return (
-                  <section key={category.slug} id={`category-section-${category.slug}`}>
-                    <div className="mb-8 text-center">
-                      <div className="ca-eyebrow mb-3">{title}</div>
-                      {subtitle && <p className="ca-copy mx-auto max-w-2xl">{subtitle}</p>}
-                    </div>
-                    <ProductGrid products={items} categoryOptionLookup={optionLookup} itemListName={title} />
-                  </section>
-                );
-              })}
+          ) : displayedProducts.length === 0 ? (
+            <div className="border border-dashed border-[var(--ca-border)] bg-white py-12 text-center">
+              <p className="ca-copy">No products found.</p>
             </div>
+          ) : (
+            <ProductGrid
+              products={displayedProducts}
+              categoryOptionLookup={optionLookup}
+              itemListName={activeCategoryName}
+            />
           )}
         </div>
       </section>

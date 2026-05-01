@@ -4,7 +4,7 @@ export function PrivacyPage() {
   return (
     <LegalPageLayout title="PRIVACY POLICY" lastUpdated="January 25, 2026">
       <p>
-        This Privacy Policy explains how Dover Designs ("we," "us," "our") collects, uses, and shares information when
+        This Privacy Policy explains how Coastal Alchemy ("we," "us," "our") collects, uses, and shares information when
         you use our website (the "Site").
       </p>
 
@@ -43,7 +43,7 @@ export function PrivacyPage() {
       <div>
         <h2 className="text-lg font-serif font-semibold text-gray-900 mb-2">3) PAYMENT PROCESSING</h2>
         <p>
-          Payments are handled by third-party payment processors. Dover Designs does not store full payment card numbers
+          Payments are handled by third-party payment processors. Coastal Alchemy does not store full payment card numbers
           or security codes on its servers. Payment processors handle your payment information under their own privacy
           policies.
         </p>
@@ -119,7 +119,7 @@ export function PrivacyPage() {
       <div>
         <h2 className="text-lg font-serif font-semibold text-gray-900 mb-2">12) CONTACT</h2>
         <p>If you have questions about this Privacy Policy, contact us at:</p>
-        <p>Email: doverdesignsshells@gmail.com</p>
+        <p>Email: hello@coastalalchemy.com</p>
         <p>Or use the contact form on the Site.</p>
       </div>
     </LegalPageLayout>

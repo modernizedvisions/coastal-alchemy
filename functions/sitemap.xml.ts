@@ -17,7 +17,7 @@ type ProductRow = {
   created_at?: string | null;
 };
 
-const CANONICAL_ORIGIN = 'https://dover-designs.com';
+const CANONICAL_ORIGIN = 'https://coastal-alchemy.pages.dev';
 
 const STATIC_ROUTES = [
   '/',

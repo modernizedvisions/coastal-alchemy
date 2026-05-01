@@ -1,45 +1,47 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ContactForm } from '../components/ContactForm';
 import { EmailListSignupSection } from '../components/email-list/EmailListSignupSection';
-import type { HomeGalleryItem } from '../lib/types';
+import type { Product } from '../lib/types';
 
 export type HomeTemplateProps = {
-  heroImageUrl?: string;
-  galleryImageUrls?: string[];
-  homeGalleryItems?: HomeGalleryItem[];
+  heroImageUrls?: string[];
+  heroRotationEnabled?: boolean;
   aboutImageUrl?: string;
+  customOrdersMainImageUrl?: string;
+  featuredProducts?: Product[];
 };
 
-const fallbackGallery = [
-  '/images/shell-frame-detail.png',
-  '/images/napkin-ring-floral.png',
-  '/images/scallop-bowl.png',
-  '/images/shell-frame-table.png',
-];
+const formatPrice = (priceCents?: number) =>
+  typeof priceCents === 'number'
+    ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(priceCents / 100)
+    : '';
 
-const fallbackFeatured = [
-  { image: '/images/shell-frame-detail.png', title: 'Petite Study', meta: 'Framed Shells' },
-  { image: '/images/napkin-ring-floral.png', title: 'Botanical Napkin Ring', meta: 'Tabletop' },
-  { image: '/images/scallop-bowl.png', title: 'Sage Scallop Catch-All', meta: 'Painted Shells' },
-  { image: '/images/shell-frame-table.png', title: 'Mini Trio Frame', meta: 'Framed Shells' },
-];
-
-export default function HomeTemplate({ heroImageUrl, galleryImageUrls, homeGalleryItems, aboutImageUrl }: HomeTemplateProps) {
-  const heroImage = heroImageUrl || '/images/large-shell-frame.png';
+export default function HomeTemplate({
+  heroImageUrls = [],
+  heroRotationEnabled = false,
+  aboutImageUrl,
+  customOrdersMainImageUrl,
+  featuredProducts = [],
+}: HomeTemplateProps) {
+  const activeHeroImages = heroImageUrls.filter(Boolean);
+  const [heroIndex, setHeroIndex] = useState(0);
+  const heroImage = activeHeroImages[heroIndex % activeHeroImages.length] || '/images/large-shell-frame.png';
   const studioImage = aboutImageUrl || '/images/shell-collection-flatlay.png';
-  const customImage = '/images/shell-frame-staged.png';
-  const gallerySource = homeGalleryItems?.length
-    ? homeGalleryItems.map((item) => ({
-        image: item.imageUrl,
-        title: item.descriptor || 'Coastal Alchemy piece',
-        meta: 'Studio Work',
-      }))
-    : (galleryImageUrls?.length ? galleryImageUrls : fallbackGallery).map((image, index) => ({
-        image,
-        title: fallbackFeatured[index % fallbackFeatured.length].title,
-        meta: fallbackFeatured[index % fallbackFeatured.length].meta,
-      }));
-  const featured = gallerySource.filter((item) => item.image).slice(0, 4);
+  const customImage = customOrdersMainImageUrl || '/images/shell-frame-staged.png';
+  const featured = featuredProducts.slice(0, 4);
+
+  useEffect(() => {
+    setHeroIndex(0);
+  }, [activeHeroImages.length]);
+
+  useEffect(() => {
+    if (!heroRotationEnabled || activeHeroImages.length < 2) return undefined;
+    const timer = window.setInterval(() => {
+      setHeroIndex((current) => (current + 1) % activeHeroImages.length);
+    }, 4500);
+    return () => window.clearInterval(timer);
+  }, [activeHeroImages.length, heroRotationEnabled]);
 
   return (
     <div className="ca-page">
@@ -115,17 +117,29 @@ export default function HomeTemplate({ heroImageUrl, galleryImageUrls, homeGalle
             <h2 className="ca-section-title">A few favorites from the studio</h2>
           </div>
           <div className="ca-grid ca-grid-4">
-            {(featured.length ? featured : fallbackFeatured).map((item, index) => (
-              <article className="ca-card" key={`${item.title}-${index}`}>
-                <Link to="/shop" className="ca-card-media">
-                  <img src={item.image} alt={item.title} loading="lazy" />
+            {featured.length ? featured.map((product) => {
+              const image = product.thumbnailUrl || product.imageUrl || product.imageUrls?.[0] || '/images/shell-frame-detail.png';
+              const unavailable = product.isSold || (typeof product.quantityAvailable === 'number' && product.quantityAvailable <= 0);
+              return (
+              <article className="ca-card" key={product.id}>
+                <Link to={`/product/${product.id}`} className="ca-card-media">
+                  <img src={image} alt={product.name} loading="lazy" />
                 </Link>
                 <div className="ca-card-body">
-                  <div className="ca-card-meta">{item.meta}</div>
-                  <div className="ca-card-title">{item.title}</div>
+                  <div className="ca-card-meta">{product.type || product.category || 'Studio Work'}</div>
+                  <div className="ca-card-title">{product.name}</div>
+                  <div className="mt-2 flex items-center justify-between gap-3 text-[0.68rem] uppercase tracking-[0.2em] text-[var(--ca-muted)]">
+                    <span>{formatPrice(product.priceCents)}</span>
+                    {unavailable && <span>Sold</span>}
+                  </div>
                 </div>
               </article>
-            ))}
+              );
+            }) : (
+              <div className="col-span-full ca-copy text-center text-sm">
+                Featured pieces will appear here when products are active in the shop.
+              </div>
+            )}
           </div>
           <div className="mt-12 text-center">
             <Link to="/shop" className="ca-button">

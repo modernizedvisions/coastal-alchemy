@@ -6,6 +6,14 @@ import { useGalleryImages } from '../lib/hooks/useGalleryImages';
 import { ProgressiveImage } from '../components/ui/ProgressiveImage';
 import { withImageWidthHint } from '../lib/images';
 
+type GalleryTile = {
+  id: string;
+  imageUrl: string;
+  title: string;
+  caption: string;
+  ratio: string;
+};
+
 export function GalleryPage() {
   const [soldProducts, setSoldProducts] = useState<Product[]>([]);
   const [isLoadingSold, setIsLoadingSold] = useState(true);
@@ -37,24 +45,64 @@ export function GalleryPage() {
   }, []);
 
   const isLoading = isLoadingGallery || isLoadingSold;
-  const combinedGallery = [
-    ...galleryImages.map((item, index) => ({
+  const galleryItems: GalleryTile[] = galleryImages
+    .map((item, index) => ({
       id: item.id,
       imageUrl: item.imageUrl,
       title: item.title || `Studio piece ${index + 1}`,
       caption: item.title || 'Studio work',
       ratio: index % 3 === 0 ? '3 / 4' : index % 3 === 1 ? '1 / 1' : '4 / 5',
-    })),
-    ...soldProducts.map((item, index) => ({
+    }))
+    .filter((item) => item.imageUrl);
+  const soldGalleryItems: GalleryTile[] = soldProducts
+    .map((item, index) => ({
       id: item.id,
       imageUrl: item.imageUrl,
       title: getSoldCardTitle(item),
-      caption: `${getSoldCardTitle(item)}${item.collection ? ` · ${formatCategoryLabel(item.collection)}` : ''}`,
+      caption: `${getSoldCardTitle(item)}${item.collection ? ` - ${formatCategoryLabel(item.collection)}` : ''}`,
       ratio: index % 3 === 0 ? '4 / 5' : index % 3 === 1 ? '3 / 4' : '1 / 1',
-    })),
-  ].filter((item) => item.imageUrl);
+    }))
+    .filter((item) => item.imageUrl);
   const columns = [0, 1, 2].map((columnIndex) =>
-    combinedGallery.filter((_, index) => index % 3 === columnIndex)
+    galleryItems.filter((_, index) => index % 3 === columnIndex)
+  );
+  const soldColumns = [0, 1, 2].map((columnIndex) =>
+    soldGalleryItems.filter((_, index) => index % 3 === columnIndex)
+  );
+
+  const renderColumns = (columnSet: GalleryTile[][], altFallback: string) => (
+    <div className="ca-gallery-cols">
+      {columnSet.map((column, columnIndex) => (
+        <div
+          className="ca-gallery-col"
+          key={`${altFallback}-column-${columnIndex}`}
+          style={{ marginTop: columnIndex === 1 ? '5rem' : columnIndex === 2 ? '2rem' : '0rem' }}
+        >
+          {column.map((item) => (
+            <figure className="ca-gallery-tile" key={item.id}>
+              <button
+                type="button"
+                className="ca-gallery-tile-media block text-left"
+                style={{ aspectRatio: item.ratio }}
+                onClick={() => setSelectedImage(item.imageUrl)}
+              >
+                <ProgressiveImage
+                  src={withImageWidthHint(item.imageUrl || '', 700)}
+                  alt={item.title || altFallback}
+                  className="h-full w-full"
+                  imgClassName="h-full w-full object-cover"
+                  width={700}
+                  height={900}
+                  loading="lazy"
+                  decoding="async"
+                />
+              </button>
+              <figcaption className="ca-gallery-caption">{item.caption}</figcaption>
+            </figure>
+          ))}
+        </div>
+      ))}
+    </div>
   );
 
   return (
@@ -69,51 +117,31 @@ export function GalleryPage() {
 
       <section className="ca-section">
         <div className="ca-container">
-        {isLoading ? (
-          <div className="py-12 text-center">
-            <p className="ca-copy">Loading gallery...</p>
-          </div>
-        ) : combinedGallery.length === 0 ? (
-          <div className="ca-copy">No images yet.</div>
-        ) : (
-          <div className="ca-gallery-cols">
-            {columns.map((column, columnIndex) => (
-              <div
-                className="ca-gallery-col"
-                key={`gallery-column-${columnIndex}`}
-                style={{ marginTop: columnIndex === 1 ? '5rem' : columnIndex === 2 ? '2rem' : '0rem' }}
-              >
-                {column.map((item) => (
-                  <figure className="ca-gallery-tile" key={item.id}>
-                    <button
-                      type="button"
-                      className="ca-gallery-tile-media block text-left"
-                      style={{ aspectRatio: item.ratio }}
-                      onClick={() => setSelectedImage(item.imageUrl)}
-                    >
-                      <ProgressiveImage
-                        src={withImageWidthHint(item.imageUrl || '', 700)}
-                        alt={item.title || 'Gallery item'}
-                        className="h-full w-full"
-                        imgClassName="h-full w-full object-cover"
-                        width={700}
-                        height={900}
-                        loading="lazy"
-                        decoding="async"
-                      />
-                    </button>
-                    <figcaption className="ca-gallery-caption">{item.caption}</figcaption>
-                  </figure>
-                ))}
+          {isLoading ? (
+            <div className="py-12 text-center">
+              <p className="ca-copy">Loading gallery...</p>
+            </div>
+          ) : galleryItems.length === 0 ? (
+            <div className="ca-copy">No images yet.</div>
+          ) : (
+            renderColumns(columns, 'Gallery item')
+          )}
+
+          {soldGalleryItems.length > 0 && (
+            <section className="mt-16 border-t border-[var(--ca-border)] pt-12">
+              <div className="mb-10 text-center">
+                <div className="ca-eyebrow mb-4">Archive</div>
+                <h2 className="ca-section-title">Sold Products</h2>
               </div>
-            ))}
+              {renderColumns(soldColumns, 'Sold product')}
+            </section>
+          )}
+
+          <div className="mt-12 text-center">
+            <Link to="/shop" className="ca-button">
+              Shop The Collection
+            </Link>
           </div>
-        )}
-        <div className="mt-12 text-center">
-          <Link to="/shop" className="ca-button">
-            Shop The Collection
-          </Link>
-        </div>
         </div>
       </section>
 

@@ -113,6 +113,7 @@ export function CheckoutPage() {
         quantity: ci.quantity,
         optionGroupLabel: ci.optionGroupLabel ?? null,
         optionValue: ci.optionValue ?? null,
+        selectedOptions: ci.selectedOptions ?? null,
       }));
     }
     if (targetProductId) {
@@ -218,6 +219,7 @@ export function CheckoutPage() {
               quantity: ci.quantity,
               optionGroupLabel: ci.optionGroupLabel ?? null,
               optionValue: ci.optionValue ?? null,
+              selectedOptions: ci.selectedOptions ?? null,
             }))
           : targetProductId
           ? [{ productId: targetProductId, quantity: 1 }]
@@ -319,6 +321,7 @@ export function CheckoutPage() {
           categories: item.categories ?? null,
           optionGroupLabel: item.optionGroupLabel ?? null,
           optionValue: item.optionValue ?? null,
+          selectedOptions: item.selectedOptions ?? null,
         }));
     }
     if (product) {
@@ -335,6 +338,7 @@ export function CheckoutPage() {
           categories: product.categories ?? null,
           optionGroupLabel: null,
           optionValue: null,
+          selectedOptions: null,
         },
       ];
     }
@@ -418,7 +422,7 @@ export function CheckoutPage() {
         <div className="ca-eyebrow mb-4">Checkout</div>
         <h1>Almost there.</h1>
         <p className="ca-copy mx-auto mt-4 max-w-2xl">
-          Review your pieces, apply any promo code, and complete payment securely through Stripe.
+          Review your pieces, share a few details, and we'll take it from here.
         </p>
       </header>
 
@@ -439,8 +443,8 @@ export function CheckoutPage() {
 
         {error && <BannerMessage message={error} type="error" />}
 
-        <div className="grid grid-cols-1 gap-10 md:grid-cols-[1fr_1.6fr]">
-          <div>
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-start">
+          <div className="order-2 lg:order-2">
             <div className="ca-checkout-summary space-y-5">
               <div>
                 <p className="ca-eyebrow mb-2">Order Summary</p>
@@ -467,7 +471,15 @@ export function CheckoutPage() {
                       {item.collection && (
                         <p className="ca-card-meta">{item.collection}</p>
                       )}
-                      {item.optionGroupLabel && item.optionValue && (
+                      {Array.isArray((item as any).selectedOptions) && (item as any).selectedOptions.length > 0 ? (
+                        <div className="mt-1 space-y-0.5">
+                          {(item as any).selectedOptions.map((option: any) => (
+                            <p key={`${option.groupId}-${option.optionValue}`} className="ca-copy text-xs">
+                              {option.groupLabel}: {option.optionLabel}
+                            </p>
+                          ))}
+                        </div>
+                      ) : item.optionGroupLabel && item.optionValue && (
                         <p className="ca-copy mt-1 text-xs">
                           {item.optionGroupLabel}: {item.optionValue}
                         </p>
@@ -537,7 +549,7 @@ export function CheckoutPage() {
                     value={promoInput}
                     onChange={(e) => setPromoInput(e.target.value)}
                     placeholder="Enter promo code"
-                    className="flex-1 border border-[var(--ca-border)] px-4 py-3 capitalize"
+                    className="lux-input flex-1 capitalize"
                   />
                   <button
                     type="button"
@@ -594,10 +606,13 @@ export function CheckoutPage() {
             </div>
           </div>
 
-          <div>
+          <div className="order-1 lg:order-1">
             <div className="border border-[var(--ca-border)] bg-white p-4 sm:p-6 space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="ca-card-title">Payment</h2>
+                <div>
+                  <p className="ca-eyebrow mb-2">Contact & Payment</p>
+                  <h2 className="ca-card-title">Secure details</h2>
+                </div>
                 {isMountingStripe && <p className="ca-copy text-sm">Loading Stripe...</p>}
               </div>
               <div

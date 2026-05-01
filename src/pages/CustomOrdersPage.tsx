@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { X } from 'lucide-react';
-import { fetchCustomOrderExamples } from '../lib/publicApi';
+import { fetchCustomOrderExamples, getPublicSiteContentHome } from '../lib/publicApi';
 import type { CustomOrderExample } from '../lib/publicApi';
 import { ContactForm } from '../components/ContactForm';
+import type { HomeSiteContent } from '../lib/types';
 
 const skeletonExamples = Array.from({ length: 6 });
 const steps = [
@@ -34,6 +35,7 @@ export default function CustomOrdersPage() {
   const [selectedItem, setSelectedItem] = useState<CustomOrderExample | null>(null);
   const contactBg = '#E6DFD4';
   const [examples, setExamples] = useState<CustomOrderExample[]>([]);
+  const [homeContent, setHomeContent] = useState<HomeSiteContent | null>(null);
   const [isLoadingExamples, setIsLoadingExamples] = useState(true);
   const [examplesError, setExamplesError] = useState<string | null>(null);
 
@@ -42,9 +44,13 @@ export default function CustomOrdersPage() {
     const loadExamples = async () => {
       try {
         setIsLoadingExamples(true);
-        const data = await fetchCustomOrderExamples();
+        const [data, content] = await Promise.all([
+          fetchCustomOrderExamples(),
+          getPublicSiteContentHome(),
+        ]);
         if (!isMounted) return;
         setExamples(Array.isArray(data) ? data : []);
+        setHomeContent(content || {});
         setExamplesError(null);
       } catch (_err) {
         if (!isMounted) return;
@@ -64,14 +70,11 @@ export default function CustomOrdersPage() {
     formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  const handleScrollToGallery = () => {
-    galleryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-
   const handleRequestFromModal = () => {
     setSelectedItem(null);
     handleScrollToForm();
   };
+  const customOrdersMainImage = homeContent?.customOrdersMainImage || '/images/large-shell-frame.png';
 
   return (
     <div className="ca-page w-full overflow-hidden">
@@ -82,12 +85,12 @@ export default function CustomOrdersPage() {
           Most of my favorite work has started with a single email. Tell me what you're imagining, and we'll build it from there.
         </p>
         <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <button type="button" onClick={handleScrollToForm} className="ca-button ca-button-filled w-full sm:w-auto">
+          <a href="#custom-order-request" className="ca-button ca-button-filled w-full sm:w-auto">
             Start Your Request
-          </button>
-          <button type="button" onClick={handleScrollToGallery} className="ca-button ca-button-ghost w-full sm:w-auto">
+          </a>
+          <a href="#past-custom-pieces" className="ca-button ca-button-ghost w-full sm:w-auto">
             Browse Past Customs
-          </button>
+          </a>
         </div>
       </header>
 
@@ -112,7 +115,7 @@ export default function CustomOrdersPage() {
       <section className="ca-section border-y border-[var(--ca-border)]">
         <div className="ca-container ca-split">
           <div className="ca-media">
-            <img src="/images/large-shell-frame.png" alt="Large framed shell collection" loading="lazy" />
+            <img src={customOrdersMainImage} alt="Large framed shell collection" loading="lazy" />
           </div>
           <div>
             <div className="ca-eyebrow mb-4">Most Requested</div>
@@ -128,7 +131,7 @@ export default function CustomOrdersPage() {
         </div>
       </section>
 
-      <section className="ca-section">
+      <section id="past-custom-pieces" className="ca-section scroll-mt-24">
         <div ref={galleryRef} className="ca-container">
           <div className="mx-auto max-w-2xl text-center">
             <p className="ca-eyebrow mb-4">Previous Work</p>
@@ -194,22 +197,27 @@ export default function CustomOrdersPage() {
         </div>
       </section>
 
-      <section id="contact" className="ca-section border-t border-[var(--ca-border)]" style={{ backgroundColor: contactBg }}>
+      <section id="custom-order-request" className="ca-section scroll-mt-24 border-t border-[var(--ca-border)]" style={{ backgroundColor: contactBg }}>
         <div className="absolute inset-0" aria-hidden="true" />
         <div ref={formRef} className="ca-container relative">
           <div className="ca-split items-start">
             <div>
               <p className="ca-eyebrow mb-4">Custom Inquiry</p>
-              <h2 className="ca-section-title mb-5">Start a project.</h2>
+              <h2 className="ca-section-title mb-5">Start Your Custom Request</h2>
               <p className="ca-copy">
-                Tell me about your space, palette, or the story you want a shell to hold.
+                Tell us what you have in mind and we'll follow up with next steps.
               </p>
               <p className="ca-copy mt-8">
                 Typical timeline: <strong className="text-[var(--ca-ink)]">4-8 weeks</strong> from approved sketch to delivery, depending on scale and time of year.
               </p>
             </div>
             <div className="ca-form-skin">
-              <ContactForm backgroundColor="transparent" variant="embedded" defaultInquiryType="custom_order" />
+              <ContactForm
+                backgroundColor="transparent"
+                variant="embedded"
+                defaultInquiryType="custom_order"
+                mode="custom-order"
+              />
             </div>
           </div>
         </div>

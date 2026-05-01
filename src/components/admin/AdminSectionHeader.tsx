@@ -9,11 +9,11 @@ interface AdminSectionHeaderProps {
 export function AdminSectionHeader({ title, subtitle, className = '' }: AdminSectionHeaderProps) {
   return (
     <div className={`mb-6 text-center ${className}`}>
-      <h2 className="lux-heading text-2xl md:text-3xl">
+      <h2 className="ca-admin-heading text-3xl md:text-4xl leading-tight">
         {title}
       </h2>
       {subtitle && (
-        <p className="lux-subtitle mt-2 text-[11px] md:text-xs uppercase tracking-[0.28em] font-semibold text-deep-ocean/80">
+        <p className="ca-admin-subheading mx-auto mt-2 max-w-3xl text-[11px] md:text-xs uppercase tracking-[0.24em]">
           {subtitle}
         </p>
       )}

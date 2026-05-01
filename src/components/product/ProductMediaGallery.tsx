@@ -147,11 +147,11 @@ export function ProductMediaGallery({
 
   return (
     <div className="space-y-4">
-      <div className="relative aspect-square rounded-shell-lg overflow-hidden bg-white/70 border border-driftwood/60 lux-shadow">
+      <div className="relative aspect-square overflow-hidden border border-[var(--ca-border)] bg-white">
         {loading ? (
-          <div className="w-full h-full animate-pulse bg-sand" />
+          <div className="w-full h-full animate-pulse bg-[var(--ca-border)]" />
         ) : !selectedItem ? (
-          <div className="w-full h-full flex items-center justify-center text-charcoal/50">Select media</div>
+          <div className="ca-copy flex h-full w-full items-center justify-center">Select media</div>
         ) : selectedItem.type === 'image' ? (
           <>
             <img
@@ -168,14 +168,14 @@ export function ProductMediaGallery({
               <>
                 <button
                   onClick={handlePrev}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 lux-button--ghost px-3 py-2 rounded-full"
+                  className="absolute left-3 top-1/2 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center border border-[var(--ca-border)] bg-white/90 text-[var(--ca-ink)] transition hover:bg-[var(--ca-ink)] hover:text-white"
                   aria-label="Previous media"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
                 <button
                   onClick={handleNext}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 lux-button--ghost px-3 py-2 rounded-full"
+                  className="absolute right-3 top-1/2 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center border border-[var(--ca-border)] bg-white/90 text-[var(--ca-ink)] transition hover:bg-[var(--ca-ink)] hover:text-white"
                   aria-label="Next media"
                 >
                   <ChevronRight className="w-4 h-4" />
@@ -213,7 +213,7 @@ export function ProductMediaGallery({
                   <button
                     type="button"
                     onClick={() => setVideoMountNonce((prev) => prev + 1)}
-                    className="lux-button--ghost px-4 py-2 text-[10px]"
+                    className="ca-button ca-button-ghost px-4 py-2 text-[10px]"
                   >
                     Retry Video
                   </button>
@@ -229,14 +229,14 @@ export function ProductMediaGallery({
               <>
                 <button
                   onClick={handlePrev}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 lux-button--ghost px-3 py-2 rounded-full"
+                  className="absolute left-3 top-1/2 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center border border-[var(--ca-border)] bg-white/90 text-[var(--ca-ink)] transition hover:bg-[var(--ca-ink)] hover:text-white"
                   aria-label="Previous media"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
                 <button
                   onClick={handleNext}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 lux-button--ghost px-3 py-2 rounded-full"
+                  className="absolute right-3 top-1/2 inline-flex h-10 w-10 -translate-y-1/2 items-center justify-center border border-[var(--ca-border)] bg-white/90 text-[var(--ca-ink)] transition hover:bg-[var(--ca-ink)] hover:text-white"
                   aria-label="Next media"
                 >
                   <ChevronRight className="w-4 h-4" />
@@ -252,9 +252,9 @@ export function ProductMediaGallery({
           <button
             key={item.id}
             onClick={() => setSelectedIndex(idx)}
-            className={`relative w-20 h-20 rounded-shell border ${
-              idx === selectedIndex ? 'border-deep-ocean shadow-md' : 'border-driftwood/60'
-            } overflow-hidden bg-white/80 transition`}
+            className={`relative h-20 w-20 border ${
+              idx === selectedIndex ? 'border-[var(--ca-navy)]' : 'border-[var(--ca-border)]'
+            } overflow-hidden bg-white transition`}
             aria-label={item.type === 'video' ? 'Select product video' : `Select image ${idx + 1}`}
           >
             {item.type === 'image' ? (
@@ -281,14 +281,14 @@ export function ProductMediaGallery({
                   decoding="async"
                 />
                 <div className="absolute inset-0 bg-black/25 flex items-center justify-center">
-                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/85 text-deep-ocean">
+                  <span className="inline-flex h-7 w-7 items-center justify-center bg-white/85 text-[var(--ca-navy)]">
                     <Play className="h-3.5 w-3.5 fill-current" />
                   </span>
                 </div>
               </>
             ) : (
-              <div className="h-full w-full bg-sand/80 text-charcoal/70 flex items-center justify-center">
-                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-deep-ocean">
+              <div className="flex h-full w-full items-center justify-center bg-[var(--ca-paper)] text-[var(--ca-muted)]">
+                <span className="inline-flex h-7 w-7 items-center justify-center bg-white/90 text-[var(--ca-navy)]">
                   <Play className="h-3.5 w-3.5 fill-current" />
                 </span>
               </div>

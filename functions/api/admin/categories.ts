@@ -28,6 +28,7 @@ type CategoryRow = {
   sort_order?: number | null;
   option_group_label?: string | null;
   option_group_options_json?: string | null;
+  option_groups_json?: string | null;
   show_on_homepage?: number | null;
   shipping_cents?: number | null;
 };
@@ -46,6 +47,26 @@ type Category = {
   sortOrder?: number;
   optionGroupLabel?: string | null;
   optionGroupOptions?: string[];
+  optionGroups?: VariationGroup[];
+};
+
+type VariationOption = {
+  id: string;
+  label: string;
+  value: string;
+  displayOrder?: number;
+  enabled?: boolean;
+};
+
+type VariationGroup = {
+  id: string;
+  label: string;
+  inputType: 'select';
+  required: boolean;
+  displayOrder?: number;
+  enabled?: boolean;
+  presetId?: string | null;
+  options: VariationOption[];
 };
 
 const createCategoriesTable = `
@@ -78,6 +99,7 @@ const REQUIRED_CATEGORY_COLUMNS: Record<string, string> = {
   sort_order: 'sort_order INTEGER NOT NULL DEFAULT 0',
   option_group_label: 'option_group_label TEXT',
   option_group_options_json: 'option_group_options_json TEXT',
+  option_groups_json: 'option_groups_json TEXT',
 };
 
 const isDataUrl = (value?: string | null) => typeof value === 'string' && value.trim().toLowerCase().startsWith('data:');
@@ -122,6 +144,86 @@ const parseOptionGroupOptions = (value?: string | null): string[] => {
   } catch {
     return [];
   }
+};
+
+const toSlug = (value: string | undefined | null) =>
+  (value || '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)+/g, '');
+
+const normalizeVariationGroups = (value: unknown): VariationGroup[] => {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((group, groupIndex) => {
+      const source = group as Partial<VariationGroup>;
+      const label = typeof source.label === 'string' ? source.label.trim() : '';
+      const seen = new Set<string>();
+      const options = (Array.isArray(source.options) ? source.options : [])
+        .map((option, optionIndex) => {
+          const opt = option as Partial<VariationOption>;
+          const optionLabel = typeof opt.label === 'string' ? opt.label.trim() : '';
+          if (!optionLabel) return null;
+          const value = typeof opt.value === 'string' && opt.value.trim() ? opt.value.trim() : toSlug(optionLabel);
+          const key = value.toLowerCase();
+          if (seen.has(key)) return null;
+          seen.add(key);
+          return {
+            id: typeof opt.id === 'string' && opt.id.trim() ? opt.id.trim() : crypto.randomUUID(),
+            label: optionLabel,
+            value,
+            displayOrder: Number.isFinite(opt.displayOrder as number) ? Number(opt.displayOrder) : optionIndex,
+            enabled: opt.enabled !== false,
+          };
+        })
+        .filter((option): option is VariationOption => Boolean(option));
+      if (!label || !options.length) return null;
+      return {
+        id: typeof source.id === 'string' && source.id.trim() ? source.id.trim() : crypto.randomUUID(),
+        label,
+        inputType: 'select' as const,
+        required: source.required !== false,
+        displayOrder: Number.isFinite(source.displayOrder as number) ? Number(source.displayOrder) : groupIndex,
+        enabled: source.enabled !== false,
+        presetId: typeof source.presetId === 'string' ? source.presetId : null,
+        options,
+      };
+    })
+    .filter((group): group is VariationGroup => Boolean(group))
+    .sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0));
+};
+
+const parseVariationGroups = (value?: string | null): VariationGroup[] => {
+  if (!value) return [];
+  try {
+    return normalizeVariationGroups(JSON.parse(value));
+  } catch {
+    return [];
+  }
+};
+
+const legacyGroups = (label?: string | null, optionsJson?: string | null): VariationGroup[] => {
+  const cleanLabel = (label || '').trim();
+  const options = parseOptionGroupOptions(optionsJson);
+  if (!cleanLabel || !options.length) return [];
+  return normalizeVariationGroups([
+    {
+      id: crypto.randomUUID(),
+      label: cleanLabel,
+      inputType: 'select',
+      required: true,
+      displayOrder: 0,
+      enabled: true,
+      options: options.map((option, index) => ({
+        id: crypto.randomUUID(),
+        label: option,
+        value: toSlug(option),
+        displayOrder: index,
+        enabled: true,
+      })),
+    },
+  ]);
 };
 
 const normalizeOptionGroupLabel = (value: unknown): string | null => {
@@ -196,7 +298,7 @@ async function handleGet(
 ): Promise<Response> {
   const { results } = await db
     .prepare(
-      `SELECT id, name, subtitle, slug, image_url, hero_image_url, image_id, hero_image_id, sort_order, option_group_label, option_group_options_json, show_on_homepage, shipping_cents, created_at
+      `SELECT id, name, subtitle, slug, image_url, hero_image_url, image_id, hero_image_id, sort_order, option_group_label, option_group_options_json, option_groups_json, show_on_homepage, shipping_cents, created_at
        FROM categories
        ORDER BY sort_order ASC, datetime(created_at) ASC, name ASC`
     )
@@ -239,6 +341,15 @@ async function handlePost(
     return json({ error: 'sort_order_invalid', detail: 'Order must be a non-negative integer.' }, 400);
   }
   const normalizedOptionGroup = normalizeOptionGroup(body?.optionGroupLabel, body?.optionGroupOptions);
+  const variationGroups = normalizeVariationGroups(body?.optionGroups);
+  const firstGroup = variationGroups[0] || normalizedOptionGroup.options.length
+    ? {
+        label: variationGroups[0]?.label || normalizedOptionGroup.label,
+        optionsJson: variationGroups[0]?.options?.length
+          ? JSON.stringify(variationGroups[0].options.map((option) => option.label))
+          : normalizedOptionGroup.optionsJson,
+      }
+    : { label: null, optionsJson: null };
 
   if (isDataUrl(imageUrl) || isDataUrl(heroImageUrl)) {
     return json({ error: 'image_url_invalid', detail: 'Image URLs must be normal URLs (data URLs are not allowed).' }, 400);
@@ -246,8 +357,8 @@ async function handlePost(
 
   const result = await db
     .prepare(
-      `INSERT INTO categories (id, name, subtitle, slug, image_url, hero_image_url, image_id, hero_image_id, sort_order, option_group_label, option_group_options_json, show_on_homepage, shipping_cents)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`
+      `INSERT INTO categories (id, name, subtitle, slug, image_url, hero_image_url, image_id, hero_image_id, sort_order, option_group_label, option_group_options_json, option_groups_json, show_on_homepage, shipping_cents)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`
     )
     .bind(
       id,
@@ -259,8 +370,9 @@ async function handlePost(
       resolvedImage.imageId,
       resolvedHero.imageId,
       sortOrder,
-      normalizedOptionGroup.label,
-      normalizedOptionGroup.optionsJson,
+      firstGroup.label,
+      firstGroup.optionsJson,
+      variationGroups.length ? JSON.stringify(variationGroups) : null,
       showOnHomePage ? 1 : 0,
       shippingCents
     )
@@ -270,7 +382,7 @@ async function handlePost(
 
   const created = await db
     .prepare(
-      `SELECT id, name, subtitle, slug, image_url, hero_image_url, image_id, hero_image_id, sort_order, option_group_label, option_group_options_json, show_on_homepage, shipping_cents
+      `SELECT id, name, subtitle, slug, image_url, hero_image_url, image_id, hero_image_id, sort_order, option_group_label, option_group_options_json, option_groups_json, show_on_homepage, shipping_cents
        FROM categories WHERE id = ?;`
     )
     .bind(id)
@@ -376,6 +488,13 @@ async function handlePut(
     addSet('option_group_label = ?', normalized.label);
     addSet('option_group_options_json = ?', normalized.optionsJson);
   }
+  if (body.optionGroups !== undefined) {
+    const groups = normalizeVariationGroups(body.optionGroups);
+    const first = groups[0] || null;
+    addSet('option_groups_json = ?', groups.length ? JSON.stringify(groups) : null);
+    addSet('option_group_label = ?', first?.label || null);
+    addSet('option_group_options_json = ?', first ? JSON.stringify(first.options.map((option) => option.label)) : null);
+  }
 
   if (!sets.length) return json({ error: 'No fields to update' }, 400);
 
@@ -389,7 +508,7 @@ async function handlePut(
 
   const updated = await db
     .prepare(
-      `SELECT id, name, subtitle, slug, image_url, hero_image_url, image_id, hero_image_id, sort_order, option_group_label, option_group_options_json, show_on_homepage, shipping_cents
+      `SELECT id, name, subtitle, slug, image_url, hero_image_url, image_id, hero_image_id, sort_order, option_group_label, option_group_options_json, option_groups_json, show_on_homepage, shipping_cents
        FROM categories WHERE id = ?;`
     )
     .bind(id)
@@ -448,6 +567,8 @@ const mapRowToCategory = (
   if (!row || !row.id || !row.name || !row.slug) return null;
   const options = parseOptionGroupOptions(row.option_group_options_json);
   const optionGroupLabel = (row.option_group_label || '').trim() || null;
+  const optionGroups = parseVariationGroups(row.option_groups_json);
+  const resolvedGroups = optionGroups.length ? optionGroups : legacyGroups(row.option_group_label, row.option_group_options_json);
   return {
     id: row.id,
     name: row.name,
@@ -462,15 +583,9 @@ const mapRowToCategory = (
     sortOrder: Number.isFinite(Number(row.sort_order)) ? Number(row.sort_order) : 0,
     optionGroupLabel,
     optionGroupOptions: optionGroupLabel && options.length ? options : undefined,
+    optionGroups: resolvedGroups.length ? resolvedGroups : undefined,
   };
 };
-
-const toSlug = (value: string | undefined | null) =>
-  (value || '')
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)+/g, '');
 
 async function ensureCategorySchema(_db: D1Database) {
   return;
@@ -481,6 +596,4 @@ const json = (data: unknown, status = 200) =>
     status,
     headers: { 'Content-Type': 'application/json' },
   });
-
-
 

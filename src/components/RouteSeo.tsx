@@ -9,56 +9,60 @@ type RouteSeoConfig = {
 };
 
 const DEFAULT_DESCRIPTION =
-  'Dover Designs creates handcrafted coastal shell art for curated interiors, custom gifts, and one-of-a-kind collections.';
+  'Coastal Alchemy creates hand-painted shells, framed shell collections, tabletop pieces, and custom coastal art from Naples, Florida.';
 
 const STATIC_ROUTES: Record<string, RouteSeoConfig> = {
   '/': {
-    title: 'Dover Designs | Handcrafted Coastal Shell Art',
+    title: 'Coastal Alchemy | Hand-Painted Shell Art',
     description:
-      'Handcrafted coastal shell art designed for curated interiors. Shop one-of-a-kind pieces and custom shell designs.',
+      'Hand-painted shells, framed shell collections, and coastal home pieces made by hand on the gulf coast of Naples, Florida.',
   },
   '/shop': {
-    title: 'Shop Coastal Shell Art | Dover Designs',
-    description: 'Browse handcrafted shell art collections and discover one-of-a-kind coastal pieces from Dover Designs.',
+    title: 'Shop Coastal Shell Art | Coastal Alchemy',
+    description: 'Browse hand-painted shell art collections and discover one-of-a-kind coastal pieces from Coastal Alchemy.',
   },
   '/gallery': {
-    title: 'Gallery | Dover Designs',
-    description: 'Explore sold works, studio highlights, and the visual gallery of Dover Designs handcrafted shell art.',
+    title: 'Gallery | Coastal Alchemy',
+    description: 'Explore finished works, studio highlights, and the visual gallery of Coastal Alchemy hand-painted shell art.',
   },
   '/custom-orders': {
-    title: 'Custom Orders | Dover Designs',
+    title: 'Custom Orders | Coastal Alchemy',
     description: 'Request a custom shell art piece designed for your interior style, palette, and personal story.',
   },
   '/about': {
-    title: 'About Dover Designs',
-    description: 'Meet the artist behind Dover Designs and learn how each handcrafted shell piece is created.',
+    title: 'About Coastal Alchemy',
+    description: 'Meet the studio behind Coastal Alchemy and learn how each hand-painted shell piece is created.',
   },
   '/join': {
-    title: 'Join the Email List | Dover Designs',
-    description: 'Join the Dover Designs email list for collection updates, releases, and custom order news.',
+    title: 'Join the Email List | Coastal Alchemy',
+    description: 'Join the Coastal Alchemy email list for collection updates, releases, and custom order news.',
   },
   '/terms': {
-    title: 'Terms of Service | Dover Designs',
-    description: 'Read the Dover Designs Terms of Service for purchases, custom orders, and website usage.',
+    title: 'Terms of Service | Coastal Alchemy',
+    description: 'Read the Coastal Alchemy Terms of Service for purchases, custom orders, and website usage.',
   },
   '/privacy': {
-    title: 'Privacy Policy | Dover Designs',
-    description: 'Read the Dover Designs Privacy Policy to understand how information is collected and used.',
+    title: 'Privacy Policy | Coastal Alchemy',
+    description: 'Read the Coastal Alchemy Privacy Policy to understand how information is collected and used.',
+  },
+  '/contact': {
+    title: 'Contact | Coastal Alchemy',
+    description: 'Contact Coastal Alchemy for commissions, design trade, press, and hand-painted shell art inquiries.',
   },
 };
 
 const getRouteSeo = (pathname: string): RouteSeoConfig => {
   if (pathname === '/checkout') {
     return {
-      title: 'Checkout | Dover Designs',
-      description: 'Secure checkout for Dover Designs orders.',
+      title: 'Checkout | Coastal Alchemy',
+      description: 'Secure checkout for Coastal Alchemy orders.',
       noindex: true,
     };
   }
 
   if (pathname === '/checkout/return') {
     return {
-      title: 'Checkout Return | Dover Designs',
+      title: 'Checkout Return | Coastal Alchemy',
       description: 'Checkout confirmation and payment return page.',
       noindex: true,
     };
@@ -66,7 +70,7 @@ const getRouteSeo = (pathname: string): RouteSeoConfig => {
 
   if (pathname === '/admin' || pathname === '/admin/login' || pathname.startsWith('/admin/')) {
     return {
-      title: 'Admin | Dover Designs',
+      title: 'Admin | Coastal Alchemy',
       description: 'Admin utility page.',
       noindex: true,
     };
@@ -74,15 +78,15 @@ const getRouteSeo = (pathname: string): RouteSeoConfig => {
 
   if (pathname === '/product' || pathname.startsWith('/product/')) {
     return {
-      title: 'Product | Dover Designs',
-      description: 'View handcrafted product details from Dover Designs.',
+      title: 'Product | Coastal Alchemy',
+      description: 'View hand-painted shell art product details from Coastal Alchemy.',
       ogType: 'product',
     };
   }
 
   return (
     STATIC_ROUTES[pathname] || {
-      title: 'Page Not Found | Dover Designs',
+      title: 'Page Not Found | Coastal Alchemy',
       description: 'The requested page could not be found.',
       noindex: true,
     }
@@ -114,13 +118,9 @@ export function RouteSeo() {
     : {
         '@context': 'https://schema.org',
         '@type': 'Organization',
-        name: 'Dover Designs',
+        name: 'Coastal Alchemy',
         url: CANONICAL_ORIGIN,
-        logo: `${CANONICAL_ORIGIN}/logo.jpg`,
-        sameAs: [
-          'https://www.instagram.com/dover_designs/',
-          'https://www.tiktok.com/@doverdesign',
-        ],
+        logo: `${CANONICAL_ORIGIN}/images/logo.jpg`,
       };
 
   const websiteSchema = isUtilitySurface
@@ -128,7 +128,7 @@ export function RouteSeo() {
     : {
         '@context': 'https://schema.org',
         '@type': 'WebSite',
-        name: 'Dover Designs',
+        name: 'Coastal Alchemy',
         url: CANONICAL_ORIGIN,
       };
 

@@ -7,19 +7,23 @@ interface ContactFormProps {
   backgroundColor?: string;
   variant?: 'card' | 'embedded';
   defaultInquiryType?: 'message' | 'custom_order';
+  mode?: 'default' | 'custom-order';
 }
 
 export function ContactForm({
   backgroundColor = '#FAC6C8',
   variant = 'card',
   defaultInquiryType = 'message',
+  mode = 'default',
 }: ContactFormProps) {
+  const isCustomOrderMode = mode === 'custom-order';
+  const initialInquiryType = isCustomOrderMode ? 'custom_order' : defaultInquiryType;
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     message: '',
   });
-  const [inquiryType, setInquiryType] = useState<'message' | 'custom_order'>(defaultInquiryType);
+  const [inquiryType, setInquiryType] = useState<'message' | 'custom_order'>(initialInquiryType);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
   const [categoryError, setCategoryError] = useState<string | null>(null);
@@ -27,7 +31,7 @@ export function ContactForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'success' | 'error' | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [submittedType, setSubmittedType] = useState<'message' | 'custom_order'>(defaultInquiryType);
+  const [submittedType, setSubmittedType] = useState<'message' | 'custom_order'>(initialInquiryType);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
@@ -44,6 +48,12 @@ export function ContactForm({
       if (imagePreview) URL.revokeObjectURL(imagePreview);
     };
   }, [imagePreview]);
+
+  useEffect(() => {
+    if (isCustomOrderMode) {
+      setInquiryType('custom_order');
+    }
+  }, [isCustomOrderMode]);
 
   useEffect(() => {
     let isMounted = true;
@@ -127,7 +137,7 @@ export function ContactForm({
       setSubmitStatus('success');
       setSubmittedType(inquiryType);
       setFormData({ name: '', email: '', message: '' });
-      setInquiryType(defaultInquiryType);
+      setInquiryType(isCustomOrderMode ? 'custom_order' : defaultInquiryType);
       setSelectedCategories([]);
       setImageFile(null);
       setImagePreview(null);
@@ -262,14 +272,13 @@ export function ContactForm({
   };
 
   return (
-    <div className={variant === 'embedded' ? 'py-0' : 'py-12'} id="contact" style={{ backgroundColor }}>
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className={variant === 'embedded' ? 'py-0 ca-form-skin' : 'py-12 ca-form-skin'} id="contact" style={{ backgroundColor }}>
+      <div className="ca-container">
         {variant !== 'embedded' && (
-          <div className="text-center mb-8 px-2 max-sm:space-y-2">
-            <h2 className="text-2xl md:text-3xl font-semibold text-slate-900 max-sm:text-xl max-sm:leading-tight max-sm:break-words">
-              GET IN TOUCH
-            </h2>
-            <p className="mt-3 text-[13px] sm:text-base text-slate-600 max-w-5xl mx-auto font-serif subtitle-text whitespace-nowrap max-sm:text-[12.5px] max-sm:leading-snug max-sm:whitespace-normal max-sm:break-words max-sm:max-w-full">
+          <div className="mx-auto mb-10 max-w-3xl text-center">
+            <div className="ca-eyebrow mb-4">Get In Touch</div>
+            <h2 className="ca-section-title">Send a note.</h2>
+            <p className="ca-copy mx-auto mt-4 max-w-2xl">
               Interested in a custom piece or looking for something specific? Send a message and I'll reply shortly.
             </p>
           </div>
@@ -277,50 +286,52 @@ export function ContactForm({
         <div
           className={
             variant === 'embedded'
-              ? 'w-full max-w-4xl mx-auto px-4 sm:px-6 md:px-8 max-sm:px-3 max-sm:max-w-full max-sm:overflow-hidden max-sm:box-border'
-              : 'w-full max-w-4xl mx-auto rounded-md contact-form-card border border-slate-200 shadow-lg bg-white overflow-hidden p-4 sm:p-6 md:p-8 max-sm:p-4 max-sm:max-w-full max-sm:overflow-hidden max-sm:box-border'
+              ? 'w-full max-w-4xl mx-auto'
+              : 'w-full max-w-4xl mx-auto border border-[var(--ca-border)] bg-white p-5 sm:p-8'
           }
         >
           <form onSubmit={handleSubmit} className={variant === 'embedded' ? 'space-y-6' : 'space-y-6'}>
-            <div className="flex justify-center max-sm:px-1">
-              <div className="inline-flex rounded-shell border border-driftwood/60 bg-white/90 p-1 shadow-sm max-sm:w-full max-sm:max-w-full max-sm:flex-nowrap max-sm:justify-center max-sm:items-center max-sm:box-border max-sm:overflow-hidden">
-                <button
-                  type="button"
-                  onClick={() => handleInquiryTypeChange('message')}
-                  className={`rounded-shell px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.3em] transition whitespace-nowrap max-sm:px-3 max-sm:py-2.5 max-sm:text-[10px] ${
-                    inquiryType === 'message'
-                      ? 'bg-deep-ocean text-white shadow-sm'
-                      : 'text-deep-ocean hover:bg-sand/70'
-                  }`}
-                >
-                  Message
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleInquiryTypeChange('custom_order')}
-                  className={`rounded-shell px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.3em] transition whitespace-nowrap max-sm:px-3 max-sm:py-2.5 max-sm:text-[10px] ${
-                    inquiryType === 'custom_order'
-                      ? 'bg-deep-ocean text-white shadow-sm'
-                      : 'text-deep-ocean hover:bg-sand/70'
-                  }`}
-                >
-                  Custom Order
-                </button>
+            {!isCustomOrderMode && (
+              <div className="flex justify-center max-sm:px-1">
+                <div className="inline-flex border border-[var(--ca-border)] bg-white p-1 max-sm:w-full max-sm:max-w-full max-sm:flex-nowrap max-sm:justify-center max-sm:items-center max-sm:box-border max-sm:overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => handleInquiryTypeChange('message')}
+                    className={`px-4 py-2 text-[10px] font-medium uppercase tracking-[0.26em] transition whitespace-nowrap max-sm:px-3 max-sm:py-2.5 max-sm:text-[10px] ${
+                      inquiryType === 'message'
+                        ? 'bg-[var(--ca-navy)] text-white'
+                        : 'text-[var(--ca-navy)] hover:bg-[var(--ca-paper)]'
+                    }`}
+                  >
+                    Message
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleInquiryTypeChange('custom_order')}
+                    className={`px-4 py-2 text-[10px] font-medium uppercase tracking-[0.26em] transition whitespace-nowrap max-sm:px-3 max-sm:py-2.5 max-sm:text-[10px] ${
+                      inquiryType === 'custom_order'
+                        ? 'bg-[var(--ca-navy)] text-white'
+                        : 'text-[var(--ca-navy)] hover:bg-[var(--ca-paper)]'
+                    }`}
+                  >
+                    Custom Order
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="space-y-3 min-h-0 flex flex-col">
               {inquiryType === 'custom_order' ? (
                 <>
                   {categoryError && (
-                    <p className="text-center text-xs text-slate-500 max-md:hidden">{categoryError}</p>
+                    <p className="ca-copy text-center text-xs max-md:hidden">{categoryError}</p>
                   )}
                   {isLoadingCategories ? (
                     <div className="mx-auto flex max-w-4xl flex-wrap justify-center gap-2 max-md:hidden">
                       {Array.from({ length: 6 }).map((_, index) => (
                         <div
                           key={`contact-chip-skeleton-${index}`}
-                          className="h-10 w-24 rounded-full bg-slate-200/70 animate-pulse"
+                          className="h-10 w-24 bg-[var(--ca-border)] animate-pulse"
                         />
                       ))}
                     </div>
@@ -334,10 +345,10 @@ export function ContactForm({
                             type="button"
                             aria-pressed={isSelected}
                             onClick={() => handleSelectCategory(chip)}
-                            className={`rounded-shell px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.3em] min-h-[40px] shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#c89f6e] ${
+                            className={`min-h-[40px] border px-4 py-2 text-[10px] font-medium uppercase tracking-[0.26em] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--ca-navy)] ${
                               isSelected
-                                ? 'border border-deep-ocean bg-deep-ocean text-white hover:brightness-105'
-                                : 'border border-driftwood/70 bg-white/90 text-deep-ocean hover:border-driftwood hover:bg-sand/60'
+                                ? 'border-[var(--ca-navy)] bg-[var(--ca-navy)] text-white'
+                                : 'border-[var(--ca-border)] bg-white text-[var(--ca-navy)] hover:border-[var(--ca-navy)]'
                             }`}
                           >
                             {chip.name}
@@ -355,7 +366,7 @@ export function ContactForm({
             <div>
               <label
                 htmlFor="name"
-                className="block text-sm font-semibold text-gray-700 mb-1 font-sans tracking-[0.12em]"
+                className="mb-2 block"
               >
                 Name
               </label>
@@ -366,13 +377,13 @@ export function ContactForm({
                 required
                 value={formData.name}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-900 focus:border-transparent font-sans font-semibold tracking-[0.12em] text-gray-900 placeholder:font-sans placeholder:font-semibold placeholder:tracking-[0.12em] placeholder:text-gray-500"
+                className="lux-input"
               />
             </div>
             <div>
               <label
                 htmlFor="email"
-                className="block text-sm font-semibold text-gray-700 mb-1 font-sans tracking-[0.12em]"
+                className="mb-2 block"
               >
                 Email
               </label>
@@ -383,15 +394,15 @@ export function ContactForm({
                 required
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-900 focus:border-transparent font-sans font-semibold tracking-[0.12em] text-gray-900 placeholder:font-sans placeholder:font-semibold placeholder:tracking-[0.12em] placeholder:text-gray-500"
+                className="lux-input"
               />
             </div>
             <div>
               <label
                 htmlFor="message"
-                className="block text-sm font-semibold text-gray-700 mb-1 font-sans tracking-[0.12em]"
+                className="mb-2 block"
               >
-                Message
+                {isCustomOrderMode ? 'Custom request details' : 'Message'}
               </label>
               <textarea
                 id="message"
@@ -400,14 +411,18 @@ export function ContactForm({
                 rows={5}
                 value={formData.message}
                 onChange={handleChange}
-                placeholder="Tell me what you're looking for - custom ideas, questions, or details."
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-none font-sans font-semibold tracking-[0.12em] text-gray-900 placeholder:font-sans placeholder:font-semibold placeholder:tracking-[0.12em] placeholder:text-gray-500"
+                placeholder={
+                  isCustomOrderMode
+                    ? "Tell us what you have in mind - size, colors, room, occasion, timeline, or inspiration."
+                    : "Tell me what you're looking for - custom ideas, questions, or details."
+                }
+                className="lux-input resize-none"
               />
             </div>
 
             <div>
               <div
-                className="rounded-md border-2 border-dashed border-gray-300 bg-gray-50 p-4 text-center text-sm text-gray-600 cursor-pointer"
+                className="cursor-pointer border border-dashed border-[var(--ca-border-strong)] bg-white p-5 text-center text-sm text-[var(--ca-muted)] transition hover:border-[var(--ca-navy)]"
                 onClick={() => document.getElementById('contact-image-input')?.click()}
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={(e) => {
@@ -424,15 +439,15 @@ export function ContactForm({
                 />
                 {imagePreview ? (
                   <div className="flex flex-col items-center gap-2">
-                    <img src={imagePreview} alt="Upload preview" className="h-32 w-32 object-cover rounded-md border border-gray-200" />
-                    <span className="text-xs text-gray-500">Click or drop to replace</span>
+                    <img src={imagePreview} alt="Upload preview" className="h-32 w-32 object-cover border border-[var(--ca-border)]" />
+                    <span className="ca-copy text-xs">Click or drop to replace</span>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center gap-1">
-                    <span className="font-sans font-semibold tracking-[0.12em] text-gray-800 text-[12px] sm:text-[13px]">
+                    <span className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--ca-ink)]">
                       Share a photo (optional)
                     </span>
-                    <span className="text-xs text-gray-500 font-sans font-semibold tracking-[0.12em]">
+                    <span className="ca-copy text-xs">
                       Upload images, inspiration, or designs you'd like us to reference
                     </span>
                   </div>
@@ -441,15 +456,15 @@ export function ContactForm({
             </div>
 
             {submitStatus === 'success' && (
-              <div className="p-4 bg-green-50 border border-green-200 rounded-md text-green-800 text-sm text-center">
+              <div className="border border-emerald-200 bg-emerald-50 p-4 text-center text-sm text-emerald-800">
                 {submittedType === 'message'
                   ? 'Thank you for your message! We typically respond within 24-48 Hours'
-                  : "Got it - we're excited!"}
+                  : "Got it - we'll follow up with next steps."}
               </div>
             )}
 
             {submitStatus === 'error' && (
-              <div className="p-4 bg-red-50 border border-red-200 rounded-md text-red-800 text-sm">
+              <div className="border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
                 {submitError || 'There was an error sending your message. Please try again.'}
               </div>
             )}
@@ -457,9 +472,13 @@ export function ContactForm({
             <button
               type="submit"
               disabled={isSubmitting || isImageProcessing}
-              className="lux-button w-full text-[10px] sm:text-[11px] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="ca-button ca-button-filled w-full disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting || isImageProcessing ? 'Sending...' : 'SEND MESSAGE'}
+              {isSubmitting || isImageProcessing
+                ? 'Sending...'
+                : isCustomOrderMode
+                  ? 'SEND CUSTOM REQUEST'
+                  : 'SEND MESSAGE'}
             </button>
           </form>
         </div>

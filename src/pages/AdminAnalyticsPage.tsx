@@ -136,11 +136,11 @@ export function AdminAnalyticsPage() {
 
   if (authState === 'checking') {
     return (
-      <div className="admin-dashboard min-h-screen bg-gradient-to-b from-[var(--warm-linen)] via-[var(--sand)] to-[var(--linen)] text-charcoal py-12 overflow-x-hidden">
+      <div className="admin-dashboard ca-admin-shell py-12 overflow-x-hidden">
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="lux-card p-8 text-center">
             <h1 className="lux-heading text-2xl">Loading analytics preview...</h1>
-            <p className="text-sm text-charcoal/75 mt-2">Checking admin access.</p>
+            <p className="ca-admin-subheading text-sm mt-2">Checking admin access.</p>
           </div>
         </div>
       </div>
@@ -148,7 +148,7 @@ export function AdminAnalyticsPage() {
   }
 
   return (
-    <div className="admin-dashboard min-h-screen bg-gradient-to-b from-[var(--warm-linen)] via-[var(--sand)] to-[var(--linen)] text-charcoal py-12 overflow-x-hidden">
+    <div className="admin-dashboard ca-admin-shell py-12 overflow-x-hidden">
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         <AnalyticsPageHeader onBackToAdmin={() => (window.location.href = '/admin/customers')} onLogout={handleLogout} />
 
@@ -164,8 +164,8 @@ export function AdminAnalyticsPage() {
 
         {snapshotError && !snapshot ? (
           <div className="lux-card p-6">
-            <h3 className="font-serif text-xl text-deep-ocean">Analytics unavailable</h3>
-            <p className="text-sm text-charcoal/80 mt-2">{snapshotError}</p>
+            <h3 className="ca-admin-heading text-2xl">Analytics unavailable</h3>
+            <p className="ca-admin-subheading text-sm mt-2">{snapshotError}</p>
             <button onClick={retrySnapshotLoad} className="lux-button--ghost mt-4 px-4 py-2 text-[10px]">
               Retry
             </button>
@@ -174,8 +174,8 @@ export function AdminAnalyticsPage() {
 
         {isSnapshotLoading && !snapshot ? (
           <div className="lux-card p-6">
-            <h3 className="font-serif text-xl text-deep-ocean">Loading analytics...</h3>
-            <p className="text-sm text-charcoal/75 mt-2">Fetching live storefront and order metrics.</p>
+            <h3 className="ca-admin-heading text-2xl">Loading analytics...</h3>
+            <p className="ca-admin-subheading text-sm mt-2">Fetching live storefront and order metrics.</p>
           </div>
         ) : null}
 

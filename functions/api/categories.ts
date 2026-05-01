@@ -23,6 +23,7 @@ type CategoryRow = {
   sort_order?: number | null;
   option_group_label?: string | null;
   option_group_options_json?: string | null;
+  option_groups_json?: string | null;
   show_on_homepage?: number | null;
   shipping_cents?: number | null;
 };
@@ -41,6 +42,26 @@ type Category = {
   sortOrder?: number;
   optionGroupLabel?: string | null;
   optionGroupOptions?: string[];
+  optionGroups?: VariationGroup[];
+};
+
+type VariationOption = {
+  id: string;
+  label: string;
+  value: string;
+  displayOrder?: number;
+  enabled?: boolean;
+};
+
+type VariationGroup = {
+  id: string;
+  label: string;
+  inputType: 'select';
+  required: boolean;
+  displayOrder?: number;
+  enabled?: boolean;
+  presetId?: string | null;
+  options: VariationOption[];
 };
 
 const createCategoriesTable = `
@@ -73,6 +94,7 @@ const REQUIRED_CATEGORY_COLUMNS: Record<string, string> = {
   sort_order: 'sort_order INTEGER NOT NULL DEFAULT 0',
   option_group_label: 'option_group_label TEXT',
   option_group_options_json: 'option_group_options_json TEXT',
+  option_groups_json: 'option_groups_json TEXT',
 };
 
 export async function onRequestGet(context: {
@@ -83,7 +105,7 @@ export async function onRequestGet(context: {
 
     const { results } = await context.env.DB
       .prepare(
-        `SELECT id, name, subtitle, slug, image_url, hero_image_url, image_id, hero_image_id, sort_order, option_group_label, option_group_options_json, show_on_homepage, shipping_cents, created_at
+        `SELECT id, name, subtitle, slug, image_url, hero_image_url, image_id, hero_image_id, sort_order, option_group_label, option_group_options_json, option_groups_json, show_on_homepage, shipping_cents, created_at
          FROM categories
          ORDER BY sort_order ASC, datetime(created_at) ASC, name ASC`
       )
@@ -115,6 +137,8 @@ const mapRowToCategory = (
   const options = parseOptionGroupOptions(row.option_group_options_json);
   const optionGroupLabel = (row.option_group_label || '').trim() || null;
   const optionGroupOptions = optionGroupLabel && options.length ? options : [];
+  const optionGroups = parseVariationGroups(row.option_groups_json);
+  const resolvedGroups = optionGroups.length ? optionGroups : legacyGroups(row.option_group_label, row.option_group_options_json);
   return {
     id: row.id,
     name: row.name,
@@ -129,6 +153,7 @@ const mapRowToCategory = (
     sortOrder: Number.isFinite(Number(row.sort_order)) ? Number(row.sort_order) : 0,
     optionGroupLabel: optionGroupLabel,
     optionGroupOptions: optionGroupLabel && optionGroupOptions.length ? optionGroupOptions : undefined,
+    optionGroups: resolvedGroups.length ? resolvedGroups : undefined,
   };
 };
 
@@ -143,8 +168,82 @@ const parseOptionGroupOptions = (value?: string | null): string[] => {
   }
 };
 
+const toSlug = (value: string | undefined | null) =>
+  (value || '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)+/g, '');
+
+const normalizeVariationGroups = (value: unknown): VariationGroup[] => {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((group, groupIndex) => {
+      const source = group as Partial<VariationGroup>;
+      const label = typeof source.label === 'string' ? source.label.trim() : '';
+      const options = (Array.isArray(source.options) ? source.options : [])
+        .map((option, optionIndex) => {
+          const opt = option as Partial<VariationOption>;
+          const optionLabel = typeof opt.label === 'string' ? opt.label.trim() : '';
+          if (!optionLabel) return null;
+          return {
+            id: typeof opt.id === 'string' && opt.id.trim() ? opt.id.trim() : `${groupIndex}-${optionIndex}`,
+            label: optionLabel,
+            value: typeof opt.value === 'string' && opt.value.trim() ? opt.value.trim() : toSlug(optionLabel),
+            displayOrder: Number.isFinite(opt.displayOrder as number) ? Number(opt.displayOrder) : optionIndex,
+            enabled: opt.enabled !== false,
+          };
+        })
+        .filter((option): option is VariationOption => Boolean(option));
+      if (!label || !options.length) return null;
+      return {
+        id: typeof source.id === 'string' && source.id.trim() ? source.id.trim() : `${groupIndex}`,
+        label,
+        inputType: 'select' as const,
+        required: source.required !== false,
+        displayOrder: Number.isFinite(source.displayOrder as number) ? Number(source.displayOrder) : groupIndex,
+        enabled: source.enabled !== false,
+        presetId: typeof source.presetId === 'string' ? source.presetId : null,
+        options,
+      };
+    })
+    .filter((group): group is VariationGroup => Boolean(group))
+    .sort((a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0));
+};
+
+const parseVariationGroups = (value?: string | null): VariationGroup[] => {
+  if (!value) return [];
+  try {
+    return normalizeVariationGroups(JSON.parse(value));
+  } catch {
+    return [];
+  }
+};
+
+const legacyGroups = (label?: string | null, optionsJson?: string | null): VariationGroup[] => {
+  const cleanLabel = (label || '').trim();
+  const options = parseOptionGroupOptions(optionsJson);
+  if (!cleanLabel || !options.length) return [];
+  return normalizeVariationGroups([
+    {
+      id: 'legacy',
+      label: cleanLabel,
+      inputType: 'select',
+      required: true,
+      displayOrder: 0,
+      enabled: true,
+      options: options.map((option, index) => ({
+        id: `legacy-${index}`,
+        label: option,
+        value: toSlug(option),
+        displayOrder: index,
+        enabled: true,
+      })),
+    },
+  ]);
+};
+
 async function ensureCategorySchema(_db: D1Database) {
   return;
 }
-
 

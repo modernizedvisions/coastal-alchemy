@@ -917,6 +917,7 @@ async function ensureOrdersSchema(db: D1Database) {
     image_url TEXT,
     option_group_label TEXT,
     option_value TEXT,
+    selected_options_json TEXT,
     created_at TEXT DEFAULT (datetime('now'))
   );`).run();
 
@@ -978,6 +979,9 @@ async function ensureOrdersSchema(db: D1Database) {
   }
   if (!itemNames.includes('option_value')) {
     await db.prepare(`ALTER TABLE order_items ADD COLUMN option_value TEXT;`).run();
+  }
+  if (!itemNames.includes('selected_options_json')) {
+    await db.prepare(`ALTER TABLE order_items ADD COLUMN selected_options_json TEXT;`).run();
   }
 
   await db
@@ -2346,6 +2350,7 @@ async function insertStandardOrderAndItems(args: {
             imageUrl,
             optionGroupLabel: meta.optionGroupLabel,
             optionValue: meta.optionValue,
+            selectedOptionsJson: meta.selectedOptionsJson,
           });
         }
         return items;
@@ -2359,8 +2364,8 @@ async function insertStandardOrderAndItems(args: {
       const itemResult = await db
         .prepare(
           `
-          INSERT INTO order_items (id, order_id, product_id, quantity, price_cents, image_url, option_group_label, option_value, created_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+          INSERT INTO order_items (id, order_id, product_id, quantity, price_cents, image_url, option_group_label, option_value, selected_options_json, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
         `
       )
       .bind(
@@ -2372,6 +2377,7 @@ async function insertStandardOrderAndItems(args: {
         (li as any).imageUrl ?? null,
         (li as any).optionGroupLabel ?? null,
         (li as any).optionValue ?? null,
+        (li as any).selectedOptionsJson ?? null,
         nowIso
       )
       .run();
@@ -2387,8 +2393,8 @@ async function insertStandardOrderAndItems(args: {
     const itemResult = await db
       .prepare(
         `
-          INSERT INTO order_items (id, order_id, product_id, quantity, price_cents, image_url, option_group_label, option_value, created_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+          INSERT INTO order_items (id, order_id, product_id, quantity, price_cents, image_url, option_group_label, option_value, selected_options_json, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
         `
       )
       .bind(
@@ -2400,6 +2406,7 @@ async function insertStandardOrderAndItems(args: {
           ? Math.floor(session.amount_subtotal / (quantityFromMeta || 1))
           : 0,
         fallbackImageUrl,
+        null,
         null,
         null,
         nowIso
@@ -2450,6 +2457,7 @@ function extractLineItemMetadata(line: Stripe.LineItem): Record<string, string> 
 function extractOptionMetadata(line: Stripe.LineItem): {
   optionGroupLabel: string | null;
   optionValue: string | null;
+  selectedOptionsJson: string | null;
   sourceProductId: string | null;
   sourceStripeProductId: string | null;
   sourceStripePriceId: string | null;
@@ -2458,6 +2466,7 @@ function extractOptionMetadata(line: Stripe.LineItem): {
   const meta = extractLineItemMetadata(line);
   const rawLabel = meta?.option_group_label;
   const rawValue = meta?.option_value;
+  const rawSelectedOptions = meta?.selected_options_json;
   const rawCanonicalSource = meta?.dd_canonical_product_id;
   const rawSource = meta?.dd_product_id;
   const rawStripeSource = meta?.dd_stripe_product_id;
@@ -2466,6 +2475,7 @@ function extractOptionMetadata(line: Stripe.LineItem): {
   return {
     optionGroupLabel: typeof rawLabel === 'string' && rawLabel.trim().length ? rawLabel.trim() : null,
     optionValue: typeof rawValue === 'string' && rawValue.trim().length ? rawValue.trim() : null,
+    selectedOptionsJson: typeof rawSelectedOptions === 'string' && rawSelectedOptions.trim().length ? rawSelectedOptions.trim() : null,
     sourceProductId:
       (typeof rawCanonicalSource === 'string' && rawCanonicalSource.trim().length ? rawCanonicalSource.trim() : null) ||
       (typeof rawSource === 'string' && rawSource.trim().length ? rawSource.trim() : null),

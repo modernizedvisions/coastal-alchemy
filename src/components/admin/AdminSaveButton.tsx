@@ -22,7 +22,7 @@ export function AdminSaveButton({
       type="button"
       onClick={onClick}
       disabled={disabled || saveState === 'saving'}
-      className={`lux-button px-4 py-2 text-[11px] tracking-[0.22em] ${className}`}
+      className={`ca-admin-button-primary inline-flex items-center justify-center gap-2 px-4 py-2 text-[11px] tracking-[0.22em] ${className}`}
     >
       {saveState === 'saving' ? (
         <>

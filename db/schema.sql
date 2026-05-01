@@ -19,6 +19,8 @@ CREATE TABLE IF NOT EXISTS products (
   collection TEXT,
   shipping_override_enabled INTEGER NOT NULL DEFAULT 0,
   shipping_override_amount_cents INTEGER,
+  option_groups_json TEXT,
+  use_category_options INTEGER NOT NULL DEFAULT 1,
   sort_order INTEGER,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
@@ -35,9 +37,18 @@ CREATE TABLE IF NOT EXISTS categories (
   sort_order INTEGER NOT NULL DEFAULT 0,
   option_group_label TEXT,
   option_group_options_json TEXT,
+  option_groups_json TEXT,
   show_on_homepage INTEGER DEFAULT 0,
   shipping_cents INTEGER DEFAULT 0,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS variation_presets (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  groups_json TEXT NOT NULL,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS images (

@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react';
 
-export const CANONICAL_ORIGIN = 'https://dover-designs.com';
+export const CANONICAL_ORIGIN = 'https://coastal-alchemy.pages.dev';
+export const DEFAULT_SOCIAL_IMAGE = `${CANONICAL_ORIGIN}/images/large-shell-frame.png`;
 
 const MANAGED_ATTR = 'data-dd-seo';
 
@@ -90,11 +91,18 @@ export const applySeo = (input: SeoInput): void => {
   upsertMetaByName('twitter:title', input.title);
   upsertMetaByName('twitter:description', description);
   upsertMetaByName('twitter:card', 'summary_large_image');
+  upsertMetaByName('twitter:image', DEFAULT_SOCIAL_IMAGE);
+  upsertMetaByName('twitter:image:alt', 'Coastal Alchemy framed hand-painted shell collection');
 
   upsertMetaByProperty('og:title', input.title);
   upsertMetaByProperty('og:description', description);
   upsertMetaByProperty('og:url', canonical);
   upsertMetaByProperty('og:type', ogType);
+  upsertMetaByProperty('og:site_name', 'Coastal Alchemy');
+  upsertMetaByProperty('og:image', DEFAULT_SOCIAL_IMAGE);
+  upsertMetaByProperty('og:image:secure_url', DEFAULT_SOCIAL_IMAGE);
+  upsertMetaByProperty('og:image:type', 'image/png');
+  upsertMetaByProperty('og:image:alt', 'Coastal Alchemy framed hand-painted shell collection');
 
   upsertCanonical(canonical);
 };

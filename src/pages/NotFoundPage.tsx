@@ -5,7 +5,7 @@ export function NotFoundPage() {
   const location = useLocation();
 
   useSeo({
-    title: 'Page Not Found | Dover Designs',
+    title: 'Page Not Found | Coastal Alchemy',
     description: 'The requested page could not be found.',
     canonicalPath: location.pathname,
     noindex: true,

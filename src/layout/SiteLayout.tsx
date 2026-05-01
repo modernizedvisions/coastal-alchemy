@@ -278,7 +278,7 @@ function SiteLayoutInner() {
             <div className="font-serif text-2xl tracking-[0.2em]">Coastal Alchemy</div>
             <div className="flex items-center gap-3 text-[var(--ca-muted)]">
               <a
-                href="https://www.instagram.com/dover_designs/"
+                href="https://www.instagram.com/coastalalchemy/"
                 target="_blank"
                 rel="noreferrer"
                 aria-label="Visit Coastal Alchemy on Instagram"
@@ -287,7 +287,7 @@ function SiteLayoutInner() {
                 <Instagram className="h-5 w-5" />
               </a>
               <a
-                href="https://www.tiktok.com/@doverdesign"
+                href="https://www.tiktok.com/@coastalalchemy"
                 target="_blank"
                 rel="noreferrer"
                 aria-label="Visit Coastal Alchemy on TikTok"

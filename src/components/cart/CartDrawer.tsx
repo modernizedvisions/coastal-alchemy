@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { X, Minus, Plus, Trash2 } from 'lucide-react';
+import { X, Minus, Plus } from 'lucide-react';
 import { useCartStore } from '../../store/cartStore';
 import { useUIStore } from '../../store/uiStore';
 import { useNavigate } from 'react-router-dom';
@@ -81,6 +81,7 @@ export function CartDrawer() {
   const shippingCents = calculateShippingCents(items, categories);
   const totalCents = effectiveSubtotal + shippingCents;
   const formatShipping = (cents: number) => (cents <= 0 ? 'FREE' : `$${(cents / 100).toFixed(2)}`);
+  const formatMoney = (cents: number) => `$${((cents || 0) / 100).toFixed(2)}`;
 
   const handleCheckout = () => {
     if (!items.length) return;
@@ -99,124 +100,137 @@ export function CartDrawer() {
         className={`fixed inset-0 bg-charcoal/60 backdrop-blur-sm z-40 drawer-overlay motion-safe-only ${isActive ? 'is-open' : 'is-closed'}`}
         onClick={() => setCartDrawerOpen(false)}
       />
-      <div className={`fixed right-0 top-0 h-full w-full max-w-md bg-linen shadow-2xl z-50 flex flex-col drawer-panel motion-safe-only ${isActive ? 'is-open' : 'is-closed'}`}>
-        <div className="p-5 border-b border-driftwood/70 flex items-center justify-between bg-white/90">
-          <div>
-            <p className="lux-eyebrow">Cart</p>
-            <h2 className="text-xl font-serif text-deep-ocean">Your selection</h2>
-          </div>
+      <div className={`fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl z-50 flex flex-col drawer-panel motion-safe-only ${isActive ? 'is-open' : 'is-closed'}`}>
+        <div className="flex items-center justify-between border-b border-[var(--ca-border)] bg-white px-5 py-5">
+          <h2 className="ca-eyebrow">Your Cart</h2>
           <button
             onClick={() => setCartDrawerOpen(false)}
-            className="lux-button--ghost px-3 py-2 rounded-full"
+            className="inline-flex h-10 w-10 items-center justify-center border border-[var(--ca-border)] text-[var(--ca-ink)] transition hover:bg-[var(--ca-ink)] hover:text-white"
             aria-label="Close cart"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-5 space-y-4">
+        <div className="flex-1 overflow-y-auto px-5 py-2">
           {items.length === 0 ? (
-            <div className="text-center py-10">
-              <p className="text-charcoal/70">Your cart is empty</p>
+            <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
+              <p className="ca-card-title">Your cart is empty.</p>
+              <p className="ca-copy mt-2 text-sm">Add a shell piece from the shop to begin.</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setCartDrawerOpen(false);
+                  navigate('/shop');
+                }}
+                className="ca-button ca-button-filled mt-6"
+              >
+                Continue Shopping
+              </button>
             </div>
           ) : (
             <>
             {items.map((item) => {
               const itemKey = `${item.productId}::${(item.optionValue || '').trim()}`;
+              const unitPrice = isPromotionEligible(promotion, item)
+                ? getDiscountedCents(item.priceCents, promotion?.percentOff || 0)
+                : item.priceCents;
               return (
-              <div key={itemKey} className="flex gap-4 pb-4 border-b border-driftwood/50 last:border-b-0">
+              <div key={itemKey} className="grid grid-cols-[86px_1fr_auto] gap-4 border-b border-[var(--ca-border)] py-5">
                 {item.imageUrl && (
                   <img
                     src={item.imageUrl}
                     alt={item.name}
-                    className="w-20 h-20 object-cover rounded-shell border border-driftwood/60 bg-white/80"
+                    className="h-[108px] w-[86px] object-cover border border-[var(--ca-border)] bg-white"
                   />
                 )}
-                <div className="flex-1">
-                  <h3 className="font-serif font-semibold text-deep-ocean leading-snug">{item.name}</h3>
-                  {item.optionGroupLabel && item.optionValue && (
-                    <p className="text-xs text-charcoal/70 mt-1">
+                <div className="min-w-0">
+                  <h3 className="ca-card-title text-[1.08rem] leading-snug">{item.name}</h3>
+                  {item.category && <p className="ca-card-meta mt-1">{item.category}</p>}
+                  {Array.isArray(item.selectedOptions) && item.selectedOptions.length > 0 ? (
+                    <div className="mt-1 space-y-0.5">
+                      {item.selectedOptions.map((option) => (
+                        <p key={`${option.groupId}-${option.optionValue}`} className="ca-copy text-xs leading-5">
+                          {option.groupLabel}: {option.optionLabel}
+                        </p>
+                      ))}
+                    </div>
+                  ) : item.optionGroupLabel && item.optionValue && (
+                    <p className="ca-copy mt-1 text-xs leading-5">
                       {item.optionGroupLabel}: {item.optionValue}
                     </p>
                   )}
-                  <div className="text-sm text-charcoal/80 mt-1">
-                    {isPromotionEligible(promotion, item) ? (
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-xs text-charcoal/60 line-through">
-                          ${(item.priceCents / 100).toFixed(2)}
-                        </span>
-                        <span className="text-sm text-deep-ocean">
-                          ${(getDiscountedCents(item.priceCents, promotion?.percentOff || 0) / 100).toFixed(2)}
-                        </span>
-                      </div>
-                    ) : (
-                      <span>${(item.priceCents / 100).toFixed(2)}</span>
-                    )}
-                  </div>
                   {item.oneoff ? (
-                    <div className="mt-3 flex items-center justify-between gap-3">
-                      <span className="lux-pill--cart inline-flex">One-of-a-kind</span>
+                    <div className="mt-4 flex items-center gap-3">
+                      <span className="border border-[var(--ca-border)] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-[var(--ca-muted)]">One of one</span>
                       <button
                         onClick={() => removeItem(item.productId, item.optionValue)}
-                        className="lux-button--ghost px-3 py-2 rounded-full text-red-700 border-red-200"
+                        className="text-[10px] uppercase tracking-[0.2em] text-[var(--ca-muted)] underline-offset-4 hover:underline"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        Remove
                       </button>
                     </div>
                   ) : (
-                    <div className="mt-3 flex items-center gap-3">
-                      <div className="lux-quantity">
+                    <div className="mt-4 flex items-center gap-3">
+                      <div className="inline-flex items-center border border-[var(--ca-border)]">
                         <button
                           onClick={() => updateQuantity(item.productId, item.quantity - 1, item.optionValue)}
-                          className="lux-button--ghost px-2 py-1 rounded-full"
+                          className="inline-flex h-9 w-9 items-center justify-center text-[var(--ca-ink)] hover:bg-[var(--ca-paper)]"
                         >
                           <Minus className="w-4 h-4" />
                         </button>
-                        <span className="w-8 text-center text-sm font-semibold text-deep-ocean">{item.quantity}</span>
+                        <span className="w-9 text-center text-sm text-[var(--ca-ink)]">{item.quantity}</span>
                         <button
                           onClick={() => updateQuantity(item.productId, item.quantity + 1, item.optionValue)}
                           disabled={item.quantityAvailable !== null && item.quantityAvailable !== undefined && item.quantity >= item.quantityAvailable}
-                          className="lux-button--ghost px-2 py-1 rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="inline-flex h-9 w-9 items-center justify-center text-[var(--ca-ink)] hover:bg-[var(--ca-paper)] disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <Plus className="w-4 h-4" />
                         </button>
                       </div>
                       <button
                         onClick={() => removeItem(item.productId, item.optionValue)}
-                        className="ml-auto lux-button--ghost px-3 py-2 rounded-full text-red-700 border-red-200"
+                        className="text-[10px] uppercase tracking-[0.2em] text-[var(--ca-muted)] underline-offset-4 hover:underline"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        Remove
                       </button>
                     </div>
+                  )}
+                </div>
+                <div className="text-right">
+                  {isPromotionEligible(promotion, item) ? (
+                    <div className="space-y-1">
+                      <div className="text-xs text-[var(--ca-muted)] line-through">{formatMoney(item.priceCents)}</div>
+                      <div className="ca-card-price">{formatMoney(unitPrice)}</div>
+                    </div>
+                  ) : (
+                    <div className="ca-card-price">{formatMoney(item.priceCents)}</div>
                   )}
                 </div>
               </div>
             );
             })}
             {qualifiedGiftProduct && (
-              <div className="flex gap-4 pb-4 border-b border-driftwood/50 last:border-b-0">
+              <div className="grid grid-cols-[86px_1fr_auto] gap-4 border-b border-[var(--ca-border)] py-5">
                 {qualifiedGiftProduct.imageUrl ? (
                   <img
                     src={qualifiedGiftProduct.imageUrl}
                     alt={qualifiedGiftProduct.name}
-                    className="w-20 h-20 object-cover rounded-shell border border-driftwood/60 bg-white/80"
+                    className="h-[108px] w-[86px] object-cover border border-[var(--ca-border)] bg-white"
                   />
                 ) : (
-                  <div className="w-20 h-20 rounded-shell border border-driftwood/60 bg-sand/70" />
+                  <div className="h-[108px] w-[86px] border border-[var(--ca-border)] bg-[var(--ca-paper)]" />
                 )}
-                <div className="flex-1">
-                  <h3 className="font-serif font-semibold text-deep-ocean leading-snug">
+                <div className="min-w-0">
+                  <h3 className="ca-card-title text-[1.08rem] leading-snug">
                     {qualifiedGiftProduct.name}
                   </h3>
                   {qualifiedGiftProduct.description ? (
-                    <p className="text-xs text-charcoal/70 mt-1 line-clamp-2">{qualifiedGiftProduct.description}</p>
+                    <p className="ca-copy mt-1 line-clamp-2 text-xs">{qualifiedGiftProduct.description}</p>
                   ) : null}
-                  <div className="mt-2 flex items-center justify-between text-sm">
-                    <span className="lux-pill--cart inline-flex">Gift Item</span>
-                    <span className="font-semibold text-emerald-700">FREE</span>
-                  </div>
-                  <p className="text-xs text-charcoal/70 mt-1">Qty: 1</p>
+                  <p className="ca-copy mt-2 text-xs">Qty: 1</p>
                 </div>
+                <div className="text-right text-sm font-medium uppercase tracking-[0.18em] text-emerald-700">Free</div>
               </div>
             )}
             </>
@@ -224,31 +238,36 @@ export function CartDrawer() {
         </div>
 
         {items.length > 0 && (
-          <div className="p-5 border-t border-driftwood/70 bg-white/90 space-y-3">
+          <div className="border-t border-[var(--ca-border)] bg-white p-5 space-y-4">
             <div className="space-y-2 text-sm">
-              <div className="flex justify-between text-charcoal/80">
+              <div className="flex justify-between text-[var(--ca-muted)]">
                 <span>Subtotal</span>
-                <span className="font-semibold text-deep-ocean">${(effectiveSubtotal / 100).toFixed(2)}</span>
+                <span className="font-medium text-[var(--ca-ink)]">${(effectiveSubtotal / 100).toFixed(2)}</span>
               </div>
-              <div className="flex justify-between text-charcoal/80">
+              <div className="flex justify-between text-[var(--ca-muted)]">
                 <span>Shipping</span>
-                <span className="font-semibold text-deep-ocean">{formatShipping(shippingCents)}</span>
+                <span className="font-medium text-[var(--ca-ink)]">{formatShipping(shippingCents)}</span>
               </div>
-              <div className="flex justify-between text-charcoal/70 text-xs">
-                <span>Tax</span>
-                <span>Calculated at checkout</span>
-              </div>
-              <div className="lux-divider-soft" />
-              <div className="flex justify-between text-base font-semibold text-deep-ocean">
+              <div className="border-t border-[var(--ca-border)] pt-3 flex justify-between font-serif text-xl text-[var(--ca-ink)]">
                 <span>Total</span>
                 <span>${(totalCents / 100).toFixed(2)}</span>
               </div>
             </div>
             <button
               onClick={handleCheckout}
-              className="lux-button w-full justify-center"
+              className="ca-button ca-button-filled w-full"
             >
               Checkout
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setCartDrawerOpen(false);
+                navigate('/shop');
+              }}
+              className="ca-button ca-button-ghost w-full"
+            >
+              Continue Shopping
             </button>
           </div>
         )}

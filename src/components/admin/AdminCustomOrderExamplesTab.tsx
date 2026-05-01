@@ -3,7 +3,14 @@ import { Plus, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdminSectionHeader } from './AdminSectionHeader';
 import { AdminSaveButton } from './AdminSaveButton';
-import { adminFetchCustomOrderExamples, adminSaveCustomOrderExamples, adminUploadImageUnified } from '../../lib/adminApi';
+import {
+  adminFetchCustomOrderExamples,
+  adminSaveCustomOrderExamples,
+  adminUploadImageUnified,
+  getAdminSiteContentHome,
+  updateAdminSiteContentHome,
+} from '../../lib/adminApi';
+import type { HomeSiteContent } from '../../lib/types';
 
 type ExampleSlot = {
   id: string;
@@ -14,6 +21,12 @@ type ExampleSlot = {
   tags: string;
   sortOrder: number;
   isActive: boolean;
+  isUploading?: boolean;
+  uploadError?: string | null;
+};
+
+type MainImageSlot = {
+  imageUrl: string;
   isUploading?: boolean;
   uploadError?: string | null;
 };
@@ -36,8 +49,11 @@ const buildEmptySlots = (): ExampleSlot[] =>
 
 export function AdminCustomOrderExamplesTab() {
   const [slots, setSlots] = useState<ExampleSlot[]>(() => buildEmptySlots());
+  const [mainImage, setMainImage] = useState<MainImageSlot>({ imageUrl: '' });
+  const [homeContent, setHomeContent] = useState<HomeSiteContent>({});
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
   const [isLoading, setIsLoading] = useState(true);
+  const mainImageInputRef = useRef<HTMLInputElement | null>(null);
   const fileInputRefs = useRef<Array<HTMLInputElement | null>>([]);
 
   useEffect(() => {
@@ -45,8 +61,13 @@ export function AdminCustomOrderExamplesTab() {
     const load = async () => {
       try {
         setIsLoading(true);
-        const examples = await adminFetchCustomOrderExamples();
+        const [examples, content] = await Promise.all([
+          adminFetchCustomOrderExamples(),
+          getAdminSiteContentHome(),
+        ]);
         if (!isMounted) return;
+        setHomeContent(content || {});
+        setMainImage({ imageUrl: content?.customOrdersMainImage || '' });
         const ordered = [...examples].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
         const next = buildEmptySlots().map((slot, idx) => {
           const ex = ordered[idx];
@@ -78,9 +99,21 @@ export function AdminCustomOrderExamplesTab() {
   }, []);
 
   const hasBlockingIssues = useMemo(
-    () => slots.some((slot) => slot.isUploading || slot.uploadError),
-    [slots]
+    () => mainImage.isUploading || mainImage.uploadError || slots.some((slot) => slot.isUploading || slot.uploadError),
+    [mainImage, slots]
   );
+
+  const handleMainImageSelect = async (file: File) => {
+    setMainImage((prev) => ({ ...prev, isUploading: true, uploadError: null }));
+    try {
+      const result = await adminUploadImageUnified(file, { scope: 'custom-orders' });
+      setMainImage({ imageUrl: result.url, isUploading: false, uploadError: null });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Upload failed';
+      setMainImage((prev) => ({ ...prev, isUploading: false, uploadError: message }));
+      toast.error(message);
+    }
+  };
 
   const handleFileSelect = async (index: number, file: File) => {
     setSlots((prev) =>
@@ -178,6 +211,12 @@ export function AdminCustomOrderExamplesTab() {
         isActive: !!slot.imageUrl,
       }));
       const saved = await adminSaveCustomOrderExamples(payload);
+      const nextHomeContent: HomeSiteContent = {
+        ...homeContent,
+        customOrdersMainImage: mainImage.imageUrl || '',
+      };
+      await updateAdminSiteContentHome(nextHomeContent);
+      setHomeContent(nextHomeContent);
       const ordered = [...saved].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
       const next = buildEmptySlots().map((slot, idx) => {
         const ex = ordered[idx];
@@ -211,7 +250,7 @@ export function AdminCustomOrderExamplesTab() {
           <div className="w-full text-center">
             <AdminSectionHeader
               title="Custom Order Examples"
-              subtitle="Manage the 9 custom examples shown on the Custom Orders page."
+              subtitle="Manage the main Custom Orders image and the 9 custom examples shown on the Custom Orders page."
             />
           </div>
           <div className="absolute right-0 top-0 hidden sm:block">
@@ -238,8 +277,81 @@ export function AdminCustomOrderExamplesTab() {
       {isLoading ? (
         <div className="mt-6 text-sm text-charcoal/60">Loading examples...</div>
       ) : (
-        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {slots.map((slot, idx) => (
+        <div className="mt-6 space-y-6">
+          <section className="lux-panel p-4">
+            <div className="grid gap-4 lg:grid-cols-[minmax(220px,320px)_1fr] lg:items-center">
+              <div className="relative aspect-[4/5] bg-linen/80 rounded-shell-lg overflow-hidden flex items-center justify-center">
+                {mainImage.imageUrl ? (
+                  <img
+                    src={mainImage.imageUrl}
+                    alt="Custom Orders Main Image"
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                ) : (
+                  <div className="text-[11px] uppercase tracking-[0.2em] text-charcoal/60 flex flex-col items-center gap-2 font-semibold">
+                    <Plus className="h-5 w-5" />
+                    Main Image
+                  </div>
+                )}
+                {mainImage.isUploading && (
+                  <div className="absolute inset-0 bg-white/70 flex items-center justify-center text-xs text-charcoal/70">
+                    Uploading...
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <h3 className="text-[13px] uppercase tracking-[0.22em] font-semibold text-charcoal">
+                    Custom Orders Main Image
+                  </h3>
+                  <p className="mt-2 text-sm text-charcoal/65">
+                    Used on the homepage Custom Orders section and the standalone Custom Orders page. This is separate from the 9 example uploads below.
+                  </p>
+                </div>
+                {mainImage.uploadError && (
+                  <div className="rounded-shell border border-rose-200 bg-rose-50 px-2 py-1 text-xs text-rose-700">
+                    {mainImage.uploadError}
+                  </div>
+                )}
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => mainImageInputRef.current?.click()}
+                    className="lux-button--ghost px-3 py-1 text-[10px]"
+                  >
+                    <Upload className="h-4 w-4" />
+                    {mainImage.imageUrl ? 'Replace' : 'Upload'}
+                  </button>
+                  {mainImage.imageUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setMainImage({ imageUrl: '' })}
+                      className="lux-button--ghost px-2 py-1 text-[10px]"
+                    >
+                      Clear
+                    </button>
+                  )}
+                  <input
+                    ref={mainImageInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) void handleMainImageSelect(file);
+                      if (mainImageInputRef.current) mainImageInputRef.current.value = '';
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {slots.map((slot, idx) => (
             <div key={slot.id} className="lux-panel p-3 space-y-3">
               <div className="relative aspect-[4/5] bg-linen/80 rounded-shell-lg overflow-hidden flex items-center justify-center">
                 {slot.imageUrl ? (
@@ -331,11 +443,11 @@ export function AdminCustomOrderExamplesTab() {
                 />
               </div>
             </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
     </div>
   );
 }
-
 

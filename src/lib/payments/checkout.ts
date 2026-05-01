@@ -55,7 +55,19 @@ export interface CheckoutSessionInfo {
 }
 
 export async function createEmbeddedCheckoutSession(
-  items: { productId: string; quantity: number; optionGroupLabel?: string | null; optionValue?: string | null }[],
+  items: {
+    productId: string;
+    quantity: number;
+    optionGroupLabel?: string | null;
+    optionValue?: string | null;
+    selectedOptions?: Array<{
+      groupId: string;
+      groupLabel: string;
+      optionId?: string | null;
+      optionLabel: string;
+      optionValue: string;
+    }> | null;
+  }[],
   promoCode?: string
 ): Promise<EmbeddedCheckoutSession> {
   const normalizedPromoCode = typeof promoCode === 'string' ? promoCode.trim() : '';

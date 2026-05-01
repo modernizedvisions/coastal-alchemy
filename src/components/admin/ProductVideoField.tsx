@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import type { ProductVideoStatus, ProductVideoSummary } from '../../lib/types';
 import { Loader2 } from 'lucide-react';
 import {
@@ -146,7 +146,7 @@ const resolveDirectUploadError = (status: number): string => {
     return 'Cloudflare rejected the file upload body.';
   }
   if (status === 401 || status === 403 || status === 410) {
-    return 'Cloudflare rejected the upload request before the video reached Dover.';
+    return 'Cloudflare rejected the upload request before the video reached Coastal Alchemy.';
   }
   if (status === 502 || status === 503 || status === 504) {
     return `The upload URL was created, but the file upload failed with HTTP ${status}.`;
@@ -574,7 +574,7 @@ export function ProductVideoField({
         status: normalizedStatus,
       });
     } catch (error) {
-      const message = 'Could not refresh product video status from Dover.';
+      const message = 'Could not refresh product video status from Coastal Alchemy.';
       const responseSnippet = truncateText(normalizeError(error), 600);
       if (!silent) {
         setUploadError(message, {
@@ -832,7 +832,7 @@ export function ProductVideoField({
       if (!uploadUrl || !providerAssetId) {
         throw toUploadFlowError(
           'create-upload',
-          'Dover created an upload request, but did not receive a valid Stream upload URL.',
+          'Coastal Alchemy created an upload request, but did not receive a valid Stream upload URL.',
           {
             errorName: 'MissingUploadPayload',
             responseSnippet: truncateText(JSON.stringify(uploadInit), 600),

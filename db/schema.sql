@@ -26,13 +26,17 @@ CREATE TABLE IF NOT EXISTS products (
 CREATE TABLE IF NOT EXISTS categories (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
+  subtitle TEXT,
   slug TEXT NOT NULL,
   image_url TEXT,
   hero_image_url TEXT,
+  image_id TEXT,
+  hero_image_id TEXT,
   sort_order INTEGER NOT NULL DEFAULT 0,
   option_group_label TEXT,
   option_group_options_json TEXT,
   show_on_homepage INTEGER DEFAULT 0,
+  shipping_cents INTEGER DEFAULT 0,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 

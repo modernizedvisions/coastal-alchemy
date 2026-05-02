@@ -245,6 +245,7 @@ export async function adminSaveCustomOrderExamples(examples: CustomOrderExample[
 export async function adminCreateCategory(payload: {
   name: string;
   subtitle?: string;
+  sampleDescription?: string;
   shippingCents?: number;
   sortOrder?: number;
   optionGroupLabel?: string | null;

@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS categories (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   subtitle TEXT,
+  sample_description TEXT,
   slug TEXT NOT NULL,
   image_url TEXT,
   hero_image_url TEXT,

@@ -15,6 +15,7 @@ type CategoryRow = {
   id: string;
   name: string | null;
   subtitle?: string | null;
+  sample_description?: string | null;
   slug: string | null;
   image_url?: string | null;
   hero_image_url?: string | null;
@@ -32,6 +33,7 @@ type Category = {
   id: string;
   name: string;
   subtitle?: string;
+  sampleDescription?: string;
   slug: string;
   imageUrl?: string;
   heroImageUrl?: string;
@@ -70,6 +72,7 @@ const createCategoriesTable = `
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     subtitle TEXT,
+    sample_description TEXT,
     slug TEXT NOT NULL,
     image_url TEXT,
     hero_image_url TEXT,
@@ -89,6 +92,7 @@ const REQUIRED_CATEGORY_COLUMNS: Record<string, string> = {
   slug: 'slug TEXT',
   hero_image_url: 'hero_image_url TEXT',
   subtitle: 'subtitle TEXT',
+  sample_description: 'sample_description TEXT',
   image_id: 'image_id TEXT',
   hero_image_id: 'hero_image_id TEXT',
   shipping_cents: 'shipping_cents INTEGER DEFAULT 0',
@@ -106,7 +110,7 @@ export async function onRequestGet(context: {
 
     const { results } = await context.env.DB
       .prepare(
-        `SELECT id, name, subtitle, slug, image_url, hero_image_url, image_id, hero_image_id, sort_order, option_group_label, option_group_options_json, option_groups_json, show_on_homepage, shipping_cents, created_at
+        `SELECT id, name, subtitle, sample_description, slug, image_url, hero_image_url, image_id, hero_image_id, sort_order, option_group_label, option_group_options_json, option_groups_json, show_on_homepage, shipping_cents, created_at
          FROM categories
          ORDER BY sort_order ASC, datetime(created_at) ASC, name ASC`
       )
@@ -144,6 +148,7 @@ const mapRowToCategory = (
     id: row.id,
     name: row.name,
     subtitle: row.subtitle || undefined,
+    sampleDescription: row.sample_description || undefined,
     slug: row.slug,
     imageUrl: row.image_url ? normalizeImageUrl(row.image_url, request, env) : undefined,
     heroImageUrl: row.hero_image_url ? normalizeImageUrl(row.hero_image_url, request, env) : undefined,

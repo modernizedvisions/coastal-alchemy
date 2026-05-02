@@ -179,6 +179,7 @@ export interface Category {
   id: string;
   name: string;
   subtitle?: string;
+  sampleDescription?: string;
   slug: string;
   imageUrl?: string;
   heroImageUrl?: string;

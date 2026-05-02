@@ -417,6 +417,10 @@ export const AdminShopTab: React.FC<AdminShopTabProps> = ({
   const [editImages, setEditImages] = useState<ManagedImage[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [autoDescriptionEnabled, setAutoDescriptionEnabled] = useState(true);
+  const [lastAutoDescription, setLastAutoDescription] = useState('');
+  const [editAutoDescriptionEnabled, setEditAutoDescriptionEnabled] = useState(false);
+  const [lastEditAutoDescription, setLastEditAutoDescription] = useState('');
   const [activeDragProductId, setActiveDragProductId] = useState<string | null>(null);
   const [activeEditImageId, setActiveEditImageId] = useState<string | null>(null);
   const [isReordering, setIsReordering] = useState(false);
@@ -491,6 +495,9 @@ export const AdminShopTab: React.FC<AdminShopTabProps> = ({
     () => adminProducts.find((product) => product.id === editProductId) || null,
     [adminProducts, editProductId]
   );
+
+  const createCategorySampleDescription = (createSelectedCategory?.sampleDescription || '').trim();
+  const editCategorySampleDescription = (editSelectedCategory?.sampleDescription || '').trim();
 
   const addProductStatusMessages = useMemo(() => {
     const messages: string[] = [];
@@ -598,6 +605,99 @@ export const AdminShopTab: React.FC<AdminShopTabProps> = ({
       setSelectedCategory('All');
     }
   }, [categories, editProductForm, onEditFormChange, onProductFormChange, productForm.category, selectedCategory]);
+
+  useEffect(() => {
+    if (!autoDescriptionEnabled) return;
+    const currentDescription = productForm.description || '';
+    if (!createCategorySampleDescription) {
+      if (lastAutoDescription && currentDescription === lastAutoDescription) {
+        onProductFormChange('description', '');
+        setLastAutoDescription('');
+      }
+      return;
+    }
+    if (!currentDescription.trim() || currentDescription === lastAutoDescription) {
+      if (currentDescription !== createCategorySampleDescription) {
+        onProductFormChange('description', createCategorySampleDescription);
+      }
+      if (lastAutoDescription !== createCategorySampleDescription) {
+        setLastAutoDescription(createCategorySampleDescription);
+      }
+    }
+  }, [
+    autoDescriptionEnabled,
+    createCategorySampleDescription,
+    lastAutoDescription,
+    onProductFormChange,
+    productForm.description,
+  ]);
+
+  useEffect(() => {
+    if (!editAutoDescriptionEnabled || !editProductForm) return;
+    const currentDescription = editProductForm.description || '';
+    if (!editCategorySampleDescription) {
+      if (lastEditAutoDescription && currentDescription === lastEditAutoDescription) {
+        onEditFormChange('description', '');
+        setLastEditAutoDescription('');
+      }
+      return;
+    }
+    if (!currentDescription.trim() || currentDescription === lastEditAutoDescription) {
+      if (currentDescription !== editCategorySampleDescription) {
+        onEditFormChange('description', editCategorySampleDescription);
+      }
+      if (lastEditAutoDescription !== editCategorySampleDescription) {
+        setLastEditAutoDescription(editCategorySampleDescription);
+      }
+    }
+  }, [
+    editAutoDescriptionEnabled,
+    editCategorySampleDescription,
+    editProductForm,
+    editProductForm?.description,
+    lastEditAutoDescription,
+    onEditFormChange,
+  ]);
+
+  const handleCreateAutoDescriptionToggle = (enabled: boolean) => {
+    setAutoDescriptionEnabled(enabled);
+    const currentDescription = productForm.description || '';
+    if (!enabled) {
+      if (lastAutoDescription && currentDescription === lastAutoDescription) {
+        onProductFormChange('description', '');
+        setLastAutoDescription('');
+      }
+      return;
+    }
+    if (createCategorySampleDescription && (!currentDescription.trim() || currentDescription === lastAutoDescription)) {
+      onProductFormChange('description', createCategorySampleDescription);
+      setLastAutoDescription(createCategorySampleDescription);
+    }
+  };
+
+  const handleEditAutoDescriptionToggle = (enabled: boolean) => {
+    setEditAutoDescriptionEnabled(enabled);
+    if (!editProductForm) return;
+    const currentDescription = editProductForm.description || '';
+    if (!enabled) {
+      if (lastEditAutoDescription && currentDescription === lastEditAutoDescription) {
+        onEditFormChange('description', '');
+        setLastEditAutoDescription('');
+      }
+      return;
+    }
+    if (editCategorySampleDescription && (!currentDescription.trim() || currentDescription === lastEditAutoDescription)) {
+      onEditFormChange('description', editCategorySampleDescription);
+      setLastEditAutoDescription(editCategorySampleDescription);
+    }
+  };
+
+  const handleStartEditProduct = (product: Product) => {
+    setEditAutoDescriptionEnabled(false);
+    setLastEditAutoDescription('');
+    setIsEditModalOpen(true);
+    onStartEditProduct(product);
+  };
 
   const handleModalFileSelect = (files: FileList | null) => {
     const list = Array.from(files ?? []);
@@ -900,6 +1000,8 @@ export const AdminShopTab: React.FC<AdminShopTabProps> = ({
   const handleEditModalOpenChange = (open: boolean) => {
     setIsEditModalOpen(open);
     if (!open) {
+      setEditAutoDescriptionEnabled(false);
+      setLastEditAutoDescription('');
       onCancelEditProduct();
     }
   };
@@ -908,10 +1010,7 @@ export const AdminShopTab: React.FC<AdminShopTabProps> = ({
     <div key={product.id} className="relative touch-pan-y">
       <ProductAdminCard
         product={product}
-        onEdit={(p) => {
-          setIsEditModalOpen(true);
-          onStartEditProduct(p);
-        }}
+        onEdit={handleStartEditProduct}
         onDelete={async (id) => {
           await onDeleteProduct(id);
         }}
@@ -1004,15 +1103,22 @@ export const AdminShopTab: React.FC<AdminShopTabProps> = ({
                 <label className="lux-label block">Product Settings</label>
                 <div className="grid grid-cols-1 gap-2 lg:grid-cols-4">
                   <div className="rounded-shell border border-driftwood/60 bg-white/80 p-2.5 space-y-2 lg:col-span-3 min-h-[190px]">
-                    <div className="flex items-center justify-between gap-2">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                       <label className="lux-label block">Categories</label>
-                      <button
-                        type="button"
-                        onClick={() => setIsCategoryModalOpen(true)}
-                        className="lux-button--ghost px-2 py-1 text-[10px]"
-                      >
-                        Edit
-                      </button>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <ToggleSwitchSmall
+                          label="Auto Description"
+                          checked={autoDescriptionEnabled}
+                          onChange={handleCreateAutoDescriptionToggle}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setIsCategoryModalOpen(true)}
+                          className="lux-button--ghost px-2 py-1 text-[10px]"
+                        >
+                          Edit
+                        </button>
+                      </div>
                     </div>
                     <div className="rounded-shell border border-driftwood/50 bg-linen/50 min-h-[140px]">
                       {categories.length === 0 ? (
@@ -1427,10 +1533,7 @@ export const AdminShopTab: React.FC<AdminShopTabProps> = ({
                     product={product}
                     canReorder={canInteractivelyReorder}
                     isReordering={isReordering}
-                    onEdit={(p) => {
-                      setIsEditModalOpen(true);
-                      onStartEditProduct(p);
-                    }}
+                    onEdit={handleStartEditProduct}
                     onDelete={async (id) => {
                       await onDeleteProduct(id);
                     }}
@@ -1544,7 +1647,14 @@ export const AdminShopTab: React.FC<AdminShopTabProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="lux-label mb-2 block">Category</label>
+                  <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <label className="lux-label block">Category</label>
+                    <ToggleSwitchSmall
+                      label="Auto Description"
+                      checked={editAutoDescriptionEnabled}
+                      onChange={handleEditAutoDescriptionToggle}
+                    />
+                  </div>
                   <select
                     value={editProductForm?.category}
                     onChange={(e) => onEditFormChange('category', e.target.value)}
@@ -1967,6 +2077,3 @@ function ManagedImagesList({
     </div>
   );
 }
-
-
-

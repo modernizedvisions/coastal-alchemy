@@ -26,6 +26,7 @@ interface CategoryManagementModalProps {
 type CategoryDraft = {
   name: string;
   subtitle: string;
+  sampleDescription: string;
   shipping: string;
   optionGroups: VariationGroup[];
 };
@@ -49,6 +50,7 @@ type ChoiceBuilderDraft = {
 const emptyDraft = (): CategoryDraft => ({
   name: '',
   subtitle: '',
+  sampleDescription: '',
   shipping: '',
   optionGroups: [],
 });
@@ -98,6 +100,25 @@ const categoryGroups = (cat: Category) =>
       : []
   );
 
+const groupMatchesPresetGroup = (group: VariationGroup, presetGroup: VariationGroup) => {
+  const groupLabel = group.label.trim().toLowerCase();
+  const presetLabel = presetGroup.label.trim().toLowerCase();
+  if (!groupLabel || groupLabel !== presetLabel) return false;
+  const groupValues = group.options.map((option) => normalizeCategoryKey(option.label || option.value)).filter(Boolean).sort();
+  const presetValues = presetGroup.options.map((option) => normalizeCategoryKey(option.label || option.value)).filter(Boolean).sort();
+  if (groupValues.length !== presetValues.length) return false;
+  return groupValues.every((value, index) => value === presetValues[index]);
+};
+
+const presetAlreadyInGroups = (preset: VariationPreset, groups: VariationGroup[]) => {
+  const currentGroups = normalizeVariationGroups(groups);
+  if (currentGroups.some((group) => group.presetId === preset.id)) return true;
+  const presetGroups = normalizeVariationGroups(preset.groups);
+  return presetGroups.length > 0 && presetGroups.every((presetGroup) =>
+    currentGroups.some((group) => groupMatchesPresetGroup(group, presetGroup))
+  );
+};
+
 export function CategoryManagementModal({
   open,
   onClose,
@@ -129,6 +150,8 @@ export function CategoryManagementModal({
   const [assignmentCategoryIds, setAssignmentCategoryIds] = useState<string[]>([]);
   const [isSavingAssignments, setIsSavingAssignments] = useState(false);
   const editTitleRef = useRef<HTMLInputElement | null>(null);
+  const presetScrollBodyRef = useRef<HTMLDivElement | null>(null);
+  const presetBuilderSectionRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -479,6 +502,7 @@ export function CategoryManagementModal({
       const created = await adminCreateCategory({
         name: trimmed,
         subtitle: newDraft.subtitle.trim() || undefined,
+        sampleDescription: newDraft.sampleDescription.trim() || undefined,
         shippingCents: normalizedShipping,
         sortOrder: Math.max(0, maxSortOrder + 1),
         optionGroups,
@@ -526,6 +550,7 @@ export function CategoryManagementModal({
       const updated = await adminUpdateCategory(cat.id, {
         name: trimmedName,
         subtitle: editDraft.subtitle.trim() || undefined,
+        sampleDescription: editDraft.sampleDescription.trim() || undefined,
         shippingCents: normalized,
         optionGroups,
       });
@@ -586,6 +611,15 @@ export function CategoryManagementModal({
     setPresetBuilderDraft(groupToChoiceBuilderDraft(preset.groups[0] || createVariationGroup(preset.name)));
     setIsPresetBuilderOpen(true);
     setCategoryMessage('');
+    requestAnimationFrame(() => {
+      const scrollBody = presetScrollBodyRef.current;
+      const section = presetBuilderSectionRef.current;
+      if (scrollBody && section) {
+        scrollBody.scrollTo({ top: Math.max(section.offsetTop - 12, 0), behavior: 'smooth' });
+        return;
+      }
+      section?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
   };
 
   const handleDeletePreset = async (id: string) => {
@@ -652,6 +686,7 @@ export function CategoryManagementModal({
     setEditDraft({
       name: cat.name || '',
       subtitle: cat.subtitle || '',
+      sampleDescription: cat.sampleDescription || '',
       shipping: cents > 0 ? (cents / 100).toFixed(2) : '',
       optionGroups: categoryGroups(cat),
     });
@@ -709,6 +744,19 @@ export function CategoryManagementModal({
                       value={newDraft.subtitle}
                       onChange={(value) => setNewDraft((p) => ({ ...p, subtitle: value }))}
                     />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="lux-label mb-2 block">Sample Product Description</label>
+                    <textarea
+                      value={newDraft.sampleDescription}
+                      onChange={(event) => setNewDraft((p) => ({ ...p, sampleDescription: event.target.value }))}
+                      placeholder="Example: Hand-finished coastal piece made with natural shell details and a soft, polished finish."
+                      className="lux-input min-h-[110px] resize-y text-sm"
+                      rows={4}
+                    />
+                    <p className="mt-2 text-xs leading-5 text-charcoal/55">
+                      Optional. This can auto-fill the product description when this category is selected.
+                    </p>
                   </div>
                 </div>
               </section>
@@ -800,6 +848,21 @@ export function CategoryManagementModal({
                           value={editDraft.subtitle}
                           onChange={(value) => setEditDraft((p) => (p ? { ...p, subtitle: value } : p))}
                         />
+                      </div>
+                      <div className="md:col-span-2">
+                        <label className="lux-label mb-2 block">Sample Product Description</label>
+                        <textarea
+                          value={editDraft.sampleDescription}
+                          onChange={(event) =>
+                            setEditDraft((p) => (p ? { ...p, sampleDescription: event.target.value } : p))
+                          }
+                          placeholder="Example: Hand-finished coastal piece made with natural shell details and a soft, polished finish."
+                          className="lux-input min-h-[110px] resize-y text-sm"
+                          rows={4}
+                        />
+                        <p className="mt-2 text-xs leading-5 text-charcoal/55">
+                          Optional. This can auto-fill the product description when this category is selected.
+                        </p>
                       </div>
                     </div>
                   </section>
@@ -898,8 +961,8 @@ export function CategoryManagementModal({
             onClose={closeAll}
           >
             <StatusMessage message={categoryMessage} />
-            <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-5 py-5 sm:px-7">
-              <section className="space-y-4">
+            <div ref={presetScrollBodyRef} className="min-h-0 flex-1 space-y-6 overflow-y-auto px-5 py-5 sm:px-7">
+              <section ref={presetBuilderSectionRef} className="space-y-4">
                 <ChoicePanelSelectorCard
                   title={presetDraftId ? 'Edit Preset' : 'Create Preset'}
                   subtitle="Create a reusable customer choice preset like Trim, Shell Type, or Set Size."
@@ -1642,7 +1705,7 @@ function CreateCategoryChoicesEditor({
       )}
 
       {activePanel === 'presets' && (
-        <PresetSelectionPanel presets={presets} onUsePreset={onUsePreset} onEditPreset={onEditPreset} />
+        <PresetSelectionPanel groups={groups} presets={presets} onUsePreset={onUsePreset} onEditPreset={onEditPreset} />
       )}
 
       <CurrentCategoryChoices
@@ -1690,14 +1753,18 @@ function ChoicePanelSelectorCard({
 }
 
 function PresetSelectionPanel({
+  groups,
   presets,
   onUsePreset,
   onEditPreset,
 }: {
+  groups: VariationGroup[];
   presets: VariationPreset[];
   onUsePreset: (preset: VariationPreset) => void;
   onEditPreset: (preset: VariationPreset) => void;
 }) {
+  const availablePresets = presets.filter((preset) => !presetAlreadyInGroups(preset, groups));
+
   return (
     <section className="space-y-4 rounded-[18px] border border-driftwood/60 bg-white/80 p-4">
       <div>
@@ -1708,9 +1775,11 @@ function PresetSelectionPanel({
         <div className="ca-admin-empty-state">
           No presets saved yet. Create a customer choice above and click Add As New Preset to reuse it later.
         </div>
+      ) : availablePresets.length === 0 ? (
+        <div className="ca-admin-empty-state">All available presets have already been added to this category.</div>
       ) : (
         <div className="grid items-stretch gap-3 md:grid-cols-2">
-          {presets.map((preset) => (
+          {availablePresets.map((preset) => (
             <PresetChoiceCard
               key={preset.id}
               preset={preset}
@@ -1900,7 +1969,7 @@ function EditCategoryChoicesEditor({
       )}
 
       {activePanel === 'presets' && (
-        <PresetSelectionPanel presets={presets} onUsePreset={onUsePreset} onEditPreset={onEditPreset} />
+        <PresetSelectionPanel groups={groups} presets={presets} onUsePreset={onUsePreset} onEditPreset={onEditPreset} />
       )}
 
       <CurrentCategoryChoices

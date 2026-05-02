@@ -1415,7 +1415,17 @@ function ChoiceBuilder({
     <div className="rounded-[20px] border border-deep-ocean/25 bg-white p-4 sm:p-5">
       <div className="space-y-4 border-l-2 border-driftwood/70 pl-4 sm:pl-5">
         <div>
-          <label className="lux-label mb-2 block">Choice Name</label>
+          <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <label className="lux-label block">Choice Name</label>
+            <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-charcoal/65">
+              <input
+                type="checkbox"
+                checked={draft.required}
+                onChange={(e) => onDraftChange({ ...draft, required: e.target.checked })}
+              />
+              Mandatory Choice
+            </label>
+          </div>
           <input
             value={draft.label}
             onChange={(e) => onDraftChange({ ...draft, label: e.target.value })}
@@ -1423,15 +1433,6 @@ function ChoiceBuilder({
             className="lux-input min-h-[46px] text-base"
           />
         </div>
-
-        <label className="flex items-center gap-3 rounded-[14px] border border-driftwood/60 bg-linen/55 px-4 py-3 text-xs uppercase tracking-[0.2em] text-charcoal/70">
-          <input
-            type="checkbox"
-            checked={draft.required}
-            onChange={(e) => onDraftChange({ ...draft, required: e.target.checked })}
-          />
-          Customer must choose one
-        </label>
 
         <div className="space-y-3 pl-3 sm:pl-5">
           <div>

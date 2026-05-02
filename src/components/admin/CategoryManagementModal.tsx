@@ -76,11 +76,11 @@ const normalizeCategoriesList = (items: Category[]): Category[] => {
   return ordered;
 };
 
-const cloneGroups = (groups: VariationGroup[]): VariationGroup[] =>
+const cloneGroups = (groups: VariationGroup[], sourcePresetId: string | null = null): VariationGroup[] =>
   normalizeVariationGroups(groups).map((group, groupIndex) => ({
     ...group,
     id: crypto.randomUUID(),
-    presetId: null,
+    presetId: sourcePresetId,
     displayOrder: groupIndex,
     options: group.options.map((option, optionIndex) => ({
       ...option,
@@ -115,8 +115,8 @@ export function CategoryManagementModal({
   const [editDraft, setEditDraft] = useState<CategoryDraft | null>(null);
   const [adminCategories, setAdminCategories] = useState<Category[]>([]);
   const [presets, setPresets] = useState<VariationPreset[]>([]);
-  const [selectedEditPresetId, setSelectedEditPresetId] = useState('');
   const [activeChoicePanel, setActiveChoicePanel] = useState<ChoicePanel | null>(null);
+  const [activeEditChoicePanel, setActiveEditChoicePanel] = useState<ChoicePanel | null>(null);
   const [choiceBuilderDraft, setChoiceBuilderDraft] = useState<ChoiceBuilderDraft>(() => emptyChoiceBuilderDraft());
   const [editChoiceBuilderDraft, setEditChoiceBuilderDraft] = useState<ChoiceBuilderDraft>(() => emptyChoiceBuilderDraft());
   const [editChoiceGroupId, setEditChoiceGroupId] = useState<string | null>(null);
@@ -124,8 +124,9 @@ export function CategoryManagementModal({
   const [presetBuilderDraft, setPresetBuilderDraft] = useState<ChoiceBuilderDraft>(() => emptyChoiceBuilderDraft());
   const [presetPendingDelete, setPresetPendingDelete] = useState<VariationPreset | null>(null);
   const [isDeletingPreset, setIsDeletingPreset] = useState(false);
-  const [applyTemplateId, setApplyTemplateId] = useState('');
-  const [applyCategoryIds, setApplyCategoryIds] = useState<string[]>([]);
+  const [assigningPreset, setAssigningPreset] = useState<VariationPreset | null>(null);
+  const [assignmentCategoryIds, setAssignmentCategoryIds] = useState<string[]>([]);
+  const [isSavingAssignments, setIsSavingAssignments] = useState(false);
   const editTitleRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -171,6 +172,7 @@ export function CategoryManagementModal({
     setToolView('launcher');
     setCategoryMessage('');
     setPresetPendingDelete(null);
+    setAssigningPreset(null);
     onClose();
   };
 
@@ -179,13 +181,11 @@ export function CategoryManagementModal({
     setCategoryMessage('');
     setEditCategoryId(null);
     setEditDraft(null);
-    setSelectedEditPresetId('');
     setActiveChoicePanel(null);
+    setActiveEditChoicePanel(null);
     setChoiceBuilderDraft(emptyChoiceBuilderDraft());
     setEditChoiceBuilderDraft(emptyChoiceBuilderDraft());
     setEditChoiceGroupId(null);
-    setApplyTemplateId('');
-    setApplyCategoryIds([]);
     resetPresetDraft();
   };
 
@@ -232,12 +232,6 @@ export function CategoryManagementModal({
     else setEditDraft((prev) => apply(prev));
   };
 
-  const applyPreset = (target: 'new' | 'edit', presetId: string) => {
-    const preset = presets.find((item) => item.id === presetId);
-    if (!preset) return;
-    updateDraftGroups(target, (groups) => [...groups, ...cloneGroups(preset.groups)]);
-  };
-
   const usePresetForNewCategory = (preset: VariationPreset) => {
     const presetLabels = new Set(normalizeVariationGroups(preset.groups).map((group) => group.label.trim().toLowerCase()).filter(Boolean));
     const duplicate = newDraft.optionGroups.find((group) => presetLabels.has(group.label.trim().toLowerCase()));
@@ -245,8 +239,75 @@ export function CategoryManagementModal({
       setCategoryMessage(`"${duplicate.label}" is already in Current Choices for This Category.`);
       return;
     }
-    updateDraftGroups('new', (groups) => [...groups, ...cloneGroups(preset.groups)]);
+    updateDraftGroups('new', (groups) => [...groups, ...cloneGroups(preset.groups, preset.id)]);
     setCategoryMessage('');
+  };
+
+  const usePresetForEditCategory = (preset: VariationPreset) => {
+    if (!editDraft) return;
+    const presetLabels = new Set(normalizeVariationGroups(preset.groups).map((group) => group.label.trim().toLowerCase()).filter(Boolean));
+    const duplicate = editDraft.optionGroups.find((group) => group.presetId === preset.id || presetLabels.has(group.label.trim().toLowerCase()));
+    if (duplicate) {
+      setCategoryMessage(`"${duplicate.label}" is already in Current Choices for This Category.`);
+      return;
+    }
+    updateDraftGroups('edit', (groups) => [...groups, ...cloneGroups(preset.groups, preset.id)]);
+    setCategoryMessage('');
+  };
+
+  const assignedCategoryIdsForPreset = (preset: VariationPreset) =>
+    adminCategories
+      .filter((cat) => categoryGroups(cat).some((group) => group.presetId === preset.id))
+      .map((cat) => cat.id);
+
+  const openAssignPreset = (preset: VariationPreset) => {
+    setAssigningPreset(preset);
+    setAssignmentCategoryIds(assignedCategoryIdsForPreset(preset));
+    setCategoryMessage('');
+  };
+
+  const handleSavePresetAssignments = async () => {
+    if (!assigningPreset) return;
+    const selectedIds = new Set(assignmentCategoryIds);
+    const previous = adminCategories;
+    const nextCategories = adminCategories.map((cat) => {
+      const groups = categoryGroups(cat);
+      const hasTrackedPreset = groups.some((group) => group.presetId === assigningPreset.id);
+      let nextGroups = groups;
+      if (selectedIds.has(cat.id) && !hasTrackedPreset) {
+        nextGroups = [...groups, ...cloneGroups(assigningPreset.groups, assigningPreset.id)];
+      }
+      if (!selectedIds.has(cat.id) && hasTrackedPreset) {
+        nextGroups = groups.filter((group) => group.presetId !== assigningPreset.id);
+      }
+      return { ...cat, optionGroups: normalizeVariationGroups(nextGroups) };
+    });
+    setAdminCategories(nextCategories);
+    onCategoriesChange(nextCategories);
+    setIsSavingAssignments(true);
+    try {
+      const updatedById = new Map<string, Category>();
+      for (const cat of nextCategories) {
+        const previousGroups = categoryGroups(previous.find((item) => item.id === cat.id) || cat);
+        const nextGroups = categoryGroups(cat);
+        if (JSON.stringify(previousGroups) === JSON.stringify(nextGroups)) continue;
+        const updated = await adminUpdateCategory(cat.id, { optionGroups: nextGroups });
+        if (updated) updatedById.set(cat.id, updated);
+      }
+      const updatedList = normalizeCategoriesList(nextCategories.map((cat) => updatedById.get(cat.id) || cat));
+      setAdminCategories(updatedList);
+      onCategoriesChange(updatedList);
+      setAssigningPreset(null);
+      setAssignmentCategoryIds([]);
+      setCategoryMessage('Preset assignments saved.');
+    } catch (error) {
+      console.error('Failed to save preset assignments', error);
+      setAdminCategories(previous);
+      onCategoriesChange(previous);
+      setCategoryMessage('Could not save preset assignments.');
+    } finally {
+      setIsSavingAssignments(false);
+    }
   };
 
   const uniquePresetName = (nameInput: string): string => {
@@ -463,7 +524,7 @@ export function CategoryManagementModal({
         setCategoryMessage('');
         setEditCategoryId(null);
         setEditDraft(null);
-        setSelectedEditPresetId('');
+        setActiveEditChoicePanel(null);
         setEditChoiceBuilderDraft(emptyChoiceBuilderDraft());
         setEditChoiceGroupId(null);
       }
@@ -581,52 +642,10 @@ export function CategoryManagementModal({
       shipping: cents > 0 ? (cents / 100).toFixed(2) : '',
       optionGroups: categoryGroups(cat),
     });
-    setSelectedEditPresetId('');
+    setActiveEditChoicePanel(null);
     setEditChoiceBuilderDraft(emptyChoiceBuilderDraft());
     setEditChoiceGroupId(null);
     setCategoryMessage('');
-  };
-
-  const handleApplyTemplateToCategories = async () => {
-    const template = presets.find((item) => item.id === applyTemplateId);
-    if (!template) {
-      setCategoryMessage('Choose a preset.');
-      return;
-    }
-    if (!applyCategoryIds.length) {
-      setCategoryMessage('Choose at least one category.');
-      return;
-    }
-    const selectedIds = new Set(applyCategoryIds);
-    const previous = adminCategories;
-    const nextCategories = adminCategories.map((cat) =>
-      selectedIds.has(cat.id) ? { ...cat, optionGroups: cloneGroups(template.groups) } : cat
-    );
-    setAdminCategories(nextCategories);
-    onCategoriesChange(nextCategories);
-    setIsSaving(true);
-    try {
-      const updatedById = new Map<string, Category>();
-      for (const cat of adminCategories.filter((item) => selectedIds.has(item.id))) {
-        const updated = await adminUpdateCategory(cat.id, { optionGroups: cloneGroups(template.groups) });
-        if (updated) updatedById.set(cat.id, updated);
-      }
-      const updatedList = normalizeCategoriesList(
-        nextCategories.map((cat) => updatedById.get(cat.id) || cat)
-      );
-      setAdminCategories(updatedList);
-      onCategoriesChange(updatedList);
-      setApplyTemplateId('');
-      setApplyCategoryIds([]);
-      setCategoryMessage('Preset added to selected categories.');
-    } catch (error) {
-      console.error('Failed to add preset to categories', error);
-      setAdminCategories(previous);
-      onCategoriesChange(previous);
-      setCategoryMessage('Could not add preset to categories.');
-    } finally {
-      setIsSaving(false);
-    }
   };
 
   const currentEditCategory = adminCategories.find((cat) => cat.id === editCategoryId) || null;
@@ -748,39 +767,42 @@ export function CategoryManagementModal({
                       <p className="ca-admin-heading text-lg">Category Details</p>
                       <p className="mt-1 text-sm text-charcoal/60">Update the title, subtitle, and default shipping price.</p>
                     </div>
-                    <div className="grid gap-4 md:grid-cols-2">
+                    <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(150px,220px)]">
                       <Input
                         inputRef={editTitleRef}
-                        label="Title"
+                        label="Category Name"
                         value={editDraft.name}
                         onChange={(value) => setEditDraft((p) => (p ? { ...p, name: value } : p))}
                       />
-                      <Input
-                        label="Subtitle"
-                        value={editDraft.subtitle}
-                        onChange={(value) => setEditDraft((p) => (p ? { ...p, subtitle: value } : p))}
+                      <ShippingInput
+                        value={editDraft.shipping}
+                        onChange={(value) => setEditDraft((p) => (p ? { ...p, shipping: value } : p))}
+                        sanitize={sanitizeShippingInput}
+                        formatDisplay={formatShippingDisplay}
+                        formatValue={formatShippingValue}
                       />
+                      <div className="md:col-span-2">
+                        <Input
+                          label="Subtitle"
+                          value={editDraft.subtitle}
+                          onChange={(value) => setEditDraft((p) => (p ? { ...p, subtitle: value } : p))}
+                        />
+                      </div>
                     </div>
-                    <ShippingInput
-                      value={editDraft.shipping}
-                      onChange={(value) => setEditDraft((p) => (p ? { ...p, shipping: value } : p))}
-                      sanitize={sanitizeShippingInput}
-                      formatDisplay={formatShippingDisplay}
-                      formatValue={formatShippingValue}
-                    />
                   </section>
 
                   <EditCategoryChoicesEditor
                     groups={editDraft.optionGroups}
                     presets={presets}
-                    selectedPresetId={selectedEditPresetId}
                     builderDraft={editChoiceBuilderDraft}
                     editingGroupId={editChoiceGroupId}
-                    onSelectedPresetChange={setSelectedEditPresetId}
+                    activePanel={activeEditChoicePanel}
+                    onPanelChange={(panel) => setActiveEditChoicePanel((current) => (current === panel ? null : panel))}
                     onBuilderDraftChange={setEditChoiceBuilderDraft}
-                    onUsePreset={() => {
-                      applyPreset('edit', selectedEditPresetId);
-                      setSelectedEditPresetId('');
+                    onUsePreset={usePresetForEditCategory}
+                    onEditPreset={(preset) => {
+                      handleEditPreset(preset);
+                      setToolView('presets');
                     }}
                     onAddBuilderChoice={addBuilderChoiceToEditCategory}
                     onAddBuilderAsPreset={() => {
@@ -798,11 +820,13 @@ export function CategoryManagementModal({
                     onCancelChoiceEdit={() => {
                       setEditChoiceBuilderDraft(emptyChoiceBuilderDraft());
                       setEditChoiceGroupId(null);
+                      setActiveEditChoicePanel(null);
                       setCategoryMessage('');
                     }}
                     onEditGroup={(group) => {
                       setEditChoiceBuilderDraft(groupToChoiceBuilderDraft(group));
                       setEditChoiceGroupId(group.id);
+                      setActiveEditChoicePanel('new');
                       setCategoryMessage('');
                     }}
                     onGroupsChange={(groups) => setEditDraft((p) => (p ? { ...p, optionGroups: groups } : p))}
@@ -827,7 +851,7 @@ export function CategoryManagementModal({
                     onClick={() => {
                       setEditCategoryId(null);
                       setEditDraft(null);
-                      setSelectedEditPresetId('');
+                      setActiveEditChoicePanel(null);
                       setEditChoiceBuilderDraft(emptyChoiceBuilderDraft());
                       setEditChoiceGroupId(null);
                     }}
@@ -895,28 +919,15 @@ export function CategoryManagementModal({
                 </div>
                 <PresetList
                   presets={presets}
+                  categories={adminCategories}
                   onEdit={handleEditPreset}
+                  onAssign={openAssignPreset}
                   onDelete={(id) => {
                     const preset = presets.find((item) => item.id === id) || null;
                     setPresetPendingDelete(preset);
                   }}
                 />
               </section>
-
-              <ApplyTemplateSection
-                presets={presets}
-                categories={adminCategories}
-                selectedTemplateId={applyTemplateId}
-                selectedCategoryIds={applyCategoryIds}
-                isSaving={isSaving}
-                onTemplateChange={setApplyTemplateId}
-                onCategoryToggle={(id) =>
-                  setApplyCategoryIds((prev) =>
-                    prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-                  )
-                }
-                onApply={handleApplyTemplateToCategories}
-              />
             </div>
             <ModalFooter>
               <button type="button" onClick={goBack} className="lux-button--ghost px-5 py-3 text-[10px]">
@@ -940,6 +951,23 @@ export function CategoryManagementModal({
       onConfirm={() => {
         if (presetPendingDelete) void handleDeletePreset(presetPendingDelete.id);
       }}
+    />
+    <PresetAssignmentDialog
+      preset={assigningPreset}
+      categories={adminCategories}
+      selectedCategoryIds={assignmentCategoryIds}
+      saving={isSavingAssignments}
+      onToggleCategory={(id) =>
+        setAssignmentCategoryIds((prev) =>
+          prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+        )
+      }
+      onCancel={() => {
+        if (isSavingAssignments) return;
+        setAssigningPreset(null);
+        setAssignmentCategoryIds([]);
+      }}
+      onSave={handleSavePresetAssignments}
     />
     </>
   );
@@ -1002,6 +1030,89 @@ function LauncherCard({ title, description, onClick }: { title: string; descript
       <span className="block font-serif text-xl text-deep-ocean">{title}</span>
       <span className="mt-2 block text-sm leading-6 text-charcoal/65">{description}</span>
     </button>
+  );
+}
+
+function PresetAssignmentDialog({
+  preset,
+  categories,
+  selectedCategoryIds,
+  saving,
+  onToggleCategory,
+  onCancel,
+  onSave,
+}: {
+  preset: VariationPreset | null;
+  categories: Category[];
+  selectedCategoryIds: string[];
+  saving: boolean;
+  onToggleCategory: (id: string) => void;
+  onCancel: () => void;
+  onSave: () => void;
+}) {
+  return (
+    <Dialog
+      open={Boolean(preset)}
+      contentClassName="!w-[calc(100vw-1.5rem)] sm:!w-[min(calc(100vw-3rem),36rem)] !max-w-none"
+      onOpenChange={(next) => {
+        if (!next && !saving) onCancel();
+      }}
+    >
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Assign Preset</DialogTitle>
+          <p className="text-sm leading-6 text-charcoal/60">Choose which categories should use this preset.</p>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          <div className="rounded-[16px] border border-driftwood/60 bg-linen/50 px-4 py-3">
+            <p className="lux-label mb-1">Preset</p>
+            <p className="font-serif text-xl text-deep-ocean">{preset?.name || 'Preset'}</p>
+          </div>
+
+          <p className="text-sm leading-6 text-charcoal/60">
+            Assigning a preset copies its choices into the selected categories. Unchecking removes tracked copies of this preset.
+            If a category has been customized, review it under Edit Existing Categories.
+          </p>
+
+          <div className="max-h-[45vh] space-y-2 overflow-y-auto rounded-[16px] border border-driftwood/60 bg-white/80 p-3">
+            {categories.length === 0 ? (
+              <div className="ca-admin-empty-state">No categories yet.</div>
+            ) : (
+              categories.map((cat) => {
+                const tracked = categoryGroups(cat).some((group) => group.presetId === preset?.id);
+                return (
+                  <label key={cat.id} className="flex items-start gap-3 rounded-[12px] border border-driftwood/45 bg-white px-3 py-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedCategoryIds.includes(cat.id)}
+                      onChange={() => onToggleCategory(cat.id)}
+                      className="mt-1"
+                    />
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-serif text-lg leading-6 text-deep-ocean">{cat.name || 'Unnamed Category'}</span>
+                      {cat.subtitle && <span className="mt-1 block text-sm leading-5 text-charcoal/55">{cat.subtitle}</span>}
+                      <span className="mt-2 block text-[10px] font-semibold uppercase tracking-[0.18em] text-charcoal/45">
+                        {tracked ? 'Currently assigned' : 'Not currently assigned'}
+                      </span>
+                    </span>
+                  </label>
+                );
+              })
+            )}
+          </div>
+        </div>
+
+        <div className="mt-5 flex flex-col-reverse gap-3 border-t border-driftwood/60 pt-4 sm:flex-row sm:justify-end">
+          <button type="button" onClick={onCancel} disabled={saving} className="lux-button--ghost px-5 py-3 text-[10px] disabled:opacity-50">
+            Cancel
+          </button>
+          <button type="button" onClick={onSave} disabled={saving || !preset} className="lux-button px-5 py-3 text-[10px] disabled:opacity-50">
+            {saving ? 'Saving...' : 'Save Assignments'}
+          </button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -1160,11 +1271,15 @@ function CategoryStatBadge({ label, value }: { label: string; value: ReactNode }
 
 function PresetList({
   presets,
+  categories,
   onEdit,
+  onAssign,
   onDelete,
 }: {
   presets: VariationPreset[];
+  categories: Category[];
   onEdit: (preset: VariationPreset) => void;
+  onAssign: (preset: VariationPreset) => void;
   onDelete: (id: string) => void;
 }) {
   if (presets.length === 0) {
@@ -1177,93 +1292,13 @@ function PresetList({
         <PresetChoiceCard
           key={preset.id}
           preset={preset}
+          assignedCategories={categories.filter((cat) => categoryGroups(cat).some((group) => group.presetId === preset.id))}
           onEdit={() => onEdit(preset)}
+          onAssign={() => onAssign(preset)}
           onDelete={() => onDelete(preset.id)}
         />
       ))}
     </div>
-  );
-}
-
-function ApplyTemplateSection({
-  presets,
-  categories,
-  selectedTemplateId,
-  selectedCategoryIds,
-  isSaving,
-  onTemplateChange,
-  onCategoryToggle,
-  onApply,
-}: {
-  presets: VariationPreset[];
-  categories: Category[];
-  selectedTemplateId: string;
-  selectedCategoryIds: string[];
-  isSaving: boolean;
-  onTemplateChange: (id: string) => void;
-  onCategoryToggle: (id: string) => void;
-  onApply: () => void;
-}) {
-  return (
-    <section className="space-y-4 border-t border-driftwood/60 pt-5">
-      <div>
-        <p className="ca-admin-heading text-lg">Add Preset to Categories</p>
-        <p className="mt-1 text-sm text-charcoal/60">
-          Choose a preset and copy it into one or more categories.
-        </p>
-      </div>
-      <div className="rounded-[18px] border border-driftwood/60 bg-white/80 p-4">
-        <div className="grid gap-4 lg:grid-cols-[minmax(220px,1fr)_minmax(260px,1.2fr)]">
-          <div>
-            <label className="lux-label mb-2 block">Saved Preset</label>
-            <select
-              value={selectedTemplateId}
-              onChange={(e) => onTemplateChange(e.target.value)}
-              className="lux-input min-h-[46px] text-base"
-            >
-              <option value="">Select preset</option>
-              {presets.map((preset) => (
-                <option key={preset.id} value={preset.id}>
-                  {preset.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <p className="lux-label mb-2">Choose Categories</p>
-            <div className="max-h-44 space-y-2 overflow-y-auto rounded-[14px] border border-driftwood/55 bg-linen/45 p-3">
-              {categories.length === 0 ? (
-                <p className="text-sm text-charcoal/60">No categories yet.</p>
-              ) : (
-                categories.map((cat) => (
-                  <label key={cat.id} className="flex items-center gap-3 rounded-[10px] bg-white/70 px-3 py-2 text-sm text-charcoal">
-                    <input
-                      type="checkbox"
-                      checked={selectedCategoryIds.includes(cat.id)}
-                      onChange={() => onCategoryToggle(cat.id)}
-                    />
-                    <span>{cat.name || 'Unnamed Category'}</span>
-                  </label>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
-        <p className="mt-3 text-xs leading-5 text-charcoal/55">
-          Adding a preset copies its customer choices and price increases into the selected categories. You can edit each category later.
-        </p>
-        <div className="mt-4 flex justify-end">
-          <button
-            type="button"
-            onClick={onApply}
-            disabled={isSaving || !selectedTemplateId || selectedCategoryIds.length === 0}
-            className="lux-button px-5 py-3 text-[10px] disabled:opacity-50"
-          >
-            {isSaving ? 'Adding...' : 'Add to Categories'}
-          </button>
-        </div>
-      </div>
-    </section>
   );
 }
 
@@ -1653,13 +1688,17 @@ function PresetSelectionPanel({
 
 function PresetChoiceCard({
   preset,
+  assignedCategories = [],
   onUse,
   onEdit,
+  onAssign,
   onDelete,
 }: {
   preset: VariationPreset;
+  assignedCategories?: Category[];
   onUse?: () => void;
   onEdit: () => void;
+  onAssign?: () => void;
   onDelete?: () => void;
 }) {
   const groups = normalizeVariationGroups(preset.groups);
@@ -1682,6 +1721,11 @@ function PresetChoiceCard({
           {onUse && (
             <button type="button" onClick={onUse} className="lux-button px-3 py-2 text-[10px]">
               Use Preset
+            </button>
+          )}
+          {onAssign && (
+            <button type="button" onClick={onAssign} className="lux-button--ghost px-3 py-2 text-[10px]">
+              Assign
             </button>
           )}
           {onDelete && (
@@ -1718,6 +1762,20 @@ function PresetChoiceCard({
       ) : (
         <p className="mt-4 flex-1 text-sm text-charcoal/55">No choices saved in this preset.</p>
       )}
+      {assignedCategories.length > 0 ? (
+        <div className="mt-4 border-t border-driftwood/50 pt-3">
+          <p className="lux-label mb-2">Assigned Categories</p>
+          <div className="flex flex-wrap gap-2">
+            {assignedCategories.map((cat) => (
+              <span key={cat.id} className="rounded-[8px] border border-driftwood/50 bg-linen/55 px-2.5 py-1 text-xs text-charcoal/65">
+                {cat.name || 'Unnamed Category'}
+              </span>
+            ))}
+          </div>
+        </div>
+      ) : onAssign ? (
+        <p className="mt-4 border-t border-driftwood/50 pt-3 text-sm text-charcoal/50">Not assigned to any categories yet.</p>
+      ) : null}
     </div>
   );
 }
@@ -1725,12 +1783,13 @@ function PresetChoiceCard({
 function EditCategoryChoicesEditor({
   groups,
   presets,
-  selectedPresetId,
   builderDraft,
   editingGroupId,
-  onSelectedPresetChange,
+  activePanel,
+  onPanelChange,
   onBuilderDraftChange,
   onUsePreset,
+  onEditPreset,
   onAddBuilderChoice,
   onAddBuilderAsPreset,
   onCancelChoiceEdit,
@@ -1739,12 +1798,13 @@ function EditCategoryChoicesEditor({
 }: {
   groups: VariationGroup[];
   presets: VariationPreset[];
-  selectedPresetId: string;
   builderDraft: ChoiceBuilderDraft;
   editingGroupId: string | null;
-  onSelectedPresetChange: (id: string) => void;
+  activePanel: ChoicePanel | null;
+  onPanelChange: (panel: ChoicePanel) => void;
   onBuilderDraftChange: (draft: ChoiceBuilderDraft) => void;
-  onUsePreset: () => void;
+  onUsePreset: (preset: VariationPreset) => void;
+  onEditPreset: (preset: VariationPreset) => void;
   onAddBuilderChoice: () => boolean;
   onAddBuilderAsPreset: () => void;
   onCancelChoiceEdit: () => void;
@@ -1753,6 +1813,58 @@ function EditCategoryChoicesEditor({
 }) {
   return (
     <section className="space-y-5 rounded-[22px] border border-driftwood/65 bg-linen/45 p-4 sm:p-5">
+      <div className="grid gap-3 md:grid-cols-2">
+        <ChoicePanelSelectorCard
+          title="Create New Choice"
+          subtitle="Add a custom choice like Trim, Shell Type, or Set Size."
+          actionLabel={activePanel === 'new' ? 'Close' : 'Open'}
+          active={activePanel === 'new'}
+          onClick={() => onPanelChange('new')}
+        />
+        <ChoicePanelSelectorCard
+          title="Select From Presets"
+          subtitle="Browse saved presets and add them to this category."
+          actionLabel={activePanel === 'presets' ? 'Close' : 'Open'}
+          active={activePanel === 'presets'}
+          onClick={() => onPanelChange('presets')}
+        />
+      </div>
+
+      {activePanel === 'new' && (
+        <div className="space-y-4 rounded-[18px] border border-driftwood/60 bg-white/80 p-4">
+          <div>
+            <p className="ca-admin-heading text-lg">{editingGroupId ? 'Edit Choice' : 'Create New Choice'}</p>
+            <p className="mt-1 text-sm text-charcoal/60">
+              Choice Name is the dropdown label customers will see. Choices are the dropdown values.
+            </p>
+          </div>
+          <ChoiceBuilder draft={builderDraft} onDraftChange={onBuilderDraftChange} />
+          <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-end">
+            {editingGroupId && (
+              <button type="button" onClick={onCancelChoiceEdit} className="lux-button--ghost px-5 py-3 text-[10px]">
+                Cancel Choice Edit
+              </button>
+            )}
+            <button type="button" onClick={onAddBuilderChoice} className="lux-button px-5 py-3 text-[10px]">
+              {editingGroupId ? 'Update Choice' : 'Add to Category'}
+            </button>
+            {!editingGroupId && (
+              <button
+                type="button"
+                onClick={onAddBuilderAsPreset}
+                className="lux-button--ghost px-5 py-3 text-[10px]"
+              >
+                Add As New Preset
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {activePanel === 'presets' && (
+        <PresetSelectionPanel presets={presets} onUsePreset={onUsePreset} onEditPreset={onEditPreset} />
+      )}
+
       <CurrentCategoryChoices
         groups={groups}
         helperText="These are the dropdown choices customers will see on products in this category."
@@ -1761,67 +1873,6 @@ function EditCategoryChoicesEditor({
         onEditGroup={onEditGroup}
         onRemoveGroup={(groupId) => onGroupsChange(groups.filter((group) => group.id !== groupId))}
       />
-
-      <div className="rounded-[18px] border border-driftwood/60 bg-white/80 p-4">
-        <div className="grid gap-3 lg:grid-cols-[minmax(190px,0.55fr)_minmax(260px,1fr)_auto] lg:items-end">
-          <div className="lg:pb-1">
-            <p className="ca-admin-heading text-base">Use Preset</p>
-            <p className="mt-1 text-sm text-charcoal/60">Choose a saved preset and add it to this category.</p>
-          </div>
-          <div>
-            <label className="lux-label mb-2 block">Saved Preset</label>
-            <select
-              value={selectedPresetId}
-              onChange={(e) => onSelectedPresetChange(e.target.value)}
-              className="lux-input min-h-[46px] text-base"
-            >
-              <option value="">Select preset</option>
-              {presets.map((preset) => (
-                <option key={preset.id} value={preset.id}>
-                  {preset.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <button
-            type="button"
-            disabled={!selectedPresetId}
-            onClick={onUsePreset}
-            className="lux-button--ghost px-5 py-3 text-[10px] disabled:opacity-50"
-          >
-            Add Preset to Category
-          </button>
-        </div>
-      </div>
-
-      <div className="space-y-4 border-t border-driftwood/60 pt-5">
-        <div>
-          <p className="ca-admin-heading text-lg">{editingGroupId ? 'Edit Choice' : 'Add New Choice'}</p>
-          <p className="mt-1 text-sm text-charcoal/60">
-            Choice Name is the dropdown label customers will see. Choices are the dropdown values.
-          </p>
-        </div>
-        <ChoiceBuilder draft={builderDraft} onDraftChange={onBuilderDraftChange} />
-        <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-end">
-          {editingGroupId && (
-            <button type="button" onClick={onCancelChoiceEdit} className="lux-button--ghost px-5 py-3 text-[10px]">
-              Cancel Choice Edit
-            </button>
-          )}
-          <button type="button" onClick={onAddBuilderChoice} className="lux-button px-5 py-3 text-[10px]">
-            {editingGroupId ? 'Update Choice' : 'Add to Category'}
-          </button>
-          {!editingGroupId && (
-            <button
-              type="button"
-              onClick={onAddBuilderAsPreset}
-              className="lux-button--ghost px-5 py-3 text-[10px]"
-            >
-              Add As New Preset
-            </button>
-          )}
-        </div>
-      </div>
     </section>
   );
 }

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Minus, Plus, ShoppingCart } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Minus, Plus, ShoppingBag } from 'lucide-react';
 import { fetchCategories, fetchProductById, fetchRelatedProducts } from '../lib/publicApi';
 import { Category, Product } from '../lib/types';
 import { useCartStore } from '../store/cartStore';
@@ -440,7 +440,7 @@ export function ProductDetailPage() {
                     }
                     className="ca-button ca-button-filled w-full justify-center"
                   >
-                    <ShoppingCart className="h-4 w-4" />
+                    <ShoppingBag className="h-4 w-4" />
                     Add to Cart
                   </button>
                   <Link
@@ -582,7 +582,7 @@ export function ProductDetailPage() {
                           }
                           className="ca-button ca-button-filled w-full justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          <ShoppingCart className="w-4 h-4" />
+                          <ShoppingBag className="w-4 h-4" />
                         </button>
                       </div>
                     </div>

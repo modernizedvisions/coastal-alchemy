@@ -1,4 +1,4 @@
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingBag } from 'lucide-react';
 import { Product } from '../lib/types';
 
 interface HomeCategoryCardProps {
@@ -64,7 +64,7 @@ export default function HomeCategoryCard({
               disabled={isCartDisabled}
               className="flex-1 flex items-center justify-center bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded-md hover:border-gray-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <ShoppingCart className="w-4 h-4" />
+              <ShoppingBag className="w-4 h-4" />
             </button>
           </div>
         ) : (

@@ -50,7 +50,7 @@ export function GalleryPage() {
       id: item.id,
       imageUrl: item.imageUrl,
       title: item.title || `Studio piece ${index + 1}`,
-      caption: item.title || 'Studio work',
+      caption: item.title || '',
       ratio: index % 3 === 0 ? '3 / 4' : index % 3 === 1 ? '1 / 1' : '4 / 5',
     }))
     .filter((item) => item.imageUrl);
@@ -97,7 +97,7 @@ export function GalleryPage() {
                   decoding="async"
                 />
               </button>
-              <figcaption className="ca-gallery-caption">{item.caption}</figcaption>
+              {item.caption ? <figcaption className="ca-gallery-caption">{item.caption}</figcaption> : null}
             </figure>
           ))}
         </div>

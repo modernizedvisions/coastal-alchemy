@@ -33,7 +33,7 @@ export default function CustomOrdersPage() {
   const galleryRef = useRef<HTMLDivElement | null>(null);
   const formRef = useRef<HTMLDivElement | null>(null);
   const [selectedItem, setSelectedItem] = useState<CustomOrderExample | null>(null);
-  const contactBg = '#E6DFD4';
+  const contactBg = '#ffffff';
   const [examples, setExamples] = useState<CustomOrderExample[]>([]);
   const [homeContent, setHomeContent] = useState<HomeSiteContent | null>(null);
   const [isLoadingExamples, setIsLoadingExamples] = useState(true);

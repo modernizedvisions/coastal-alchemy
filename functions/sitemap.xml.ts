@@ -25,7 +25,6 @@ const STATIC_ROUTES = [
   '/gallery',
   '/custom-orders',
   '/about',
-  '/join',
   '/terms',
   '/privacy',
 ];

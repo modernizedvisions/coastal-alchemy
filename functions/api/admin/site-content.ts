@@ -79,8 +79,14 @@ export async function onRequest(context: { env: { DB: D1Database }; request: Req
         ? incomingJson.homeGallery
         : [];
       const aboutImages = incomingJson?.aboutImages || {};
+      const featuredCategoryTiles = Array.isArray(incomingJson?.featuredCategoryTiles)
+        ? incomingJson.featuredCategoryTiles
+        : [];
 
       const homeGalleryUrls = homeGallery
+        .map((item: any) => item?.imageUrl)
+        .filter(Boolean) as string[];
+      const featuredTileUrls = featuredCategoryTiles
         .map((item: any) => item?.imageUrl)
         .filter(Boolean) as string[];
       const aboutUrls = [aboutImages.home, aboutImages.about].filter(Boolean) as string[];
@@ -91,6 +97,7 @@ export async function onRequest(context: { env: { DB: D1Database }; request: Req
         heroImages.middle,
         heroImages.right,
         ...homeGalleryUrls,
+        ...featuredTileUrls,
         ...aboutUrls,
         customOrdersMainImage,
       ].filter(Boolean) as string[];

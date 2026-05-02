@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { Plus } from 'lucide-react';
-import type { CustomOrdersImage, HeroCollageImage, HomeSiteContent } from '../../lib/types';
+import type { Category, CustomOrdersImage, HeroCollageImage, HomeFeaturedCategoryTile, HomeSiteContent } from '../../lib/types';
 import { AdminSectionHeader } from './AdminSectionHeader';
 import { AdminSaveButton } from './AdminSaveButton';
-import { adminUploadImageUnified, getAdminSiteContentHome, updateAdminSiteContentHome } from '../../lib/adminApi';
+import { adminFetchCategories, adminUploadImageUnified, getAdminSiteContentHome, updateAdminSiteContentHome } from '../../lib/adminApi';
 import { ProgressiveImage } from '../ui/ProgressiveImage';
 
 export function AdminHomeTab() {
   const [heroImages, setHeroImages] = useState<HeroCollageImage[]>([]);
   const [aboutImages, setAboutImages] = useState<CustomOrdersImage[]>([]);
   const [heroRotationEnabled, setHeroRotationEnabled] = useState(false);
+  const [featuredTiles, setFeaturedTiles] = useState<HomeFeaturedCategoryTile[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [homeContent, setHomeContent] = useState<HomeSiteContent>({});
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
   const [loadState, setLoadState] = useState<'idle' | 'loading' | 'error'>('idle');
@@ -20,12 +22,17 @@ export function AdminHomeTab() {
       setLoadState('loading');
       setError(null);
       try {
-        const content = await getAdminSiteContentHome();
+        const [content, categoryData] = await Promise.all([
+          getAdminSiteContentHome(),
+          adminFetchCategories().catch(() => []),
+        ]);
         setHomeContent(content || {});
         const { hero, rotation, aboutImages } = normalizeSiteContent(content);
         setHeroImages(hero);
         setHeroRotationEnabled(rotation);
         setAboutImages(aboutImages);
+        setFeaturedTiles(normalizeFeaturedTiles(content?.featuredCategoryTiles));
+        setCategories(categoryData);
         setLoadState('idle');
       } catch (err) {
         console.error('Failed to load home content', err);
@@ -40,7 +47,11 @@ export function AdminHomeTab() {
     setSaveState('saving');
     setError(null);
     try {
-      const allImages = [...heroImages, ...aboutImages];
+      const allImages: Array<{ imageUrl?: string; uploading?: boolean; uploadError?: string }> = [
+        ...heroImages,
+        ...aboutImages,
+        ...featuredTiles.map((tile) => ({ imageUrl: tile.imageUrl || '' })),
+      ];
       const hasUploads = allImages.some((img) => img?.uploading);
       const hasErrors = allImages.some((img) => img?.uploadError);
       const hasInvalid = allImages.some(
@@ -56,6 +67,7 @@ export function AdminHomeTab() {
       const payload: HomeSiteContent = {
         ...(restHomeContent as HomeSiteContent),
         ...buildSiteContent(heroImages, heroRotationEnabled, aboutImages),
+        featuredCategoryTiles: buildFeaturedTiles(featuredTiles),
       };
       await updateAdminSiteContentHome(payload);
       setHomeContent(payload);
@@ -82,6 +94,14 @@ export function AdminHomeTab() {
       <AboutImagesAdmin
         images={aboutImages}
         onChange={setAboutImages}
+        onSave={handleSave}
+        saveState={saveState}
+      />
+
+      <FeaturedCategoryTilesAdmin
+        tiles={featuredTiles}
+        categories={categories}
+        onChange={setFeaturedTiles}
         onSave={handleSave}
         saveState={saveState}
       />
@@ -334,6 +354,144 @@ interface AboutImagesAdminProps {
   saveState: 'idle' | 'saving' | 'success' | 'error';
 }
 
+interface FeaturedCategoryTilesAdminProps {
+  tiles: HomeFeaturedCategoryTile[];
+  categories: Category[];
+  onChange: React.Dispatch<React.SetStateAction<HomeFeaturedCategoryTile[]>>;
+  onSave: () => Promise<void>;
+  saveState: 'idle' | 'saving' | 'success' | 'error';
+}
+
+function FeaturedCategoryTilesAdmin({
+  tiles,
+  categories,
+  onChange,
+  onSave,
+  saveState,
+}: FeaturedCategoryTilesAdminProps) {
+  const slots = [0, 1, 2, 3];
+
+  const patchTile = (index: number, patch: Partial<HomeFeaturedCategoryTile>) => {
+    onChange((prev) => {
+      const next = normalizeFeaturedTiles(prev);
+      next[index] = { ...(next[index] || {}), ...patch };
+      return next.slice(0, 4);
+    });
+  };
+
+  const handleFileSelect = async (index: number, file: File) => {
+    const previewUrl = URL.createObjectURL(file);
+    patchTile(index, { imageUrl: previewUrl });
+    try {
+      const result = await adminUploadImageUnified(file, { scope: 'home' });
+      URL.revokeObjectURL(previewUrl);
+      patchTile(index, { imageUrl: result.url });
+    } catch (err) {
+      URL.revokeObjectURL(previewUrl);
+      console.error('Featured tile upload failed', err);
+      patchTile(index, { imageUrl: '' });
+    }
+  };
+
+  return (
+    <section className="space-y-4 lux-card p-4">
+      <div className="space-y-2">
+        <AdminSectionHeader
+          title="Homepage Featured Categories"
+          subtitle="Choose up to 4 category tiles to feature on the homepage. Each tile links customers into the shop."
+        />
+        <div className="w-full sm:flex sm:justify-end">
+          <AdminSaveButton saveState={saveState} onClick={onSave} className="w-full sm:w-auto" />
+        </div>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {slots.map((slot) => {
+          const tile = tiles[slot] || {};
+          const inputId = `featured-category-tile-${slot}`;
+          return (
+            <div key={slot} className="lux-panel p-3 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] uppercase tracking-[0.22em] font-semibold text-charcoal">
+                  Featured Tile {slot + 1}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => document.getElementById(inputId)?.click()}
+                  className="lux-button--ghost px-3 py-1 text-[10px]"
+                >
+                  {tile.imageUrl ? 'Replace' : 'Upload'}
+                </button>
+              </div>
+              <div className="aspect-[4/5] rounded-shell border border-dashed border-driftwood/70 bg-linen/70 flex items-center justify-center overflow-hidden">
+                {tile.imageUrl ? (
+                  <ProgressiveImage
+                    src={tile.imageUrl}
+                    alt={tile.title || `Featured tile ${slot + 1}`}
+                    className="h-full w-full"
+                    imgClassName="h-full w-full object-cover"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center text-charcoal/60 text-[11px] uppercase tracking-[0.2em] font-semibold">
+                    <Plus className="h-6 w-6 mb-1" />
+                    <span>Image</span>
+                  </div>
+                )}
+              </div>
+              <div className="space-y-1">
+                <label htmlFor={`${inputId}-title`} className="lux-label text-[10px]">Title</label>
+                <input
+                  id={`${inputId}-title`}
+                  type="text"
+                  value={tile.title || ''}
+                  onChange={(e) => patchTile(slot, { title: e.target.value })}
+                  className="lux-input text-sm"
+                />
+              </div>
+              <div className="space-y-1">
+                <label htmlFor={`${inputId}-category`} className="lux-label text-[10px]">Link Category</label>
+                <select
+                  id={`${inputId}-category`}
+                  value={tile.categorySlug || 'all'}
+                  onChange={(e) => {
+                    const slug = e.target.value;
+                    const category = categories.find((item) => item.slug === slug);
+                    patchTile(slot, {
+                      categorySlug: slug,
+                      categoryId: category?.id,
+                    });
+                  }}
+                  className="lux-input text-sm"
+                >
+                  <option value="all">Shop All</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.slug}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <input
+                id={inputId}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) void handleFileSelect(slot, file);
+                  (e.target as HTMLInputElement).value = '';
+                }}
+              />
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 function AboutImagesAdmin({ images, onChange, onSave, saveState }: AboutImagesAdminProps) {
   const slots = [
     { label: 'Home About Image', index: 0 },
@@ -520,6 +678,22 @@ const normalizeSiteContent = (content: HomeSiteContent) => {
     aboutImages,
   };
 };
+
+const normalizeFeaturedTiles = (tiles?: HomeFeaturedCategoryTile[]): HomeFeaturedCategoryTile[] => {
+  const normalized = Array.from({ length: 4 }, (_, index) => ({
+    ...(Array.isArray(tiles) ? tiles[index] : {}),
+    categorySlug: (Array.isArray(tiles) ? tiles[index]?.categorySlug : '') || 'all',
+  }));
+  return normalized;
+};
+
+const buildFeaturedTiles = (tiles: HomeFeaturedCategoryTile[]): HomeFeaturedCategoryTile[] =>
+  normalizeFeaturedTiles(tiles).map((tile) => ({
+    imageUrl: tile.imageUrl || '',
+    title: tile.title || '',
+    categorySlug: tile.categorySlug || 'all',
+    categoryId: tile.categoryId || undefined,
+  }));
 
 const buildSiteContent = (
   hero: HeroCollageImage[],

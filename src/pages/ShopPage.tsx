@@ -216,7 +216,7 @@ export function ShopPage() {
 
   useEffect(() => {
     if (!visibleCategories.length) return;
-    const typeParam = searchParams.get('type');
+    const typeParam = searchParams.get('category') || searchParams.get('type');
     const normalized = typeParam ? toSlug(typeParam) : '';
     if (!normalized || normalized === 'all') {
       if (activeCategorySlug) setActiveCategorySlug('');
@@ -265,11 +265,13 @@ export function ShopPage() {
     if (!slug) {
       if (activeCategorySlug) setActiveCategorySlug('');
       nextParams.delete('type');
+      nextParams.delete('category');
       setSearchParams(nextParams, { replace: true });
       return;
     }
     if (activeCategorySlug !== slug) setActiveCategorySlug(slug);
-    nextParams.set('type', slug);
+    nextParams.delete('type');
+    nextParams.set('category', slug);
     setSearchParams(nextParams, { replace: true });
   };
 

@@ -1,5 +1,5 @@
 import { type ReactNode, type RefObject, useEffect, useRef, useState } from 'react';
-import { ArrowDown, ArrowLeft, ArrowUp, Loader2, Pencil, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowLeft, ArrowUp, Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   adminCreateCategory,
@@ -12,7 +12,7 @@ import {
   adminUpdateVariationPreset,
 } from '../../lib/adminApi';
 import type { Category, VariationGroup, VariationPreset } from '../../lib/types';
-import { createVariationGroup, createVariationOption, normalizeVariationGroups } from '../../lib/categoryOptions';
+import { createVariationGroup, createVariationOption, normalizeCategoryKey, normalizeVariationGroups } from '../../lib/categoryOptions';
 
 interface CategoryManagementModalProps {
   open: boolean;
@@ -31,11 +31,34 @@ type CategoryDraft = {
 
 type ToolView = 'launcher' | 'create' | 'edit' | 'presets';
 
+type ChoiceValueDraft = {
+  id: string;
+  label: string;
+  priceIncreaseCents: number;
+};
+
+type ChoiceBuilderDraft = {
+  id: string | null;
+  label: string;
+  required: boolean;
+  choices: ChoiceValueDraft[];
+};
+
 const emptyDraft = (): CategoryDraft => ({
   name: '',
   subtitle: '',
   shipping: '',
   optionGroups: [],
+});
+
+const emptyChoiceBuilderDraft = (): ChoiceBuilderDraft => ({
+  id: null,
+  label: '',
+  required: true,
+  choices: [
+    { id: crypto.randomUUID(), label: '', priceIncreaseCents: 0 },
+    { id: crypto.randomUUID(), label: '', priceIncreaseCents: 0 },
+  ],
 });
 
 const normalizeCategoriesList = (items: Category[]): Category[] => {
@@ -93,6 +116,9 @@ export function CategoryManagementModal({
   const [selectedNewPresetId, setSelectedNewPresetId] = useState('');
   const [selectedEditPresetId, setSelectedEditPresetId] = useState('');
   const [newQuickPresetName, setNewQuickPresetName] = useState('');
+  const [newChoiceSetupName, setNewChoiceSetupName] = useState('');
+  const [isChoiceBuilderOpen, setChoiceBuilderOpen] = useState(false);
+  const [choiceBuilderDraft, setChoiceBuilderDraft] = useState<ChoiceBuilderDraft>(() => emptyChoiceBuilderDraft());
   const [editQuickPresetName, setEditQuickPresetName] = useState('');
   const [presetDraftId, setPresetDraftId] = useState<string | null>(null);
   const [presetName, setPresetName] = useState('');
@@ -120,7 +146,7 @@ export function CategoryManagementModal({
         setToolView('launcher');
       } catch (error) {
         console.error('Failed to load category options', error);
-        setCategoryMessage('Could not load categories or choice templates.');
+        setCategoryMessage('Could not load categories or saved choice setups.');
       } finally {
         setIsLoading(false);
       }
@@ -154,6 +180,9 @@ export function CategoryManagementModal({
     setSelectedNewPresetId('');
     setSelectedEditPresetId('');
     setNewQuickPresetName('');
+    setNewChoiceSetupName('');
+    setChoiceBuilderOpen(false);
+    setChoiceBuilderDraft(emptyChoiceBuilderDraft());
     setEditQuickPresetName('');
     setApplyTemplateId('');
     setApplyCategoryIds([]);
@@ -210,6 +239,76 @@ export function CategoryManagementModal({
     updateDraftGroups(target, (groups) => [...groups, ...cloneGroups(preset.groups)]);
   };
 
+  const validateCreateGroups = (groupsInput: VariationGroup[]): VariationGroup[] | null => {
+    for (const group of groupsInput) {
+      if (!group.label.trim()) {
+        setCategoryMessage('Add a choice name, like Trim or Shell Type.');
+        return null;
+      }
+      if (!group.options.some((option) => option.label.trim())) {
+        setCategoryMessage('Each choice needs a name, like Gold or Oyster Shell.');
+        return null;
+      }
+      if (group.options.some((option) => !option.label.trim())) {
+        setCategoryMessage('Each choice needs a name, like Gold or Oyster Shell.');
+        return null;
+      }
+    }
+    const normalized = normalizeVariationGroups(groupsInput);
+    if (groupsInput.length > 0 && !normalized.length) {
+      setCategoryMessage('Each choice needs a name, like Gold or Oyster Shell.');
+      return null;
+    }
+    return normalized;
+  };
+
+  const choiceDraftToGroup = (draft: ChoiceBuilderDraft): VariationGroup | null => {
+    const label = draft.label.trim();
+    if (!label) {
+      setCategoryMessage('Add a choice name, like Trim or Shell Type.');
+      return null;
+    }
+    const filledChoices = draft.choices.filter((choice) => choice.label.trim());
+    if (filledChoices.length !== draft.choices.length || !filledChoices.length) {
+      setCategoryMessage('Each choice needs a name, like Gold or Oyster Shell.');
+      return null;
+    }
+    return {
+      id: draft.id || crypto.randomUUID(),
+      label,
+      inputType: 'select',
+      required: draft.required,
+      displayOrder: newDraft.optionGroups.length,
+      enabled: true,
+      presetId: null,
+      options: filledChoices.map((choice, index) => ({
+        id: choice.id,
+        label: choice.label.trim(),
+        value: normalizeCategoryKey(choice.label),
+        priceIncreaseCents: Math.max(0, Math.round(Number(choice.priceIncreaseCents || 0))),
+        displayOrder: index,
+        enabled: true,
+      })),
+    };
+  };
+
+  const addBuilderChoiceToCategory = () => {
+    const group = choiceDraftToGroup(choiceBuilderDraft);
+    if (!group) return false;
+    setNewDraft((prev) => {
+      const existingIndex = group.id ? prev.optionGroups.findIndex((item) => item.id === group.id) : -1;
+      const nextGroups =
+        existingIndex >= 0
+          ? prev.optionGroups.map((item, index) => (index === existingIndex ? { ...group, displayOrder: index } : item))
+          : [...prev.optionGroups, { ...group, displayOrder: prev.optionGroups.length }];
+      return { ...prev, optionGroups: normalizeVariationGroups(nextGroups) };
+    });
+    setChoiceBuilderDraft(emptyChoiceBuilderDraft());
+    setChoiceBuilderOpen(false);
+    setCategoryMessage('');
+    return true;
+  };
+
   const handleAddCategory = async () => {
     const trimmed = newDraft.name.trim();
     if (!trimmed) {
@@ -221,7 +320,16 @@ export function CategoryManagementModal({
       setCategoryMessage('Shipping must be a non-negative number.');
       return;
     }
-    const optionGroups = normalizeVariationGroups(newDraft.optionGroups);
+    const hasUnaddedChoiceDraft =
+      isChoiceBuilderOpen &&
+      (choiceBuilderDraft.label.trim() ||
+        choiceBuilderDraft.choices.some((choice) => choice.label.trim() || choice.priceIncreaseCents > 0));
+    if (hasUnaddedChoiceDraft) {
+      setCategoryMessage('Add the current choice to the category, or remove the unfinished choice before creating the category.');
+      return;
+    }
+    const optionGroups = validateCreateGroups(newDraft.optionGroups);
+    if (!optionGroups) return;
     const maxSortOrder = adminCategories.reduce((max, cat) => Math.max(max, cat.sortOrder ?? 0), -1);
     setIsSaving(true);
     try {
@@ -291,12 +399,12 @@ export function CategoryManagementModal({
   const handleSavePreset = async () => {
     const name = presetName.trim();
     if (!name) {
-      setCategoryMessage('Template name is required.');
+      setCategoryMessage('Setup name is required.');
       return;
     }
     const groups = normalizeVariationGroups(presetGroups);
     if (!groups.length) {
-      setCategoryMessage('Add at least one option type before saving a template.');
+      setCategoryMessage('Add at least one customer choice before saving a setup.');
       return;
     }
     setIsSaving(true);
@@ -313,8 +421,8 @@ export function CategoryManagementModal({
         setCategoryMessage('');
       }
     } catch (error) {
-      console.error('Failed to save template', error);
-      setCategoryMessage('Could not save template.');
+      console.error('Failed to save choice setup', error);
+      setCategoryMessage('Could not save choice setup.');
     } finally {
       setIsSaving(false);
     }
@@ -327,12 +435,12 @@ export function CategoryManagementModal({
   ) => {
     const name = nameInput.trim();
     if (!name) {
-      setCategoryMessage('Template name is required.');
+      setCategoryMessage('Setup name is required.');
       return;
     }
     const groups = normalizeVariationGroups(groupsInput);
     if (!groups.length) {
-      setCategoryMessage('Add at least one option type before saving a template.');
+      setCategoryMessage('Add at least one customer choice before saving a setup.');
       return;
     }
     setIsSaving(true);
@@ -341,11 +449,11 @@ export function CategoryManagementModal({
       if (created) {
         setPresets((prev) => [...prev.filter((preset) => preset.id !== created.id), created].sort((a, b) => a.name.localeCompare(b.name)));
         onSaved();
-        setCategoryMessage('Template saved.');
+        setCategoryMessage('Choice setup saved.');
       }
     } catch (error) {
-      console.error('Failed to create template', error);
-      setCategoryMessage('Could not create template.');
+      console.error('Failed to create choice setup', error);
+      setCategoryMessage('Could not save choice setup.');
     } finally {
       setIsSaving(false);
     }
@@ -359,14 +467,14 @@ export function CategoryManagementModal({
   };
 
   const handleDeletePreset = async (id: string) => {
-    if (!window.confirm('Delete this template? Existing categories that used copied choices will not change.')) return;
+    if (!window.confirm('Delete this saved choice setup? Existing categories that used copied choices will not change.')) return;
     try {
       await adminDeleteVariationPreset(id);
       setPresets((prev) => prev.filter((preset) => preset.id !== id));
       if (presetDraftId === id) resetPresetDraft();
     } catch (error) {
-      console.error('Failed to delete template', error);
-      setCategoryMessage('Could not delete template.');
+      console.error('Failed to delete saved choice setup', error);
+      setCategoryMessage('Could not delete saved choice setup.');
     }
   };
 
@@ -429,7 +537,7 @@ export function CategoryManagementModal({
   const handleApplyTemplateToCategories = async () => {
     const template = presets.find((item) => item.id === applyTemplateId);
     if (!template) {
-      setCategoryMessage('Choose a template.');
+      setCategoryMessage('Choose a saved choice setup.');
       return;
     }
     if (!applyCategoryIds.length) {
@@ -457,12 +565,12 @@ export function CategoryManagementModal({
       onCategoriesChange(updatedList);
       setApplyTemplateId('');
       setApplyCategoryIds([]);
-      setCategoryMessage('Template applied to selected categories.');
+      setCategoryMessage('Saved choice setup added to selected categories.');
     } catch (error) {
-      console.error('Failed to apply template to categories', error);
+      console.error('Failed to add saved choice setup to categories', error);
       setAdminCategories(previous);
       onCategoriesChange(previous);
-      setCategoryMessage('Could not apply template to categories.');
+      setCategoryMessage('Could not add saved choice setup to categories.');
     } finally {
       setIsSaving(false);
     }
@@ -495,37 +603,56 @@ export function CategoryManagementModal({
           >
             <StatusMessage message={categoryMessage} />
             <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-5 py-5 sm:px-7">
-              <div className="grid gap-4 md:grid-cols-2">
-                <Input label="Title" value={newDraft.name} onChange={(value) => setNewDraft((p) => ({ ...p, name: value }))} />
-                <Input
-                  label="Subtitle"
-                  value={newDraft.subtitle}
-                  onChange={(value) => setNewDraft((p) => ({ ...p, subtitle: value }))}
+              <section className="space-y-4 rounded-[22px] border border-driftwood/65 bg-white/85 p-4 sm:p-5">
+                <div>
+                  <p className="ca-admin-heading text-lg">Category Details</p>
+                  <p className="mt-1 text-sm text-charcoal/60">Name the category and set its default shipping.</p>
+                </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Input label="Category Name" value={newDraft.name} onChange={(value) => setNewDraft((p) => ({ ...p, name: value }))} />
+                  <Input
+                    label="Subtitle"
+                    value={newDraft.subtitle}
+                    onChange={(value) => setNewDraft((p) => ({ ...p, subtitle: value }))}
+                  />
+                </div>
+                <ShippingInput
+                  value={newDraft.shipping}
+                  onChange={(value) => setNewDraft((p) => ({ ...p, shipping: value }))}
+                  sanitize={sanitizeShippingInput}
+                  formatDisplay={formatShippingDisplay}
+                  formatValue={formatShippingValue}
                 />
-              </div>
-              <ShippingInput
-                value={newDraft.shipping}
-                onChange={(value) => setNewDraft((p) => ({ ...p, shipping: value }))}
-                sanitize={sanitizeShippingInput}
-                formatDisplay={formatShippingDisplay}
-                formatValue={formatShippingValue}
-              />
-              <VariationEditor
-                title="Choices"
-                subtitle="These choices automatically appear on products in this category."
+              </section>
+
+              <CreateCategoryChoicesEditor
                 groups={newDraft.optionGroups}
                 presets={presets}
                 selectedPresetId={selectedNewPresetId}
-                quickPresetName={newQuickPresetName}
+                setupName={newChoiceSetupName}
+                builderOpen={isChoiceBuilderOpen}
+                builderDraft={choiceBuilderDraft}
                 onSelectedPresetChange={setSelectedNewPresetId}
-                onQuickPresetNameChange={setNewQuickPresetName}
-                onApplyPreset={() => {
+                onSetupNameChange={setNewChoiceSetupName}
+                onBuilderOpenChange={setChoiceBuilderOpen}
+                onBuilderDraftChange={setChoiceBuilderDraft}
+                onUseSavedChoices={() => {
                   applyPreset('new', selectedNewPresetId);
                   setSelectedNewPresetId('');
                 }}
-                onSaveCurrentPreset={() =>
-                  handleSaveCurrentOptionsAsPreset(newQuickPresetName, newDraft.optionGroups, () => setNewQuickPresetName(''))
+                onAddBuilderChoice={addBuilderChoiceToCategory}
+                onSaveBuilderSetup={() => {
+                  const group = choiceDraftToGroup(choiceBuilderDraft);
+                  if (!group) return;
+                  void handleSaveCurrentOptionsAsPreset(newChoiceSetupName, [group], () => setNewChoiceSetupName(''));
+                }}
+                onSaveCurrentSetup={() =>
+                  handleSaveCurrentOptionsAsPreset(newChoiceSetupName, newDraft.optionGroups, () => setNewChoiceSetupName(''))
                 }
+                onEditGroup={(group) => {
+                  setChoiceBuilderDraft(groupToChoiceBuilderDraft(group));
+                  setChoiceBuilderOpen(true);
+                }}
                 onGroupsChange={(groups) => setNewDraft((p) => ({ ...p, optionGroups: groups }))}
               />
             </div>
@@ -644,7 +771,7 @@ export function CategoryManagementModal({
 
         {toolView === 'presets' && (
           <ModalShell
-            title="Choice Templates"
+            title="Saved Choice Setups"
             subtitle="Create reusable customer choice setups and apply them to product categories."
             onBack={goBack}
             onClose={closeAll}
@@ -653,11 +780,11 @@ export function CategoryManagementModal({
             <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-5 py-5 sm:px-7">
               <section className="space-y-4">
                 <div>
-                  <p className="ca-admin-heading text-lg">{presetDraftId ? 'Edit Template' : 'New Template'}</p>
-                  <p className="mt-1 text-sm text-charcoal/60">Build the option types and choices customers can select.</p>
+                  <p className="ca-admin-heading text-lg">{presetDraftId ? 'Edit Saved Setup' : 'New Saved Setup'}</p>
+                  <p className="mt-1 text-sm text-charcoal/60">Build the customer choices shoppers can select.</p>
                 </div>
                 <Input
-                  label="Template Name"
+                  label="Setup Name"
                   value={presetName}
                   onChange={setPresetName}
                   placeholder="Example: Shell Dish Options"
@@ -675,14 +802,14 @@ export function CategoryManagementModal({
                     disabled={isSaving}
                     className="lux-button px-5 py-3 text-[10px] disabled:opacity-50"
                   >
-                    {isSaving ? 'Saving...' : 'Save Template'}
+                    {isSaving ? 'Saving...' : 'Save Setup'}
                   </button>
                 </div>
               </section>
 
               <section className="space-y-4 border-t border-driftwood/60 pt-5">
                 <div>
-                  <p className="ca-admin-heading text-lg">Saved Templates</p>
+                  <p className="ca-admin-heading text-lg">Saved Choice Setups</p>
                   <p className="mt-1 text-sm text-charcoal/60">Edit or delete reusable customer choice setups.</p>
                 </div>
                 <PresetList presets={presets} onEdit={handleEditPreset} onDelete={handleDeletePreset} />
@@ -733,7 +860,7 @@ function LauncherView({
           <DialogHeader>
             <DialogTitle>Category Tools</DialogTitle>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-charcoal/70">
-              Create categories, edit existing category details, and manage reusable choice templates.
+              Create categories, edit existing category details, and manage reusable customer choice setups.
             </p>
           </DialogHeader>
           <button type="button" onClick={onClose} className="lux-button--ghost shrink-0 px-4 py-2 text-[10px]">
@@ -753,8 +880,8 @@ function LauncherView({
           onClick={onOpenEdit}
         />
         <LauncherCard
-          title="Choice Templates"
-          description="Create reusable option types, choices, and price increases."
+          title="Saved Choice Setups"
+          description="Create and manage reusable customer choice setups."
           onClick={onOpenPresets}
         />
       </div>
@@ -872,7 +999,7 @@ function CategoryList({
                 <div className="mt-3 flex flex-wrap gap-2">
                   <span className="ca-admin-badge">Order {index + 1}</span>
                   <span className="ca-admin-badge">
-                    {groups.length} option type{groups.length === 1 ? '' : 's'}
+                    {groups.length} customer choice{groups.length === 1 ? '' : 's'}
                   </span>
                   <span className="ca-admin-badge">
                     Shipping {typeof cat.shippingCents === 'number' && cat.shippingCents > 0 ? `$${(cat.shippingCents / 100).toFixed(2)}` : '$0.00'}
@@ -928,7 +1055,7 @@ function PresetList({
   onDelete: (id: string) => void;
 }) {
   if (presets.length === 0) {
-    return <div className="ca-admin-empty-state">No choice templates yet.</div>;
+    return <div className="ca-admin-empty-state">No saved choice setups yet.</div>;
   }
 
   return (
@@ -939,7 +1066,7 @@ function PresetList({
             <div className="min-w-0">
               <p className="break-words font-serif text-lg text-deep-ocean">{preset.name}</p>
               <p className="mt-1 text-xs uppercase tracking-[0.2em] text-charcoal/55">
-                {preset.groups.length} option type{preset.groups.length === 1 ? '' : 's'}
+                {preset.groups.length} customer choice{preset.groups.length === 1 ? '' : 's'}
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-1">
@@ -947,7 +1074,7 @@ function PresetList({
                 type="button"
                 onClick={() => onEdit(preset)}
                 className="rounded-full p-2 text-charcoal/55 transition hover:bg-linen hover:text-deep-ocean"
-                aria-label={`Edit ${preset.name} template`}
+                aria-label={`Edit ${preset.name} saved choice setup`}
               >
                 <Pencil className="h-4 w-4" />
               </button>
@@ -955,7 +1082,7 @@ function PresetList({
                 type="button"
                 onClick={() => onDelete(preset.id)}
                 className="rounded-full p-2 text-charcoal/50 transition hover:bg-red-50 hover:text-red-700"
-                aria-label={`Delete ${preset.name} template`}
+                aria-label={`Delete ${preset.name} saved choice setup`}
               >
                 <Trash2 className="h-4 w-4" />
               </button>
@@ -963,7 +1090,7 @@ function PresetList({
           </div>
           {preset.groups.length > 0 && (
             <p className="mt-3 text-sm leading-6 text-charcoal/65">
-              {preset.groups.map((group) => group.label || 'Untitled option type').join(', ')}
+              {preset.groups.map((group) => group.label || 'Untitled customer choice').join(', ')}
             </p>
           )}
         </div>
@@ -994,21 +1121,21 @@ function ApplyTemplateSection({
   return (
     <section className="space-y-4 border-t border-driftwood/60 pt-5">
       <div>
-        <p className="ca-admin-heading text-lg">Apply Template to Categories</p>
+        <p className="ca-admin-heading text-lg">Add Saved Choices to Categories</p>
         <p className="mt-1 text-sm text-charcoal/60">
-          Choose a saved template and copy it into one or more categories.
+          Choose a saved choice setup and copy it into one or more categories.
         </p>
       </div>
       <div className="rounded-[18px] border border-driftwood/60 bg-white/80 p-4">
         <div className="grid gap-4 lg:grid-cols-[minmax(220px,1fr)_minmax(260px,1.2fr)]">
           <div>
-            <label className="lux-label mb-2 block">Choose Template</label>
+            <label className="lux-label mb-2 block">Select saved choice setup</label>
             <select
               value={selectedTemplateId}
               onChange={(e) => onTemplateChange(e.target.value)}
               className="lux-input min-h-[46px] text-base"
             >
-              <option value="">Select template</option>
+              <option value="">Select saved choice setup</option>
               {presets.map((preset) => (
                 <option key={preset.id} value={preset.id}>
                   {preset.name}
@@ -1037,7 +1164,7 @@ function ApplyTemplateSection({
           </div>
         </div>
         <p className="mt-3 text-xs leading-5 text-charcoal/55">
-          Applying a template copies its option types, choices, and price increases into the selected categories. You can edit each category later.
+          Adding a saved setup copies its customer choices and price increases into the selected categories. You can edit each category later.
         </p>
         <div className="mt-4 flex justify-end">
           <button
@@ -1046,7 +1173,7 @@ function ApplyTemplateSection({
             disabled={isSaving || !selectedTemplateId || selectedCategoryIds.length === 0}
             className="lux-button px-5 py-3 text-[10px] disabled:opacity-50"
           >
-            {isSaving ? 'Applying...' : 'Apply Template'}
+            {isSaving ? 'Adding...' : 'Add to Categories'}
           </button>
         </div>
       </div>
@@ -1167,6 +1294,322 @@ function PriceIncreaseInput({
       placeholder="$0.00"
       className="lux-input min-h-[44px] text-base"
     />
+  );
+}
+
+const groupToChoiceBuilderDraft = (group: VariationGroup): ChoiceBuilderDraft => ({
+  id: group.id,
+  label: group.label || '',
+  required: group.required !== false,
+  choices: group.options.length
+    ? group.options.map((option) => ({
+        id: option.id || crypto.randomUUID(),
+        label: option.label || '',
+        priceIncreaseCents: option.priceIncreaseCents || 0,
+      }))
+    : [{ id: crypto.randomUUID(), label: '', priceIncreaseCents: 0 }],
+});
+
+function CreateCategoryChoicesEditor({
+  groups,
+  presets,
+  selectedPresetId,
+  setupName,
+  builderOpen,
+  builderDraft,
+  onSelectedPresetChange,
+  onSetupNameChange,
+  onBuilderOpenChange,
+  onBuilderDraftChange,
+  onUseSavedChoices,
+  onAddBuilderChoice,
+  onSaveBuilderSetup,
+  onSaveCurrentSetup,
+  onEditGroup,
+  onGroupsChange,
+}: {
+  groups: VariationGroup[];
+  presets: VariationPreset[];
+  selectedPresetId: string;
+  setupName: string;
+  builderOpen: boolean;
+  builderDraft: ChoiceBuilderDraft;
+  onSelectedPresetChange: (id: string) => void;
+  onSetupNameChange: (name: string) => void;
+  onBuilderOpenChange: (open: boolean) => void;
+  onBuilderDraftChange: (draft: ChoiceBuilderDraft) => void;
+  onUseSavedChoices: () => void;
+  onAddBuilderChoice: () => boolean;
+  onSaveBuilderSetup: () => void;
+  onSaveCurrentSetup: () => void;
+  onEditGroup: (group: VariationGroup) => void;
+  onGroupsChange: (groups: VariationGroup[]) => void;
+}) {
+  const updateChoice = (id: string, patch: Partial<ChoiceValueDraft>) => {
+    onBuilderDraftChange({
+      ...builderDraft,
+      choices: builderDraft.choices.map((choice) => (choice.id === id ? { ...choice, ...patch } : choice)),
+    });
+  };
+
+  return (
+    <section className="space-y-5 rounded-[22px] border border-driftwood/65 bg-linen/45 p-4 sm:p-5">
+      <div>
+        <p className="ca-admin-heading text-lg">Customer Choices</p>
+        <p className="mt-1 max-w-3xl text-sm leading-6 text-charcoal/65">
+          Add the choices customers will pick from on products in this category, like Trim, Shell Type, or Set Size.
+        </p>
+      </div>
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <button
+          type="button"
+          onClick={() => {
+            onBuilderDraftChange(emptyChoiceBuilderDraft());
+            onBuilderOpenChange(true);
+          }}
+          className="lux-button px-5 py-3 text-[10px]"
+        >
+          <Plus className="h-4 w-4" />
+          Create Choice
+        </button>
+      </div>
+
+      <div className="rounded-[18px] border border-driftwood/60 bg-white/80 p-4">
+        <div>
+          <p className="ca-admin-heading text-base">Use Saved Choices</p>
+          <p className="mt-1 text-sm text-charcoal/60">Pick a saved choice setup and add it to this category.</p>
+        </div>
+        <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(260px,1fr)_auto] lg:items-end">
+          <div>
+            <label className="lux-label mb-2 block">Select saved choice setup</label>
+            <select
+              value={selectedPresetId}
+              onChange={(e) => onSelectedPresetChange(e.target.value)}
+              className="lux-input min-h-[46px] text-base"
+            >
+              <option value="">Select saved choice setup</option>
+              {presets.map((preset) => (
+                <option key={preset.id} value={preset.id}>
+                  {preset.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <button
+            type="button"
+            disabled={!selectedPresetId}
+            onClick={onUseSavedChoices}
+            className="lux-button--ghost px-5 py-3 text-[10px] disabled:opacity-50"
+          >
+            Add to Category
+          </button>
+        </div>
+      </div>
+
+      {builderOpen && (
+        <div className="rounded-[20px] border border-deep-ocean/25 bg-white p-4 sm:p-5">
+          <div className="mb-4">
+            <p className="ca-admin-heading text-lg">Create Choice</p>
+            <p className="mt-1 text-sm text-charcoal/60">
+              Choice Name is the dropdown label customers will see. Choices are the dropdown values.
+            </p>
+          </div>
+
+          <div className="space-y-4 border-l-2 border-driftwood/70 pl-4 sm:pl-5">
+            <div>
+              <label className="lux-label mb-2 block">Choice Name</label>
+              <input
+                value={builderDraft.label}
+                onChange={(e) => onBuilderDraftChange({ ...builderDraft, label: e.target.value })}
+                placeholder="Trim, Shell Type, Set Size"
+                className="lux-input min-h-[46px] text-base"
+              />
+            </div>
+
+            <label className="flex items-center gap-3 rounded-[14px] border border-driftwood/60 bg-linen/55 px-4 py-3 text-xs uppercase tracking-[0.2em] text-charcoal/70">
+              <input
+                type="checkbox"
+                checked={builderDraft.required}
+                onChange={(e) => onBuilderDraftChange({ ...builderDraft, required: e.target.checked })}
+              />
+              Customer must choose one
+            </label>
+
+            <div className="space-y-3 pl-3 sm:pl-5">
+              <div>
+                <p className="lux-label">Choices</p>
+                <p className="mt-1 text-xs leading-5 text-charcoal/55">
+                  Price Increase is added to the base product price. Leave at $0 if this choice does not change the price.
+                </p>
+              </div>
+              {builderDraft.choices.map((choice) => (
+                <div key={choice.id} className="grid gap-2 lg:grid-cols-[minmax(240px,1fr)_minmax(170px,220px)_auto]">
+                  <input
+                    value={choice.label}
+                    onChange={(e) => updateChoice(choice.id, { label: e.target.value })}
+                    placeholder="Gold, Oyster Shell, Set of 4"
+                    className="lux-input min-h-[44px] text-base"
+                  />
+                  <div>
+                    <label className="sr-only">Price Increase</label>
+                    <PriceIncreaseInput
+                      valueCents={choice.priceIncreaseCents}
+                      onChange={(cents) => updateChoice(choice.id, { priceIncreaseCents: cents })}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      onBuilderDraftChange({
+                        ...builderDraft,
+                        choices: builderDraft.choices.filter((item) => item.id !== choice.id),
+                      })
+                    }
+                    className="lux-button--ghost px-4 py-2 text-[10px]"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() =>
+                  onBuilderDraftChange({
+                    ...builderDraft,
+                    choices: [...builderDraft.choices, { id: crypto.randomUUID(), label: '', priceIncreaseCents: 0 }],
+                  })
+                }
+                className="lux-button--ghost px-4 py-2 text-[10px]"
+              >
+                Add Another Choice
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-5 grid gap-3 lg:grid-cols-[minmax(240px,1fr)_auto_auto] lg:items-end">
+            <Input
+              label="Setup Name"
+              value={setupName}
+              onChange={onSetupNameChange}
+              placeholder="Trim Color or Shell Dish Setup"
+            />
+            <button type="button" onClick={onAddBuilderChoice} className="lux-button px-5 py-3 text-[10px]">
+              Add to Category
+            </button>
+            <button
+              type="button"
+              onClick={onSaveBuilderSetup}
+              disabled={!setupName.trim()}
+              className="lux-button--ghost px-5 py-3 text-[10px] disabled:opacity-50"
+            >
+              Save This Choice Setup
+            </button>
+          </div>
+          <p className="mt-2 text-xs text-charcoal/55">Save this setup so you can reuse it on other categories later.</p>
+        </div>
+      )}
+
+      <CurrentCategoryChoices
+        groups={groups}
+        setupName={setupName}
+        onSetupNameChange={onSetupNameChange}
+        onSaveCurrentSetup={onSaveCurrentSetup}
+        onEditGroup={onEditGroup}
+        onRemoveGroup={(groupId) => onGroupsChange(groups.filter((group) => group.id !== groupId))}
+      />
+    </section>
+  );
+}
+
+function CurrentCategoryChoices({
+  groups,
+  setupName,
+  onSetupNameChange,
+  onSaveCurrentSetup,
+  onEditGroup,
+  onRemoveGroup,
+}: {
+  groups: VariationGroup[];
+  setupName: string;
+  onSetupNameChange: (name: string) => void;
+  onSaveCurrentSetup: () => void;
+  onEditGroup: (group: VariationGroup) => void;
+  onRemoveGroup: (groupId: string) => void;
+}) {
+  return (
+    <section className="space-y-4 border-t border-driftwood/60 pt-5">
+      <div>
+        <p className="ca-admin-heading text-lg">Current Choices for This Category</p>
+        <p className="mt-1 text-sm text-charcoal/60">
+          These choices will be attached when you create the category.
+        </p>
+      </div>
+
+      {groups.length === 0 ? (
+        <div className="ca-admin-empty-state">
+          No customer choices added yet. Products in this category will not show dropdown choices unless added later.
+        </div>
+      ) : (
+        <div className="grid gap-3 md:grid-cols-2">
+          {groups.map((group) => (
+            <div key={group.id} className="rounded-[18px] border border-driftwood/65 bg-white/90 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="font-serif text-xl text-deep-ocean">{group.label}</p>
+                  <p className="mt-1 text-xs uppercase tracking-[0.18em] text-charcoal/55">
+                    Customer must choose: {group.required !== false ? 'Yes' : 'No'}
+                  </p>
+                </div>
+                <div className="flex shrink-0 gap-2">
+                  <button type="button" onClick={() => onEditGroup(group)} className="lux-button--ghost px-3 py-2 text-[10px]">
+                    Edit
+                  </button>
+                  <button type="button" onClick={() => onRemoveGroup(group.id)} className="lux-button--ghost px-3 py-2 text-[10px] text-red-700">
+                    Remove
+                  </button>
+                </div>
+              </div>
+              <div className="mt-4">
+                <p className="lux-label mb-2">Choices</p>
+                <ul className="space-y-1 text-sm text-charcoal/70">
+                  {group.options.map((option) => (
+                    <li key={option.id}>
+                      - {option.label}
+                      {option.priceIncreaseCents && option.priceIncreaseCents > 0
+                        ? ` +$${(option.priceIncreaseCents / 100).toFixed(2).replace(/\.00$/, '')}`
+                        : ''}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {groups.length > 0 && (
+        <div className="rounded-[18px] border border-driftwood/60 bg-white/75 p-4">
+          <div className="grid gap-3 lg:grid-cols-[minmax(260px,1fr)_auto] lg:items-end">
+            <Input
+              label="Setup Name"
+              value={setupName}
+              onChange={onSetupNameChange}
+              placeholder="Shell Dish Setup"
+            />
+            <button
+              type="button"
+              onClick={onSaveCurrentSetup}
+              disabled={!setupName.trim()}
+              className="lux-button--ghost px-5 py-3 text-[10px] disabled:opacity-50"
+            >
+              Save This Choice Setup
+            </button>
+          </div>
+          <p className="mt-2 text-xs text-charcoal/55">Save this setup so you can reuse it on other categories later.</p>
+        </div>
+      )}
+    </section>
   );
 }
 

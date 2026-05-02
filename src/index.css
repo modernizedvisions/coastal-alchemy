@@ -781,7 +781,8 @@
 
   .ca-card-price {
     font-family: "Cormorant Garamond", serif;
-    font-size: 1.05rem;
+    font-size: 1.45rem;
+    line-height: 1;
     color: var(--ca-ink);
   }
 
@@ -853,6 +854,24 @@
     font-size: 0.58rem;
     letter-spacing: 0.22em;
     white-space: nowrap;
+  }
+
+  .ca-shop-card-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.25fr);
+    gap: 0.65rem;
+  }
+
+  .ca-shop-view-button {
+    justify-content: center;
+    min-height: 30px;
+    padding: 0.62rem 0.8rem;
+    font-size: 0.58rem;
+    letter-spacing: 0.22em;
+  }
+
+  .ca-feature-tile .ca-card-title {
+    font-size: 1.45rem;
   }
 
   .ca-gallery-cols {
@@ -1008,6 +1027,10 @@
 
     .ca-gallery-col {
       margin-top: 0 !important;
+    }
+
+    .ca-shop-card-actions {
+      grid-template-columns: 1fr;
     }
   }
 }

@@ -1,35 +1,29 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ContactForm } from '../components/ContactForm';
-import { EmailListSignupSection } from '../components/email-list/EmailListSignupSection';
-import type { Product } from '../lib/types';
+import type { HomeFeaturedCategoryTile } from '../lib/types';
 
 export type HomeTemplateProps = {
   heroImageUrls?: string[];
   heroRotationEnabled?: boolean;
   aboutImageUrl?: string;
   customOrdersMainImageUrl?: string;
-  featuredProducts?: Product[];
+  featuredTiles?: HomeFeaturedCategoryTile[];
 };
-
-const formatPrice = (priceCents?: number) =>
-  typeof priceCents === 'number'
-    ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(priceCents / 100)
-    : '';
 
 export default function HomeTemplate({
   heroImageUrls = [],
   heroRotationEnabled = false,
   aboutImageUrl,
   customOrdersMainImageUrl,
-  featuredProducts = [],
+  featuredTiles = [],
 }: HomeTemplateProps) {
   const activeHeroImages = heroImageUrls.filter(Boolean);
   const [heroIndex, setHeroIndex] = useState(0);
   const heroImage = activeHeroImages[heroIndex % activeHeroImages.length] || '/images/large-shell-frame.png';
   const studioImage = aboutImageUrl || '/images/shell-collection-flatlay.png';
   const customImage = customOrdersMainImageUrl || '/images/shell-frame-staged.png';
-  const featured = featuredProducts.slice(0, 4);
+  const featured = featuredTiles.slice(0, 4);
 
   useEffect(() => {
     setHeroIndex(0);
@@ -117,27 +111,25 @@ export default function HomeTemplate({
             <h2 className="ca-section-title">A few favorites from the studio</h2>
           </div>
           <div className="ca-grid ca-grid-4">
-            {featured.length ? featured.map((product) => {
-              const image = product.thumbnailUrl || product.imageUrl || product.imageUrls?.[0] || '/images/shell-frame-detail.png';
-              const unavailable = product.isSold || (typeof product.quantityAvailable === 'number' && product.quantityAvailable <= 0);
+            {featured.length ? featured.map((tile, index) => {
+              const categorySlug = (tile.categorySlug || '').trim();
+              const href = !categorySlug || categorySlug === 'all'
+                ? '/shop'
+                : `/shop?category=${encodeURIComponent(categorySlug)}`;
               return (
-              <article className="ca-card" key={product.id}>
-                <Link to={`/product/${product.id}`} className="ca-card-media">
-                  <img src={image} alt={product.name} loading="lazy" />
+              <article className="ca-card ca-feature-tile" key={`${tile.categorySlug || 'all'}-${index}`}>
+                <Link to={href} className="ca-card-media" aria-label={`Shop ${tile.title}`}>
+                  <img src={tile.imageUrl || '/images/shell-frame-detail.png'} alt={tile.title || 'Featured category'} loading="lazy" />
                 </Link>
                 <div className="ca-card-body">
-                  <div className="ca-card-meta">{product.type || product.category || 'Studio Work'}</div>
-                  <div className="ca-card-title">{product.name}</div>
-                  <div className="mt-2 flex items-center justify-between gap-3 text-[0.68rem] uppercase tracking-[0.2em] text-[var(--ca-muted)]">
-                    <span>{formatPrice(product.priceCents)}</span>
-                    {unavailable && <span>Sold</span>}
-                  </div>
+                  <div className="ca-card-meta">Shop Category</div>
+                  <Link to={href} className="ca-card-title transition hover:text-[var(--ca-navy)]">{tile.title}</Link>
                 </div>
               </article>
               );
             }) : (
               <div className="col-span-full ca-copy text-center text-sm">
-                Featured pieces will appear here when products are active in the shop.
+                Featured categories will appear here when they are configured in admin.
               </div>
             )}
           </div>
@@ -204,12 +196,6 @@ export default function HomeTemplate({
           <div className="ca-form-skin">
             <ContactForm backgroundColor="transparent" variant="embedded" />
           </div>
-        </div>
-      </section>
-
-      <section className="ca-section-tight border-t border-[var(--ca-border)]">
-        <div className="ca-container max-w-4xl">
-          <EmailListSignupSection />
         </div>
       </section>
     </div>

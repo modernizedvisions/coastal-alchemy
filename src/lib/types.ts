@@ -138,6 +138,13 @@ export type AboutImages = {
   about?: string;
 };
 
+export type HomeFeaturedCategoryTile = {
+  imageUrl?: string;
+  title?: string;
+  categorySlug?: string;
+  categoryId?: string;
+};
+
 export interface HeroConfig {
   heroImages: HeroCollageImage[]; // up to 3
   customOrdersImages?: CustomOrdersImage[]; // up to 4 for custom shells grid
@@ -156,6 +163,8 @@ export type HomeSiteContent = {
   aboutImages?: AboutImages;
   // Main image shared by homepage and Custom Orders page.
   customOrdersMainImage?: string;
+  // Four admin-managed category feature tiles shown in the homepage Featured Pieces section.
+  featuredCategoryTiles?: HomeFeaturedCategoryTile[];
   heroRotationEnabled?: boolean;
   shopCategoryCards?: Array<{
     slotIndex: number;

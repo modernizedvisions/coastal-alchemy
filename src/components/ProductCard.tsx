@@ -1,4 +1,4 @@
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingBag } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Product } from '../lib/types';
 import type { CategoryOptionGroup } from '../lib/categoryOptions';
@@ -155,7 +155,7 @@ export function ProductCard({ product, categoryOptionLookup, itemListName }: Pro
           </div>
         )}
 
-        <div className="mt-auto flex items-end justify-between gap-4 pt-5">
+        <div className="mt-auto space-y-4 pt-5">
           {promoEligible && discountedCents !== basePriceCents && basePriceCents !== null ? (
             <div className="whitespace-nowrap">
               <div className="text-xs text-[var(--ca-muted)] line-through">{priceLabel}</div>
@@ -164,30 +164,39 @@ export function ProductCard({ product, categoryOptionLookup, itemListName }: Pro
           ) : (
             <span className="ca-card-price whitespace-nowrap">{priceLabel}</span>
           )}
-          <button
-            onClick={() => {
-              if (requiresOption) {
-                handleSelectItem();
-                navigate(productHref);
-                return;
-              }
-              handleAddToCart();
-            }}
-            disabled={!requiresOption && (isDisabled || !isPurchaseReady)}
-            className="ca-button ca-button-filled ca-shop-add-button disabled:cursor-not-allowed disabled:opacity-50"
-            aria-label={requiresOption ? 'Choose options' : 'Add to Cart'}
-          >
-            {requiresOption ? (
-              <span>Choose Options</span>
-            ) : inCart && product.oneoff ? (
-              <span>Added</span>
-            ) : (
-              <>
-                <ShoppingCart className="h-3.5 w-3.5" />
-                <span>Add to Cart</span>
-              </>
-            )}
-          </button>
+          <div className="ca-shop-card-actions">
+            <Link
+              to={productHref}
+              onClick={handleSelectItem}
+              className="ca-button ca-button-ghost ca-shop-view-button"
+            >
+              View
+            </Link>
+            <button
+              onClick={() => {
+                if (requiresOption) {
+                  handleSelectItem();
+                  navigate(productHref);
+                  return;
+                }
+                handleAddToCart();
+              }}
+              disabled={!requiresOption && (isDisabled || !isPurchaseReady)}
+              className="ca-button ca-button-filled ca-shop-add-button disabled:cursor-not-allowed disabled:opacity-50"
+              aria-label={requiresOption ? 'Choose options' : 'Add to Cart'}
+            >
+              {requiresOption ? (
+                <span>Choose Options</span>
+              ) : inCart && product.oneoff ? (
+                <span>Added</span>
+              ) : (
+                <>
+                  <ShoppingBag className="h-3.5 w-3.5" />
+                  <span>Add to Cart</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </article>

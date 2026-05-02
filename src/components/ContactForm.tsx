@@ -21,13 +21,14 @@ export function ContactForm({
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    phone: '',
     message: '',
   });
   const [inquiryType, setInquiryType] = useState<'message' | 'custom_order'>(initialInquiryType);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
   const [categoryError, setCategoryError] = useState<string | null>(null);
-  const [selectedCategories, setSelectedCategories] = useState<Array<{ id: string; name: string }>>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'success' | 'error' | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -95,19 +96,35 @@ export function ContactForm({
     try {
       const imageUrl = imageDataUrl || null;
 
+      const selectedCategory = categories.find((category) => category.id === selectedCategoryId);
+      const messageBody =
+        isCustomOrderMode && formData.phone.trim()
+          ? `Phone: ${formData.phone.trim()}\n\n${formData.message}`
+          : formData.message;
+
       const res = await fetch('/api/messages', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          ...formData,
+          name: formData.name,
+          email: formData.email,
+          message: messageBody,
           imageUrl: imageUrl || undefined,
           type: inquiryType,
           categoryIds:
-            inquiryType === 'custom_order' ? selectedCategories.map((category) => category.id) : undefined,
+            inquiryType === 'custom_order'
+              ? selectedCategory
+                ? [selectedCategory.id]
+                : undefined
+              : undefined,
           categoryNames:
-            inquiryType === 'custom_order' ? selectedCategories.map((category) => category.name) : undefined,
+            inquiryType === 'custom_order'
+              ? selectedCategory
+                ? [selectedCategory.name]
+                : undefined
+              : undefined,
         }),
       });
 
@@ -136,9 +153,9 @@ export function ContactForm({
 
       setSubmitStatus('success');
       setSubmittedType(inquiryType);
-      setFormData({ name: '', email: '', message: '' });
+      setFormData({ name: '', email: '', phone: '', message: '' });
       setInquiryType(isCustomOrderMode ? 'custom_order' : defaultInquiryType);
-      setSelectedCategories([]);
+      setSelectedCategoryId('');
       setImageFile(null);
       setImagePreview(null);
       setImageDataUrl(null);
@@ -155,23 +172,6 @@ export function ContactForm({
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleInquiryTypeChange = (type: 'message' | 'custom_order') => {
-    setInquiryType(type);
-    if (type === 'message') {
-      setSelectedCategories([]);
-    }
-  };
-
-  const handleSelectCategory = (chip: { id: string; name: string }) => {
-    setSelectedCategories((prev) => {
-      const exists = prev.some((category) => category.id === chip.id);
-      if (exists) {
-        return prev.filter((category) => category.id !== chip.id);
-      }
-      return [...prev, { id: chip.id, name: chip.name }];
     });
   };
 
@@ -291,77 +291,28 @@ export function ContactForm({
           }
         >
           <form onSubmit={handleSubmit} className={variant === 'embedded' ? 'space-y-6' : 'space-y-6'}>
-            {!isCustomOrderMode && (
-              <div className="flex justify-center max-sm:px-1">
-                <div className="inline-flex border border-[var(--ca-border)] bg-white p-1 max-sm:w-full max-sm:max-w-full max-sm:flex-nowrap max-sm:justify-center max-sm:items-center max-sm:box-border max-sm:overflow-hidden">
-                  <button
-                    type="button"
-                    onClick={() => handleInquiryTypeChange('message')}
-                    className={`px-4 py-2 text-[10px] font-medium uppercase tracking-[0.26em] transition whitespace-nowrap max-sm:px-3 max-sm:py-2.5 max-sm:text-[10px] ${
-                      inquiryType === 'message'
-                        ? 'bg-[var(--ca-navy)] text-white'
-                        : 'text-[var(--ca-navy)] hover:bg-[var(--ca-paper)]'
-                    }`}
-                  >
-                    Message
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleInquiryTypeChange('custom_order')}
-                    className={`px-4 py-2 text-[10px] font-medium uppercase tracking-[0.26em] transition whitespace-nowrap max-sm:px-3 max-sm:py-2.5 max-sm:text-[10px] ${
-                      inquiryType === 'custom_order'
-                        ? 'bg-[var(--ca-navy)] text-white'
-                        : 'text-[var(--ca-navy)] hover:bg-[var(--ca-paper)]'
-                    }`}
-                  >
-                    Custom Order
-                  </button>
-                </div>
+            {isCustomOrderMode && (
+              <div>
+                <label htmlFor="custom-order-category" className="mb-2 block">
+                  Category of Piece
+                </label>
+                <select
+                  id="custom-order-category"
+                  value={selectedCategoryId}
+                  onChange={(e) => setSelectedCategoryId(e.target.value)}
+                  className="lux-input"
+                >
+                  <option value="">Select a category</option>
+                  {categoryChips.map((chip) => (
+                    <option key={chip.id} value={chip.id}>
+                      {chip.name}
+                    </option>
+                  ))}
+                </select>
+                {categoryError && <p className="ca-copy mt-2 text-xs">{categoryError}</p>}
+                {isLoadingCategories && <p className="ca-copy mt-2 text-xs">Loading categories...</p>}
               </div>
             )}
-
-            <div className="space-y-3 min-h-0 flex flex-col">
-              {inquiryType === 'custom_order' ? (
-                <>
-                  {categoryError && (
-                    <p className="ca-copy text-center text-xs max-md:hidden">{categoryError}</p>
-                  )}
-                  {isLoadingCategories ? (
-                    <div className="mx-auto flex max-w-4xl flex-wrap justify-center gap-2 max-md:hidden">
-                      {Array.from({ length: 6 }).map((_, index) => (
-                        <div
-                          key={`contact-chip-skeleton-${index}`}
-                          className="h-10 w-24 bg-[var(--ca-border)] animate-pulse"
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="mx-auto flex max-w-4xl flex-wrap justify-center gap-3 max-md:hidden">
-                      {categoryChips.map((chip) => {
-                        const isSelected = selectedCategories.some((category) => category.id === chip.id);
-                        return (
-                          <button
-                            key={chip.id}
-                            type="button"
-                            aria-pressed={isSelected}
-                            onClick={() => handleSelectCategory(chip)}
-                            className={`min-h-[40px] border px-4 py-2 text-[10px] font-medium uppercase tracking-[0.26em] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--ca-navy)] ${
-                              isSelected
-                                ? 'border-[var(--ca-navy)] bg-[var(--ca-navy)] text-white'
-                                : 'border-[var(--ca-border)] bg-white text-[var(--ca-navy)] hover:border-[var(--ca-navy)]'
-                            }`}
-                          >
-                            {chip.name}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div aria-hidden className="h-0" />
-              )}
-            </div>
 
             <div>
               <label
@@ -397,12 +348,30 @@ export function ContactForm({
                 className="lux-input"
               />
             </div>
+            {isCustomOrderMode && (
+              <div>
+                <label
+                  htmlFor="phone"
+                  className="mb-2 block"
+                >
+                  Phone
+                </label>
+                <input
+                  type="tel"
+                  id="phone"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  className="lux-input"
+                />
+              </div>
+            )}
             <div>
               <label
                 htmlFor="message"
                 className="mb-2 block"
               >
-                {isCustomOrderMode ? 'Custom request details' : 'Message'}
+                {isCustomOrderMode ? 'Message / Project Details' : 'Message'}
               </label>
               <textarea
                 id="message"
@@ -445,7 +414,7 @@ export function ContactForm({
                 ) : (
                   <div className="flex flex-col items-center gap-1">
                     <span className="text-[11px] font-medium uppercase tracking-[0.24em] text-[var(--ca-ink)]">
-                      Share a photo (optional)
+                      {isCustomOrderMode ? 'Share a Photo' : 'Share a photo (optional)'}
                     </span>
                     <span className="ca-copy text-xs">
                       Upload images, inspiration, or designs you'd like us to reference

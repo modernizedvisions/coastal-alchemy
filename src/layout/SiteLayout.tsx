@@ -153,11 +153,9 @@ function SiteLayoutInner() {
               </button>
               <Link
                 to="/"
-                className="font-serif text-xl tracking-[0.22em] text-[var(--ca-ink)] flex-1 text-center md:text-left truncate whitespace-nowrap inline-flex items-center gap-2 max-md:flex-row max-md:items-center max-md:justify-center"
+                className="font-serif text-xl tracking-[0.24em] text-[var(--ca-ink)] flex-1 text-center md:text-left truncate whitespace-nowrap uppercase"
               >
-                <img src="/images/logo.jpg" alt="Coastal Alchemy logo" className="h-8 w-auto object-contain md:mr-1" />
-                <span className="md:hidden inline-block text-center">Coastal Alchemy</span>
-                <span className="hidden md:inline">Coastal Alchemy</span>
+                COASTAL ALCHEMY
               </Link>
             </div>
             <div className="hidden md:flex items-center gap-6">
@@ -272,69 +270,78 @@ function SiteLayoutInner() {
         </div>
       )}
 
-      <footer className="bg-white border-t border-[var(--ca-border)] py-12 text-[var(--ca-ink)]">
+      <footer className="bg-white border-t border-[var(--ca-border)] py-14 text-[var(--ca-ink)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col items-center gap-4 text-center">
-            <div className="font-serif text-2xl tracking-[0.2em]">Coastal Alchemy</div>
-            <div className="flex items-center gap-3 text-[var(--ca-muted)]">
+          <div className="grid gap-10 md:grid-cols-[1.4fr_0.8fr_0.9fr_0.9fr]">
+            <div className="max-w-sm">
+              <div className="font-serif text-2xl uppercase tracking-[0.22em]">COASTAL ALCHEMY</div>
+              <p className="ca-copy mt-4 text-sm">
+                Hand-painted shells and coastal pieces, made one at a time on the Gulf Coast in Naples, Florida.
+              </p>
+            </div>
+
+            <div>
+              <h2 className="mb-4 text-[0.68rem] font-semibold uppercase tracking-[0.28em] text-[var(--ca-navy)]">Explore</h2>
+              <nav className="flex flex-col gap-2 text-sm text-[var(--ca-muted)]">
+                <Link to="/shop" className="hover:text-[var(--ca-ink)] transition-colors">Shop</Link>
+                <Link to="/gallery" className="hover:text-[var(--ca-ink)] transition-colors">Gallery</Link>
+                <Link to="/custom-orders" className="hover:text-[var(--ca-ink)] transition-colors">Custom Orders</Link>
+                <Link to="/about" className="hover:text-[var(--ca-ink)] transition-colors">About</Link>
+              </nav>
+            </div>
+
+            <div>
+              <h2 className="mb-4 text-[0.68rem] font-semibold uppercase tracking-[0.28em] text-[var(--ca-navy)]">Visit</h2>
+              <div className="space-y-2 text-sm text-[var(--ca-muted)]">
+                <p>Naples, Florida</p>
+                <p>By appointment only</p>
+                <Link to="/contact" className="inline-block hover:text-[var(--ca-ink)] transition-colors">Get in touch</Link>
+              </div>
+            </div>
+
+            <div>
+              <h2 className="mb-4 text-[0.68rem] font-semibold uppercase tracking-[0.28em] text-[var(--ca-navy)]">Follow</h2>
+              <div className="flex items-center gap-3 text-[var(--ca-muted)]">
               <a
                 href="https://www.instagram.com/coastalalchemy/"
                 target="_blank"
                 rel="noreferrer"
                 aria-label="Visit Coastal Alchemy on Instagram"
-                className="p-2 rounded-full border border-[var(--ca-border)] hover:border-[var(--ca-navy)] hover:text-[var(--ca-navy)] transition-colors"
+                className="p-2 border border-[var(--ca-border)] text-[var(--ca-navy)] hover:bg-[var(--ca-paper)] transition-colors"
               >
                 <Instagram className="h-5 w-5" />
               </a>
-              <a
-                href="https://www.tiktok.com/@coastalalchemy"
-                target="_blank"
-                rel="noreferrer"
-                aria-label="Visit Coastal Alchemy on TikTok"
-                className="p-2 rounded-full border border-[var(--ca-border)] hover:border-[var(--ca-navy)] hover:text-[var(--ca-navy)] transition-colors"
-              >
-                <TikTokIcon className="h-5 w-5" />
+              </div>
+              <a href="mailto:hello@coastalalchemy.com" className="mt-4 inline-block text-sm text-[var(--ca-muted)] hover:text-[var(--ca-ink)] transition-colors">
+                hello@coastalalchemy.com
               </a>
             </div>
-            <div className="flex items-center gap-4 text-sm font-serif text-[var(--ca-muted)]">
+          </div>
+
+          <div className="mt-12 flex flex-col gap-4 border-t border-[var(--ca-border)] pt-6 text-sm text-[var(--ca-muted)] md:flex-row md:items-center md:justify-between">
+            <p>&copy; 2026 Coastal Alchemy. All rights reserved.</p>
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
               <Link to="/terms" className="hover:text-linen transition-colors">
                 Terms
               </Link>
               <Link to="/privacy" className="hover:text-linen transition-colors">
                 Privacy
               </Link>
-            </div>
-            <p className="text-sm font-serif text-[var(--ca-muted)]">
-              &copy; 2026 Coastal Alchemy. All rights reserved.
-            </p>
-            <p className="text-sm font-serif text-[var(--ca-muted)]">
-              Built By{' '}
+              <span>
+                Built by{' '}
               <a
                 href="https://modernizedvisions.agency"
                 className="underline decoration-1 underline-offset-2 hover:text-[var(--ca-navy)] transition-colors"
               >
                 Modernized Visions
               </a>
-            </p>
+              </span>
+            </div>
           </div>
         </div>
       </footer>
 
       <CartDrawer />
     </div>
-  );
-}
-
-function TikTokIcon({ className = 'h-5 w-5' }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className={className}
-      aria-hidden="true"
-    >
-      <path d="M21 8.27c-1.18-.24-2.26-.75-3.2-1.5a6.43 6.43 0 0 1-1.01-1.06c-.15-.21-.29-.43-.42-.66v8.07a5.72 5.72 0 0 1-1.13 3.4c-.88 1.19-2.13 1.98-3.57 2.21a5.64 5.64 0 0 1-3.48-.54A5.18 5.18 0 0 1 5.4 14.8c.02-1.33.55-2.58 1.52-3.53a5.34 5.34 0 0 1 5.77-1.16v2.61c-.38-.25-.82-.39-1.27-.4a2.2 2.2 0 0 0-2.25 2.25c0 .6.23 1.18.65 1.6a2.22 2.22 0 0 0 2.31.53c.38-.14.72-.38 1-.69.47-.54.73-1.24.73-1.96V3h2.4c.08.36.2.72.35 1.06.22.49.5.95.84 1.38.51.66 1.17 1.2 1.92 1.57.57.29 1.18.48 1.81.55V8.27Z" />
-    </svg>
   );
 }

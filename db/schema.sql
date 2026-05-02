@@ -230,6 +230,7 @@ CREATE TABLE IF NOT EXISTS gallery_images (
   image_url TEXT,
   image_id TEXT,
   alt_text TEXT,
+  title TEXT,
   hidden INTEGER NOT NULL DEFAULT 0,
   is_active INTEGER DEFAULT 1,
   sort_order INTEGER NOT NULL DEFAULT 0,

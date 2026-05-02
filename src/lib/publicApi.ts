@@ -40,7 +40,7 @@ export async function fetchGalleryImages() {
     imageId: img.imageId || img.image_id || undefined,
     hidden: !!(img.hidden ?? img.is_active === 0),
     alt: img.alt || img.alt_text,
-    title: img.title || img.alt || img.alt_text,
+    title: img.title || undefined,
     position: typeof img.position === 'number' ? img.position : idx,
     createdAt: img.createdAt || img.created_at,
   }));

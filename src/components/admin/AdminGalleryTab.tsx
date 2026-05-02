@@ -11,6 +11,7 @@ export type AdminGalleryItem = {
   imageId?: string | null;
   previewUrl?: string | null;
   alt?: string;
+  title?: string;
   hidden?: boolean;
   position?: number;
   createdAt?: string;
@@ -184,6 +185,10 @@ function GalleryAdmin({
           : img
       )
     );
+  };
+
+  const handleTitleChange = (id: string, title: string) => {
+    onChange(images.map((img) => (img.id === id ? { ...img, title } : img)));
   };
 
   const handleMove = (id: string, direction: 'up' | 'down') => {
@@ -399,6 +404,22 @@ function GalleryAdmin({
                 #{idx + 1}
               </span>
             </div>
+            <div className="space-y-1 p-3">
+              <label htmlFor={`gallery-title-${img.id}`} className="lux-label text-[10px]">
+                Optional Title
+              </label>
+              <input
+                id={`gallery-title-${img.id}`}
+                type="text"
+                value={img.title || ''}
+                onChange={(e) => handleTitleChange(img.id, e.target.value)}
+                placeholder="Shown under the image on the gallery page if filled in."
+                className="lux-input text-sm"
+              />
+              <p className="text-[10px] text-charcoal/60">
+                Shown under the image on the gallery page if filled in.
+              </p>
+            </div>
           </div>
         ))}
 
@@ -412,5 +433,4 @@ function GalleryAdmin({
     </div>
   );
 }
-
 

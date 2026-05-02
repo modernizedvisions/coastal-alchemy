@@ -17,6 +17,7 @@ type GalleryRow = {
   image_url: string | null;
   image_id?: string | null;
   alt_text?: string | null;
+  title?: string | null;
   is_active?: number | null;
   position?: number | null;
   sort_order?: number | null;
@@ -27,6 +28,14 @@ type GalleryRow = {
 const MAX_URL_LENGTH = 2000;
 
 const isDataUrl = (value: string) => value.trim().toLowerCase().startsWith('data:');
+
+async function ensureGallerySchema(db: D1Database) {
+  const { results } = await db.prepare(`PRAGMA table_info(gallery_images);`).all<{ name: string }>();
+  const names = new Set((results || []).map((column) => column.name));
+  if (!names.has('title')) {
+    await db.prepare(`ALTER TABLE gallery_images ADD COLUMN title TEXT;`).run();
+  }
+}
 
 function json(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -46,7 +55,7 @@ function mapRowToImage(row: GalleryRow | null | undefined) {
     imageUrl: normalizeImageUrl(url),
     imageId: row.image_id || undefined,
     alt: row.alt_text || undefined,
-    title: row.alt_text || undefined,
+    title: row.title || undefined,
     hidden,
     position,
     createdAt: row.created_at || undefined,
@@ -59,10 +68,11 @@ export async function onRequestGet(context: { env: { DB?: D1Database }; request:
     if (!db) {
       return json({ error: 'missing_d1_binding', hint: 'Bind D1 as DB in Cloudflare Pages' }, 500);
     }
+    await ensureGallerySchema(db);
 
     const { results } = await db
       .prepare(
-        `SELECT id, url, image_url, image_id, alt_text, hidden, is_active, sort_order, position, created_at
+        `SELECT id, url, image_url, image_id, alt_text, title, hidden, is_active, sort_order, position, created_at
          FROM gallery_images
          WHERE hidden = 0 OR hidden IS NULL
          ORDER BY sort_order ASC, created_at ASC;`
@@ -86,6 +96,7 @@ export async function onRequestPut(context: { env: { DB?: D1Database }; request:
     if (!db) {
       return json({ error: 'missing_d1_binding', hint: 'Bind D1 as DB in Cloudflare Pages' }, 500);
     }
+    await ensureGallerySchema(db);
 
     const body = (await context.request.json().catch(() => null)) as any;
     if (!Array.isArray(body?.images)) {
@@ -107,7 +118,8 @@ export async function onRequestPut(context: { env: { DB?: D1Database }; request:
           id: typeof img?.id === 'string' && img.id ? img.id : crypto.randomUUID(),
           url: normalizedUrl,
           imageId: typeof img?.imageId === 'string' && img.imageId ? img.imageId : null,
-          alt: typeof img?.alt === 'string' ? img.alt : typeof img?.title === 'string' ? img.title : null,
+          alt: typeof img?.alt === 'string' ? img.alt : null,
+          title: typeof img?.title === 'string' ? img.title.trim() || null : null,
           hidden: !!img?.hidden,
           sortOrder: Number.isFinite(Number(img?.position)) ? Number(img.position) : idx,
           createdAt: typeof img?.createdAt === 'string' && img.createdAt ? img.createdAt : new Date().toISOString(),
@@ -118,6 +130,7 @@ export async function onRequestPut(context: { env: { DB?: D1Database }; request:
       url: string;
       imageId: string | null;
       alt: string | null;
+      title: string | null;
       hidden: boolean;
       sortOrder: number;
       createdAt: string;
@@ -128,8 +141,8 @@ export async function onRequestPut(context: { env: { DB?: D1Database }; request:
     for (const img of normalized) {
       const inserted = await db
         .prepare(
-          `INSERT INTO gallery_images (id, url, image_url, image_id, alt_text, hidden, is_active, sort_order, position, created_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`
+          `INSERT INTO gallery_images (id, url, image_url, image_id, alt_text, title, hidden, is_active, sort_order, position, created_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`
         )
         .bind(
           img.id,
@@ -137,6 +150,7 @@ export async function onRequestPut(context: { env: { DB?: D1Database }; request:
           img.url,
           img.imageId,
           img.alt,
+          img.title,
           img.hidden ? 1 : 0,
           img.hidden ? 0 : 1,
           img.sortOrder,
@@ -152,7 +166,7 @@ export async function onRequestPut(context: { env: { DB?: D1Database }; request:
 
     const refreshed = await db
       .prepare(
-        `SELECT id, url, image_url, image_id, alt_text, hidden, is_active, sort_order, position, created_at
+        `SELECT id, url, image_url, image_id, alt_text, title, hidden, is_active, sort_order, position, created_at
          FROM gallery_images
          ORDER BY sort_order ASC, created_at ASC;`
       )

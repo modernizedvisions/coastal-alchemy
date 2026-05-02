@@ -31,6 +31,7 @@ type CategoryDraft = {
 };
 
 type ToolView = 'launcher' | 'create' | 'edit' | 'presets';
+type ChoicePanel = 'new' | 'presets';
 
 type ChoiceValueDraft = {
   id: string;
@@ -115,7 +116,7 @@ export function CategoryManagementModal({
   const [adminCategories, setAdminCategories] = useState<Category[]>([]);
   const [presets, setPresets] = useState<VariationPreset[]>([]);
   const [selectedEditPresetId, setSelectedEditPresetId] = useState('');
-  const [showCreatePresets, setShowCreatePresets] = useState(false);
+  const [activeChoicePanel, setActiveChoicePanel] = useState<ChoicePanel | null>(null);
   const [choiceBuilderDraft, setChoiceBuilderDraft] = useState<ChoiceBuilderDraft>(() => emptyChoiceBuilderDraft());
   const [editChoiceBuilderDraft, setEditChoiceBuilderDraft] = useState<ChoiceBuilderDraft>(() => emptyChoiceBuilderDraft());
   const [editChoiceGroupId, setEditChoiceGroupId] = useState<string | null>(null);
@@ -179,7 +180,7 @@ export function CategoryManagementModal({
     setEditCategoryId(null);
     setEditDraft(null);
     setSelectedEditPresetId('');
-    setShowCreatePresets(false);
+    setActiveChoicePanel(null);
     setChoiceBuilderDraft(emptyChoiceBuilderDraft());
     setEditChoiceBuilderDraft(emptyChoiceBuilderDraft());
     setEditChoiceGroupId(null);
@@ -415,7 +416,7 @@ export function CategoryManagementModal({
         onCategoriesChange(updated);
         onCategorySelected?.(created.name);
         setNewDraft(emptyDraft());
-        setShowCreatePresets(false);
+        setActiveChoicePanel(null);
         setCategoryMessage('');
         closeAll();
       }
@@ -682,8 +683,8 @@ export function CategoryManagementModal({
                 groups={newDraft.optionGroups}
                 presets={presets}
                 builderDraft={choiceBuilderDraft}
-                showPresets={showCreatePresets}
-                onTogglePresets={() => setShowCreatePresets((prev) => !prev)}
+                activePanel={activeChoicePanel}
+                onPanelChange={(panel) => setActiveChoicePanel((current) => (current === panel ? null : panel))}
                 onBuilderDraftChange={setChoiceBuilderDraft}
                 onUsePreset={usePresetForNewCategory}
                 onEditPreset={(preset) => {
@@ -1492,8 +1493,8 @@ function CreateCategoryChoicesEditor({
   groups,
   presets,
   builderDraft,
-  showPresets,
-  onTogglePresets,
+  activePanel,
+  onPanelChange,
   onBuilderDraftChange,
   onUsePreset,
   onEditPreset,
@@ -1505,8 +1506,8 @@ function CreateCategoryChoicesEditor({
   groups: VariationGroup[];
   presets: VariationPreset[];
   builderDraft: ChoiceBuilderDraft;
-  showPresets: boolean;
-  onTogglePresets: () => void;
+  activePanel: ChoicePanel | null;
+  onPanelChange: (panel: ChoicePanel) => void;
   onBuilderDraftChange: (draft: ChoiceBuilderDraft) => void;
   onUsePreset: (preset: VariationPreset) => void;
   onEditPreset: (preset: VariationPreset) => void;
@@ -1524,14 +1525,32 @@ function CreateCategoryChoicesEditor({
         </p>
       </div>
 
-      <div className="space-y-4">
-        <div>
-          <p className="ca-admin-heading text-lg">New Customer Choice</p>
-          <p className="mt-1 text-sm text-charcoal/60">
-            Create a choice customers can select on products in this category.
-          </p>
-        </div>
-        <ChoiceBuilder draft={builderDraft} onDraftChange={onBuilderDraftChange} />
+      <div className="grid gap-3 md:grid-cols-2">
+        <ChoicePanelSelectorCard
+          title="Create New Choice"
+          subtitle="Add a custom choice like Trim, Shell Type, or Set Size."
+          actionLabel={activePanel === 'new' ? 'Close' : 'Open'}
+          active={activePanel === 'new'}
+          onClick={() => onPanelChange('new')}
+        />
+        <ChoicePanelSelectorCard
+          title="Select From Presets"
+          subtitle="Browse saved presets and add them to this category."
+          actionLabel={activePanel === 'presets' ? 'Close' : 'Browse'}
+          active={activePanel === 'presets'}
+          onClick={() => onPanelChange('presets')}
+        />
+      </div>
+
+      {activePanel === 'new' && (
+        <div className="space-y-4 rounded-[18px] border border-driftwood/60 bg-white/80 p-4">
+          <div>
+            <p className="ca-admin-heading text-lg">Create New Choice</p>
+            <p className="mt-1 text-sm text-charcoal/60">
+              Create a choice customers can select on products in this category.
+            </p>
+          </div>
+          <ChoiceBuilder draft={builderDraft} onDraftChange={onBuilderDraftChange} />
           <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-end">
             <button type="button" onClick={onAddBuilderChoice} className="lux-button px-5 py-3 text-[10px]">
               Add to Category
@@ -1544,15 +1563,12 @@ function CreateCategoryChoicesEditor({
               Add As New Preset
             </button>
           </div>
-      </div>
+        </div>
+      )}
 
-      <PresetBrowser
-        presets={presets}
-        expanded={showPresets}
-        onToggle={onTogglePresets}
-        onUsePreset={onUsePreset}
-        onEditPreset={onEditPreset}
-      />
+      {activePanel === 'presets' && (
+        <PresetSelectionPanel presets={presets} onUsePreset={onUsePreset} onEditPreset={onEditPreset} />
+      )}
 
       <CurrentCategoryChoices
         groups={groups}
@@ -1566,54 +1582,67 @@ function CreateCategoryChoicesEditor({
   );
 }
 
-function PresetBrowser({
+function ChoicePanelSelectorCard({
+  title,
+  subtitle,
+  actionLabel,
+  active,
+  onClick,
+}: {
+  title: string;
+  subtitle: string;
+  actionLabel: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex min-h-[112px] w-full flex-col gap-3 rounded-[18px] border px-4 py-4 text-left transition sm:flex-row sm:items-start sm:justify-between ${
+        active
+          ? 'border-deep-ocean/45 bg-white shadow-[0_12px_30px_rgba(23,56,64,0.08)]'
+          : 'border-driftwood/60 bg-white/80 hover:border-deep-ocean/25 hover:bg-white'
+      }`}
+    >
+      <span>
+        <span className="ca-admin-heading block text-base">{title}</span>
+        <span className="mt-1 block text-sm leading-6 text-charcoal/60">{subtitle}</span>
+      </span>
+      <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.2em] text-deep-ocean">{actionLabel}</span>
+    </button>
+  );
+}
+
+function PresetSelectionPanel({
   presets,
-  expanded,
-  onToggle,
   onUsePreset,
   onEditPreset,
 }: {
   presets: VariationPreset[];
-  expanded: boolean;
-  onToggle: () => void;
   onUsePreset: (preset: VariationPreset) => void;
   onEditPreset: (preset: VariationPreset) => void;
 }) {
   return (
-    <section className="rounded-[18px] border border-driftwood/60 bg-white/80">
-      <button
-        type="button"
-        onClick={onToggle}
-        className="flex w-full flex-col gap-2 px-4 py-4 text-left sm:flex-row sm:items-center sm:justify-between"
-        aria-expanded={expanded}
-      >
-        <span>
-          <span className="ca-admin-heading block text-base">Use Existing Presets</span>
-          <span className="mt-1 block text-sm text-charcoal/60">Browse saved presets and add them to this category.</span>
-        </span>
-        <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-deep-ocean">
-          {expanded ? 'Hide' : 'Browse'}
-        </span>
-      </button>
-
-      {expanded && (
-        <div className="border-t border-driftwood/55 px-4 py-4">
-          {presets.length === 0 ? (
-            <div className="ca-admin-empty-state">
-              No presets saved yet. Create a customer choice above and click Add As New Preset to reuse it later.
-            </div>
-          ) : (
-            <div className="grid items-stretch gap-3 md:grid-cols-2">
-              {presets.map((preset) => (
-                <PresetChoiceCard
-                  key={preset.id}
-                  preset={preset}
-                  onUse={() => onUsePreset(preset)}
-                  onEdit={() => onEditPreset(preset)}
-                />
-              ))}
-            </div>
-          )}
+    <section className="space-y-4 rounded-[18px] border border-driftwood/60 bg-white/80 p-4">
+      <div>
+        <p className="ca-admin-heading text-lg">Select From Presets</p>
+        <p className="mt-1 text-sm text-charcoal/60">Browse saved presets and add them to this category.</p>
+      </div>
+      {presets.length === 0 ? (
+        <div className="ca-admin-empty-state">
+          No presets saved yet. Create a customer choice above and click Add As New Preset to reuse it later.
+        </div>
+      ) : (
+        <div className="grid items-stretch gap-3 md:grid-cols-2">
+          {presets.map((preset) => (
+            <PresetChoiceCard
+              key={preset.id}
+              preset={preset}
+              onUse={() => onUsePreset(preset)}
+              onEdit={() => onEditPreset(preset)}
+            />
+          ))}
         </div>
       )}
     </section>

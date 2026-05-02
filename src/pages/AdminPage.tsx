@@ -802,6 +802,9 @@ export function AdminPage() {
     setImages((prev) => prev.map((img) => (img ? { ...img, isPrimary: img.id === id } : img)));
   };
 
+  const markFirstImageAsPrimary = (images: ManagedImage[]): ManagedImage[] =>
+    images.filter((img): img is ManagedImage => !!img).map((img, index) => ({ ...img, isPrimary: index === 0 }));
+
   const moveImage = (
     id: string,
     direction: 'up' | 'down',
@@ -814,7 +817,7 @@ export function AdminPage() {
       if (swapWith < 0 || swapWith >= prev.length) return prev;
       const newOrder = prev.slice();
       [newOrder[idx], newOrder[swapWith]] = [newOrder[swapWith], newOrder[idx]];
-      return newOrder;
+      return markFirstImageAsPrimary(newOrder);
     });
   };
 
@@ -830,7 +833,7 @@ export function AdminPage() {
         .filter((img): img is ManagedImage => !!img);
       const seen = new Set(next.map((img) => img.id));
       const tail = prev.filter((img) => !seen.has(img.id));
-      return [...next, ...tail];
+      return markFirstImageAsPrimary([...next, ...tail]);
     });
   };
 
@@ -1227,6 +1230,43 @@ export function AdminPage() {
     }
   };
 
+  const getProductActiveState = (product: Product) =>
+    ((product as any).isActive ?? (product as any).active ?? product.visible) !== false;
+
+  const handleToggleProductActive = async (product: Product) => {
+    const nextActive = !getProductActiveState(product);
+    const previousProducts = adminProducts;
+    setAdminProducts((prev) =>
+      prev.map((item) =>
+        item.id === product.id
+          ? {
+              ...item,
+              visible: nextActive,
+              active: nextActive,
+              isActive: nextActive,
+            } as Product
+          : item
+      )
+    );
+
+    try {
+      const updated = await adminUpdateProduct(product.id, { isActive: nextActive });
+      if (updated) {
+        setAdminProducts((prev) => prev.map((item) => (item.id === product.id ? updated : item)));
+      } else {
+        await loadAdminProducts();
+      }
+      setProductStatus({
+        type: 'success',
+        message: nextActive ? 'Product marked active.' : 'Product marked inactive.',
+      });
+    } catch (err) {
+      console.error('Toggle product active failed', err);
+      setAdminProducts(previousProducts);
+      setProductStatus({ type: 'error', message: 'Could not update product status.' });
+    }
+  };
+
   const handleReorderProducts = async (orderedIds: string[]) => {
     const previous = adminProducts;
     const next = reorderByIds(previous, orderedIds);
@@ -1349,6 +1389,7 @@ export function AdminPage() {
             onCancelEditProduct={cancelEditProduct}
             onStartEditProduct={startEditProduct}
             onDeleteProduct={handleDeleteProduct}
+            onToggleProductActive={handleToggleProductActive}
             onReorderProducts={handleReorderProducts}
             onRefreshProducts={loadAdminProducts}
           />

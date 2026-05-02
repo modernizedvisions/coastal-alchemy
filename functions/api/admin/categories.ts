@@ -34,6 +34,10 @@ type CategoryRow = {
   shipping_cents?: number | null;
 };
 
+type TableInfoRow = {
+  name?: string | null;
+};
+
 type Category = {
   id: string;
   name: string;
@@ -274,6 +278,37 @@ const normalizeSortOrder = (value: unknown, fallback: number | null): number | n
   return Math.round(parsed);
 };
 
+const categorySelectColumns = (includeSampleDescription: boolean) =>
+  [
+    'id',
+    'name',
+    'subtitle',
+    includeSampleDescription ? 'sample_description' : null,
+    'slug',
+    'image_url',
+    'hero_image_url',
+    'image_id',
+    'hero_image_id',
+    'sort_order',
+    'option_group_label',
+    'option_group_options_json',
+    'option_groups_json',
+    'show_on_homepage',
+    'shipping_cents',
+  ]
+    .filter(Boolean)
+    .join(', ');
+
+const categoryHasColumn = async (db: D1Database, columnName: string): Promise<boolean> => {
+  try {
+    const { results } = await db.prepare(`PRAGMA table_info(categories);`).all<TableInfoRow>();
+    return (results || []).some((row) => row.name === columnName);
+  } catch (error) {
+    console.error('Failed to inspect categories schema', error);
+    return false;
+  }
+};
+
 export async function onRequest(context: { env: { DB: D1Database }; request: Request }): Promise<Response> {
   const method = context.request.method.toUpperCase();
 
@@ -306,9 +341,10 @@ async function handleGet(
   request: Request,
   env: { PUBLIC_IMAGES_BASE_URL?: string }
 ): Promise<Response> {
+  const hasSampleDescription = await categoryHasColumn(db, 'sample_description');
   const { results } = await db
     .prepare(
-      `SELECT id, name, subtitle, sample_description, slug, image_url, hero_image_url, image_id, hero_image_id, sort_order, option_group_label, option_group_options_json, option_groups_json, show_on_homepage, shipping_cents, created_at
+      `SELECT ${categorySelectColumns(hasSampleDescription)}, created_at
        FROM categories
        ORDER BY sort_order ASC, datetime(created_at) ASC, name ASC`
     )
@@ -333,6 +369,7 @@ async function handlePost(
   const showOnHomePage = !!body?.showOnHomePage;
   const subtitle = (body?.subtitle || '').trim() || null;
   const sampleDescription = (body?.sampleDescription || '').trim() || null;
+  const hasSampleDescription = await categoryHasColumn(db, 'sample_description');
   const resolvedImage = await resolveCategoryImageInput(db, request, env, {
     imageId: body?.imageId,
     imageUrl: body?.imageUrl,
@@ -366,35 +403,54 @@ async function handlePost(
     return json({ error: 'image_url_invalid', detail: 'Image URLs must be normal URLs (data URLs are not allowed).' }, 400);
   }
 
+  const insertColumns = [
+    'id',
+    'name',
+    'subtitle',
+    hasSampleDescription ? 'sample_description' : null,
+    'slug',
+    'image_url',
+    'hero_image_url',
+    'image_id',
+    'hero_image_id',
+    'sort_order',
+    'option_group_label',
+    'option_group_options_json',
+    'option_groups_json',
+    'show_on_homepage',
+    'shipping_cents',
+  ].filter(Boolean);
+  const insertValues = [
+    id,
+    name,
+    subtitle,
+    ...(hasSampleDescription ? [sampleDescription] : []),
+    slug,
+    imageUrl,
+    heroImageUrl,
+    resolvedImage.imageId,
+    resolvedHero.imageId,
+    sortOrder,
+    firstGroup.label,
+    firstGroup.optionsJson,
+    variationGroups.length ? JSON.stringify(variationGroups) : null,
+    showOnHomePage ? 1 : 0,
+    shippingCents,
+  ];
+
   const result = await db
     .prepare(
-      `INSERT INTO categories (id, name, subtitle, sample_description, slug, image_url, hero_image_url, image_id, hero_image_id, sort_order, option_group_label, option_group_options_json, option_groups_json, show_on_homepage, shipping_cents)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`
+      `INSERT INTO categories (${insertColumns.join(', ')})
+       VALUES (${insertColumns.map(() => '?').join(', ')});`
     )
-    .bind(
-      id,
-      name,
-      subtitle,
-      sampleDescription,
-      slug,
-      imageUrl,
-      heroImageUrl,
-      resolvedImage.imageId,
-      resolvedHero.imageId,
-      sortOrder,
-      firstGroup.label,
-      firstGroup.optionsJson,
-      variationGroups.length ? JSON.stringify(variationGroups) : null,
-      showOnHomePage ? 1 : 0,
-      shippingCents
-    )
+    .bind(...insertValues)
     .run();
 
   if (!result.success) return json({ error: 'Failed to create category' }, 500);
 
   const created = await db
     .prepare(
-      `SELECT id, name, subtitle, sample_description, slug, image_url, hero_image_url, image_id, hero_image_id, sort_order, option_group_label, option_group_options_json, option_groups_json, show_on_homepage, shipping_cents
+      `SELECT ${categorySelectColumns(hasSampleDescription)}
        FROM categories WHERE id = ?;`
     )
     .bind(id)
@@ -417,6 +473,7 @@ async function handlePut(
 
   const sets: string[] = [];
   const values: unknown[] = [];
+  const hasSampleDescription = await categoryHasColumn(db, 'sample_description');
 
   const addSet = (clause: string, value: unknown) => {
     sets.push(clause);
@@ -425,7 +482,7 @@ async function handlePut(
 
   if (body.name !== undefined) addSet('name = ?', (body.name || '').trim());
   if (body.subtitle !== undefined) addSet('subtitle = ?', (body.subtitle || '').trim() || null);
-  if (body.sampleDescription !== undefined) {
+  if (body.sampleDescription !== undefined && hasSampleDescription) {
     addSet('sample_description = ?', (body.sampleDescription || '').trim() || null);
   }
   if (body.slug !== undefined || body.name !== undefined) {
@@ -523,7 +580,7 @@ async function handlePut(
 
   const updated = await db
     .prepare(
-      `SELECT id, name, subtitle, sample_description, slug, image_url, hero_image_url, image_id, hero_image_id, sort_order, option_group_label, option_group_options_json, option_groups_json, show_on_homepage, shipping_cents
+      `SELECT ${categorySelectColumns(hasSampleDescription)}
        FROM categories WHERE id = ?;`
     )
     .bind(id)

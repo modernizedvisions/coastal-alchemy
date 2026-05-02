@@ -14,13 +14,12 @@ import {
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import {
   SortableContext,
-  arrayMove,
   rectSortingStrategy,
   sortableKeyboardCoordinates,
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { CheckCircle, GripVertical, Loader2, Trash2 } from 'lucide-react';
+import { CheckCircle, ChevronLeft, ChevronRight, Eye, EyeOff, GripVertical, Loader2, Trash2 } from 'lucide-react';
 import type { Category, Product } from '../../lib/types';
 import type { ManagedImage, ProductFormState } from '../../pages/AdminPage';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
@@ -36,6 +35,8 @@ interface ProductAdminCardProps {
   product: Product;
   onEdit: (product: Product) => void;
   onDelete?: (id: string) => Promise<void> | void;
+  onToggleActive?: (product: Product) => Promise<void> | void;
+  isTogglingActive?: boolean;
 }
 
 interface SortableAdminProductTileProps {
@@ -44,13 +45,15 @@ interface SortableAdminProductTileProps {
   isReordering: boolean;
   onEdit: (product: Product) => void;
   onDelete: (id: string) => Promise<void> | void;
+  onToggleActive?: (product: Product) => Promise<void> | void;
+  isTogglingActive?: boolean;
 }
 
-interface SortableEditImageTileProps {
+interface EditImageTileProps {
   image: ManagedImage;
   index: number;
-  canReorder: boolean;
-  onSetPrimary: (id: string) => void;
+  total: number;
+  onMove: (id: string, direction: 'left' | 'right') => void;
   onRetry: (id: string) => void;
   onRemove: (id: string) => void;
 }
@@ -88,7 +91,13 @@ const normalizeCategoriesList = (items: Category[]): Category[] => {
   return ordered;
 };
 
-const ProductAdminCard: React.FC<ProductAdminCardProps> = ({ product, onEdit, onDelete }) => {
+const ProductAdminCard: React.FC<ProductAdminCardProps> = ({
+  product,
+  onEdit,
+  onDelete,
+  onToggleActive,
+  isTogglingActive = false,
+}) => {
   const rawSrc = Array.isArray((product as any).images) && (product as any).images.length > 0
     ? (product as any).images[0]
     : (product as any).imageUrls?.[0] ?? (product as any).imageUrl ?? null;
@@ -98,7 +107,7 @@ const ProductAdminCard: React.FC<ProductAdminCardProps> = ({ product, onEdit, on
     product.type ||
     ((product as any).categories && Array.isArray((product as any).categories) ? (product as any).categories[0] : null);
 
-  const isActive = ('active' in product ? (product as any).active : (product as any).active) ?? product.visible;
+  const isActive = ((product as any).isActive ?? (product as any).active ?? product.visible) !== false;
 
   const priceLabel =
     (product as any).formattedPrice ??
@@ -110,15 +119,30 @@ const ProductAdminCard: React.FC<ProductAdminCardProps> = ({ product, onEdit, on
   return (
     <div className="group lux-card relative overflow-hidden bg-white/90 transition-all duration-300 hover:-translate-y-0.5">
       <div className="relative aspect-square overflow-hidden rounded-shell-lg bg-sand">
-        {isActive !== undefined && (
-          <span
-            className={`absolute left-3 top-3 z-10 lux-pill border ${
-              isActive ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-rose-200 bg-rose-50 text-rose-700'
-            }`}
-          >
-            {isActive ? 'Active' : 'Inactive'}
-          </span>
-        )}
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+            if (isTogglingActive) return;
+            void onToggleActive?.(product);
+          }}
+          disabled={!onToggleActive || isTogglingActive}
+          className={`absolute left-3 top-3 z-10 rounded-ui border p-1.5 shadow-sm transition disabled:cursor-not-allowed disabled:opacity-60 ${
+            isActive
+              ? 'border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+              : 'border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100'
+          }`}
+          aria-label={isActive ? 'Mark product inactive' : 'Mark product active'}
+          title={isActive ? 'Mark product inactive' : 'Mark product active'}
+        >
+          {isTogglingActive ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : isActive ? (
+            <Eye className="h-4 w-4" />
+          ) : (
+            <EyeOff className="h-4 w-4" />
+          )}
+        </button>
         {onDelete && (
           <button
             type="button"
@@ -186,6 +210,8 @@ const SortableAdminProductTile: React.FC<SortableAdminProductTileProps> = ({
   isReordering,
   onEdit,
   onDelete,
+  onToggleActive,
+  isTogglingActive,
 }) => {
   const {
     attributes,
@@ -227,59 +253,37 @@ const SortableAdminProductTile: React.FC<SortableAdminProductTileProps> = ({
           <GripVertical className="h-5 w-5" />
         </button>
       )}
-      <ProductAdminCard product={product} onEdit={onEdit} onDelete={onDelete} />
+      <ProductAdminCard
+        product={product}
+        onEdit={onEdit}
+        onDelete={onDelete}
+        onToggleActive={onToggleActive}
+        isTogglingActive={isTogglingActive}
+      />
     </div>
   );
 };
 
-const SortableEditImageTile: React.FC<SortableEditImageTileProps> = ({
+const EditImageTile: React.FC<EditImageTileProps> = ({
   image,
   index,
-  canReorder,
-  onSetPrimary,
+  total,
+  onMove,
   onRetry,
   onRemove,
 }) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    setActivatorNodeRef,
-    transform,
-    transition,
-    isDragging,
-    isOver,
-  } = useSortable({
-    id: image.id,
-    disabled: !canReorder,
-  });
-
-  const style: React.CSSProperties = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
+  const isPrimary = index === 0;
+  const canMoveLeft = index > 0;
+  const canMoveRight = index < total - 1;
 
   return (
     <div
-      ref={setNodeRef}
-      style={style}
-      className={`relative aspect-square rounded-shell-lg overflow-hidden border border-driftwood/60 bg-linen/80 touch-pan-y ${
-        isDragging ? 'opacity-70' : ''
-      } ${isOver ? 'ring-2 ring-deep-ocean/35' : ''}`}
+      className={`relative aspect-square overflow-hidden rounded-shell-lg border bg-linen/80 transition ${
+        isPrimary
+          ? 'border-emerald-500 ring-2 ring-emerald-500/45 shadow-sm'
+          : 'border-driftwood/60'
+      }`}
     >
-      {canReorder && (
-        <button
-          ref={setActivatorNodeRef}
-          type="button"
-          {...attributes}
-          {...listeners}
-          className="absolute left-2 top-2 z-20 rounded-ui border border-driftwood/55 bg-white/95 p-1 text-charcoal/60 cursor-grab active:cursor-grabbing touch-none"
-          aria-label={`Reorder image ${index + 1}`}
-          title="Drag to reorder image"
-        >
-          <GripVertical className="h-4 w-4" />
-        </button>
-      )}
       <ProgressiveImage
         src={image.previewUrl ?? image.url}
         alt={`Edit image ${index + 1}`}
@@ -298,16 +302,29 @@ const SortableEditImageTile: React.FC<SortableEditImageTileProps> = ({
           {image.uploadError}
         </div>
       )}
-      <div className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-black/40 px-2 py-1 text-xs text-white">
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onRemove(image.id);
+        }}
+        className="absolute right-2 top-2 z-20 rounded-ui border border-rose-200 bg-white/95 p-1.5 text-rose-700 shadow-sm transition hover:bg-rose-50"
+        aria-label={`Remove image ${index + 1}`}
+      >
+        <Trash2 className="h-4 w-4" />
+      </button>
+      <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-2 bg-black/40 px-2 py-1.5 text-xs text-white">
         <button
           type="button"
           onClick={(e) => {
             e.stopPropagation();
-            onSetPrimary(image.id);
+            if (canMoveLeft) onMove(image.id, 'left');
           }}
-          className={`px-2 py-1 rounded-shell ${image.isPrimary ? 'bg-white text-charcoal' : 'bg-black/30 text-white'}`}
+          disabled={!canMoveLeft}
+          className="rounded-ui border border-white/35 bg-white/90 p-1 text-charcoal shadow-sm transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-35"
+          aria-label={`Move image ${index + 1} left`}
         >
-          {image.isPrimary ? 'Primary' : 'Set primary'}
+          <ChevronLeft className="h-4 w-4" />
         </button>
         {image.uploadError && image.file && (
           <button
@@ -325,15 +342,14 @@ const SortableEditImageTile: React.FC<SortableEditImageTileProps> = ({
           type="button"
           onClick={(e) => {
             e.stopPropagation();
-            onRemove(image.id);
+            if (canMoveRight) onMove(image.id, 'right');
           }}
-          className="text-red-100 hover:text-red-300"
+          disabled={!canMoveRight}
+          className="rounded-ui border border-white/35 bg-white/90 p-1 text-charcoal shadow-sm transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-35"
+          aria-label={`Move image ${index + 1} right`}
         >
-          Remove
+          <ChevronRight className="h-4 w-4" />
         </button>
-      </div>
-      <div className="absolute right-2 top-2 rounded-ui bg-white/90 px-2 py-0.5 text-[10px] font-semibold text-charcoal/80 shadow-sm">
-        #{index + 1}
       </div>
     </div>
   );
@@ -370,6 +386,7 @@ export interface AdminShopTabProps {
   onCancelEditProduct: () => void;
   onStartEditProduct: (product: Product) => void;
   onDeleteProduct: (id: string) => void | Promise<void>;
+  onToggleProductActive?: (product: Product) => void | Promise<void>;
   onReorderProducts?: (orderedIds: string[]) => void | Promise<void>;
   onRefreshProducts?: () => void | Promise<void>;
 }
@@ -405,6 +422,7 @@ export const AdminShopTab: React.FC<AdminShopTabProps> = ({
   onCancelEditProduct,
   onStartEditProduct,
   onDeleteProduct,
+  onToggleProductActive,
   onReorderProducts,
   onRefreshProducts,
 }) => {
@@ -422,7 +440,7 @@ export const AdminShopTab: React.FC<AdminShopTabProps> = ({
   const [editAutoDescriptionEnabled, setEditAutoDescriptionEnabled] = useState(false);
   const [lastEditAutoDescription, setLastEditAutoDescription] = useState('');
   const [activeDragProductId, setActiveDragProductId] = useState<string | null>(null);
-  const [activeEditImageId, setActiveEditImageId] = useState<string | null>(null);
+  const [togglingActiveProductId, setTogglingActiveProductId] = useState<string | null>(null);
   const [isReordering, setIsReordering] = useState(false);
   const [pendingCreateVideoFile, setPendingCreateVideoFile] = useState<File | null>(null);
   const [createVideoUploadTargetProductId, setCreateVideoUploadTargetProductId] = useState<string | null>(null);
@@ -704,82 +722,33 @@ export const AdminShopTab: React.FC<AdminShopTabProps> = ({
     onAddEditProductImages(list);
   };
 
-  const handleSetPrimaryModalImage = (id: string) => {
-    onSetPrimaryEditImage(id);
-    setEditImages((prev) => prev.map((img) => (img ? { ...img, isPrimary: img.id === id } : img)));
-  };
+  const markFirstEditImagePrimary = (images: ManagedImage[]) =>
+    images.filter((img): img is ManagedImage => !!img).map((img, index) => ({ ...img, isPrimary: index === 0 }));
 
   const handleRemoveModalImage = (id: string) => {
     onRemoveEditImage(id);
-    setEditImages((prev) => {
-      const filtered = prev.filter((img) => img && img.id !== id);
-      if (filtered.length > 0 && !filtered.some((img) => img?.isPrimary)) {
-        filtered[0].isPrimary = true;
-      }
-      return filtered;
-    });
+    setEditImages((prev) => markFirstEditImagePrimary(prev.filter((img) => img && img.id !== id)));
   };
-
-  const editImageSensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 180,
-        tolerance: 8,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
 
   const visibleEditImages = useMemo(() => editImages.filter((img): img is ManagedImage => !!img), [editImages]);
-  const canReorderEditImages = visibleEditImages.length > 1;
 
-  const handleEditImageDragStart = (event: DragStartEvent) => {
-    if (!canReorderEditImages) return;
-    setActiveEditImageId(String(event.active.id));
+  const handleMoveModalImage = (id: string, direction: 'left' | 'right') => {
+    const index = visibleEditImages.findIndex((img) => img.id === id);
+    if (index === -1) return;
+    const targetIndex = direction === 'left' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= visibleEditImages.length) return;
+    const next = [...visibleEditImages];
+    [next[index], next[targetIndex]] = [next[targetIndex], next[index]];
+    const normalized = markFirstEditImagePrimary(next);
+    const orderedIds = normalized.map((img) => img.id);
+    setEditImages(normalized);
+    if (onReorderEditImages) {
+      onReorderEditImages(orderedIds);
+    } else {
+      onMoveEditImage(id, direction === 'left' ? 'up' : 'down');
+    }
+    if (normalized[0]) onSetPrimaryEditImage(normalized[0].id);
   };
-
-  const handleEditImageDragEnd = (event: DragEndEvent) => {
-    const sourceId = String(event.active.id);
-    const targetId = event.over ? String(event.over.id) : null;
-    setActiveEditImageId(null);
-    if (!canReorderEditImages || !targetId || sourceId === targetId) return;
-
-    setEditImages((prev) => {
-      const sourceIndex = prev.findIndex((img) => img?.id === sourceId);
-      const targetIndex = prev.findIndex((img) => img?.id === targetId);
-      if (sourceIndex === -1 || targetIndex === -1 || sourceIndex === targetIndex) return prev;
-
-      const next = arrayMove(prev, sourceIndex, targetIndex);
-      const orderedIds = next.filter((img): img is ManagedImage => !!img).map((img) => img.id);
-
-      if (onReorderEditImages) {
-        onReorderEditImages(orderedIds);
-      } else {
-        const direction: 'up' | 'down' = sourceIndex < targetIndex ? 'down' : 'up';
-        const steps = Math.abs(targetIndex - sourceIndex);
-        for (let i = 0; i < steps; i += 1) {
-          onMoveEditImage(sourceId, direction);
-        }
-      }
-      return next;
-    });
-  };
-
-  const handleEditImageDragCancel = () => {
-    setActiveEditImageId(null);
-  };
-
-  const activeEditImage = useMemo(
-    () => visibleEditImages.find((img) => img.id === activeEditImageId) ?? null,
-    [activeEditImageId, visibleEditImages]
-  );
 
   const visibleProducts = useMemo(
     () => adminProducts.filter((product) => !isProductSoldOrOut(product)),
@@ -926,12 +895,7 @@ export const AdminShopTab: React.FC<AdminShopTabProps> = ({
 
   useEffect(() => {
     if (isEditModalOpen) {
-      const hasPrimary = editProductImages.some((img) => img?.isPrimary);
-      const fallbackPrimary = editProductImages.find((img) => !!img) || null;
-      const imgs = editProductImages.length && !hasPrimary && fallbackPrimary
-        ? [{ ...fallbackPrimary, isPrimary: true }, ...editProductImages.filter((img) => img && img.id !== fallbackPrimary.id)]
-        : editProductImages;
-      setEditImages(imgs);
+      setEditImages(markFirstEditImagePrimary(editProductImages));
     }
   }, [isEditModalOpen, editProductImages, editProductId]);
 
@@ -1011,12 +975,24 @@ export const AdminShopTab: React.FC<AdminShopTabProps> = ({
       <ProductAdminCard
         product={product}
         onEdit={handleStartEditProduct}
+        onToggleActive={handleToggleProductActive}
+        isTogglingActive={togglingActiveProductId === product.id}
         onDelete={async (id) => {
           await onDeleteProduct(id);
         }}
       />
     </div>
   );
+
+  const handleToggleProductActive = async (product: Product) => {
+    if (!onToggleProductActive || togglingActiveProductId) return;
+    setTogglingActiveProductId(product.id);
+    try {
+      await onToggleProductActive(product);
+    } finally {
+      setTogglingActiveProductId(null);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -1534,6 +1510,8 @@ export const AdminShopTab: React.FC<AdminShopTabProps> = ({
                     canReorder={canInteractivelyReorder}
                     isReordering={isReordering}
                     onEdit={handleStartEditProduct}
+                    onToggleActive={handleToggleProductActive}
+                    isTogglingActive={togglingActiveProductId === product.id}
                     onDelete={async (id) => {
                       await onDeleteProduct(id);
                     }}
@@ -1769,54 +1747,30 @@ export const AdminShopTab: React.FC<AdminShopTabProps> = ({
                   />
                 </div>
 
-                <DndContext
-                  sensors={editImageSensors}
-                  collisionDetection={closestCenter}
-                  onDragStart={handleEditImageDragStart}
-                  onDragEnd={handleEditImageDragEnd}
-                  onDragCancel={handleEditImageDragCancel}
-                >
-                  <SortableContext items={visibleEditImages.map((img) => img.id)} strategy={rectSortingStrategy}>
-                    <div className="grid grid-cols-2 gap-3 md:grid-cols-4 touch-pan-y">
-                      {visibleEditImages.map((image, idx) => (
-                        <SortableEditImageTile
-                          key={image.id}
-                          image={image}
-                          index={idx}
-                          canReorder={canReorderEditImages}
-                          onSetPrimary={handleSetPrimaryModalImage}
-                          onRetry={onRetryEditImage}
-                          onRemove={handleRemoveModalImage}
-                        />
-                      ))}
+                <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                  {visibleEditImages.map((image, idx) => (
+                    <EditImageTile
+                      key={image.id}
+                      image={image}
+                      index={idx}
+                      total={visibleEditImages.length}
+                      onMove={handleMoveModalImage}
+                      onRetry={onRetryEditImage}
+                      onRemove={handleRemoveModalImage}
+                    />
+                  ))}
 
-                      {Array.from({
-                        length: Math.max(0, maxModalImages - visibleEditImages.length),
-                      }).map((_, idx) => (
-                        <div
-                          key={`empty-edit-slot-${idx}`}
-                          className="flex items-center justify-center aspect-square rounded-shell-lg border-2 border-dashed border-driftwood/70 bg-linen/70 text-xs text-charcoal/40"
-                        >
-                          Empty Slot
-                        </div>
-                      ))}
+                  {Array.from({
+                    length: Math.max(0, maxModalImages - visibleEditImages.length),
+                  }).map((_, idx) => (
+                    <div
+                      key={`empty-edit-slot-${idx}`}
+                      className="flex aspect-square items-center justify-center rounded-shell-lg border-2 border-dashed border-driftwood/70 bg-linen/70 text-xs text-charcoal/40"
+                    >
+                      Empty Slot
                     </div>
-                  </SortableContext>
-                  <DragOverlay>
-                    {activeEditImage ? (
-                      <div className="w-[min(240px,46vw)] rounded-shell-lg overflow-hidden border border-driftwood/60 bg-linen/80 shadow-lg pointer-events-none">
-                        <ProgressiveImage
-                          src={activeEditImage.previewUrl ?? activeEditImage.url}
-                          alt="Dragging product image"
-                          className="h-full w-full"
-                          imgClassName="h-full w-full object-cover aspect-square"
-                          loading="eager"
-                          decoding="async"
-                        />
-                      </div>
-                    ) : null}
-                  </DragOverlay>
-                </DndContext>
+                  ))}
+                </div>
 
                 <ProductVideoField
                   mode="edit"

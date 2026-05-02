@@ -29,6 +29,10 @@ type CategoryRow = {
   shipping_cents?: number | null;
 };
 
+type TableInfoRow = {
+  name?: string | null;
+};
+
 type Category = {
   id: string;
   name: string;
@@ -107,10 +111,11 @@ export async function onRequestGet(context: {
   request: Request;
 }): Promise<Response> {
   try {
+    const hasSampleDescription = await categoryHasColumn(context.env.DB, 'sample_description');
 
     const { results } = await context.env.DB
       .prepare(
-        `SELECT id, name, subtitle, sample_description, slug, image_url, hero_image_url, image_id, hero_image_id, sort_order, option_group_label, option_group_options_json, option_groups_json, show_on_homepage, shipping_cents, created_at
+        `SELECT ${categorySelectColumns(hasSampleDescription)}, created_at
          FROM categories
          ORDER BY sort_order ASC, datetime(created_at) ASC, name ASC`
       )
@@ -132,6 +137,37 @@ export async function onRequestGet(context: {
     });
   }
 }
+
+const categorySelectColumns = (includeSampleDescription: boolean) =>
+  [
+    'id',
+    'name',
+    'subtitle',
+    includeSampleDescription ? 'sample_description' : null,
+    'slug',
+    'image_url',
+    'hero_image_url',
+    'image_id',
+    'hero_image_id',
+    'sort_order',
+    'option_group_label',
+    'option_group_options_json',
+    'option_groups_json',
+    'show_on_homepage',
+    'shipping_cents',
+  ]
+    .filter(Boolean)
+    .join(', ');
+
+const categoryHasColumn = async (db: D1Database, columnName: string): Promise<boolean> => {
+  try {
+    const { results } = await db.prepare(`PRAGMA table_info(categories);`).all<TableInfoRow>();
+    return (results || []).some((row) => row.name === columnName);
+  } catch (error) {
+    console.error('Failed to inspect categories schema', error);
+    return false;
+  }
+};
 
 const mapRowToCategory = (
   row: CategoryRow,

@@ -662,21 +662,23 @@ export function CategoryManagementModal({
                   <p className="ca-admin-heading text-lg">Category Details</p>
                   <p className="mt-1 text-sm text-charcoal/60">Name the category and set its default shipping.</p>
                 </div>
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(150px,220px)]">
                   <Input label="Category Name" value={newDraft.name} onChange={(value) => setNewDraft((p) => ({ ...p, name: value }))} />
-                  <Input
-                    label="Subtitle"
-                    value={newDraft.subtitle}
-                    onChange={(value) => setNewDraft((p) => ({ ...p, subtitle: value }))}
+                  <ShippingInput
+                    value={newDraft.shipping}
+                    onChange={(value) => setNewDraft((p) => ({ ...p, shipping: value }))}
+                    sanitize={sanitizeShippingInput}
+                    formatDisplay={formatShippingDisplay}
+                    formatValue={formatShippingValue}
                   />
+                  <div className="md:col-span-2">
+                    <Input
+                      label="Subtitle"
+                      value={newDraft.subtitle}
+                      onChange={(value) => setNewDraft((p) => ({ ...p, subtitle: value }))}
+                    />
+                  </div>
                 </div>
-                <ShippingInput
-                  value={newDraft.shipping}
-                  onChange={(value) => setNewDraft((p) => ({ ...p, shipping: value }))}
-                  sanitize={sanitizeShippingInput}
-                  formatDisplay={formatShippingDisplay}
-                  formatValue={formatShippingValue}
-                />
               </section>
 
               <CreateCategoryChoicesEditor
@@ -1536,7 +1538,7 @@ function CreateCategoryChoicesEditor({
         <ChoicePanelSelectorCard
           title="Select From Presets"
           subtitle="Browse saved presets and add them to this category."
-          actionLabel={activePanel === 'presets' ? 'Close' : 'Browse'}
+          actionLabel={activePanel === 'presets' ? 'Close' : 'Open'}
           active={activePanel === 'presets'}
           onClick={() => onPanelChange('presets')}
         />

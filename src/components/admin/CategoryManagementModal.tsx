@@ -1,5 +1,6 @@
 import { type ReactNode, type RefObject, useEffect, useRef, useState } from 'react';
-import { ArrowDown, ArrowLeft, ArrowUp, Loader2, Pencil, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowLeft, ArrowUp, Loader2, Trash2 } from 'lucide-react';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   adminCreateCategory,
@@ -120,6 +121,8 @@ export function CategoryManagementModal({
   const [editChoiceGroupId, setEditChoiceGroupId] = useState<string | null>(null);
   const [presetDraftId, setPresetDraftId] = useState<string | null>(null);
   const [presetBuilderDraft, setPresetBuilderDraft] = useState<ChoiceBuilderDraft>(() => emptyChoiceBuilderDraft());
+  const [presetPendingDelete, setPresetPendingDelete] = useState<VariationPreset | null>(null);
+  const [isDeletingPreset, setIsDeletingPreset] = useState(false);
   const [applyTemplateId, setApplyTemplateId] = useState('');
   const [applyCategoryIds, setApplyCategoryIds] = useState<string[]>([]);
   const editTitleRef = useRef<HTMLInputElement | null>(null);
@@ -166,6 +169,7 @@ export function CategoryManagementModal({
   const closeAll = () => {
     setToolView('launcher');
     setCategoryMessage('');
+    setPresetPendingDelete(null);
     onClose();
   };
 
@@ -510,14 +514,17 @@ export function CategoryManagementModal({
   };
 
   const handleDeletePreset = async (id: string) => {
-    if (!window.confirm('Delete this preset? Existing categories that used copied choices will not change.')) return;
+    setIsDeletingPreset(true);
     try {
       await adminDeleteVariationPreset(id);
       setPresets((prev) => prev.filter((preset) => preset.id !== id));
       if (presetDraftId === id) resetPresetDraft();
+      setPresetPendingDelete(null);
     } catch (error) {
       console.error('Failed to delete preset', error);
       setCategoryMessage('Could not delete preset.');
+    } finally {
+      setIsDeletingPreset(false);
     }
   };
 
@@ -628,6 +635,7 @@ export function CategoryManagementModal({
       : '!w-[calc(100vw-1.5rem)] sm:!w-[min(calc(100vw-3rem),64rem)] !max-w-none !max-h-[90vh]';
 
   return (
+    <>
     <Dialog open={open} onOpenChange={(next) => !next && closeAll()} contentClassName={modalWidth}>
       <DialogContent className="flex max-h-[90vh] flex-col overflow-hidden p-0">
         {toolView === 'launcher' && (
@@ -882,7 +890,14 @@ export function CategoryManagementModal({
                   <p className="ca-admin-heading text-lg">Existing Presets</p>
                   <p className="mt-1 text-sm text-charcoal/60">Edit or delete reusable customer choice presets.</p>
                 </div>
-                <PresetList presets={presets} onEdit={handleEditPreset} onDelete={handleDeletePreset} />
+                <PresetList
+                  presets={presets}
+                  onEdit={handleEditPreset}
+                  onDelete={(id) => {
+                    const preset = presets.find((item) => item.id === id) || null;
+                    setPresetPendingDelete(preset);
+                  }}
+                />
               </section>
 
               <ApplyTemplateSection
@@ -909,6 +924,21 @@ export function CategoryManagementModal({
         )}
       </DialogContent>
     </Dialog>
+    <ConfirmDialog
+      open={Boolean(presetPendingDelete)}
+      title="Delete Preset?"
+      description="This will remove the preset from your saved presets. Existing categories that already use this preset will keep their current choices."
+      cancelText="Cancel"
+      confirmText="Delete Preset"
+      confirmVariant="danger"
+      confirmDisabled={isDeletingPreset}
+      cancelDisabled={isDeletingPreset}
+      onCancel={() => setPresetPendingDelete(null)}
+      onConfirm={() => {
+        if (presetPendingDelete) void handleDeletePreset(presetPendingDelete.id);
+      }}
+    />
+    </>
   );
 }
 
@@ -1139,47 +1169,14 @@ function PresetList({
   }
 
   return (
-    <div className="grid gap-3 md:grid-cols-2">
+    <div className="grid items-stretch gap-3 md:grid-cols-2">
       {presets.map((preset) => (
-        <div key={preset.id} className="rounded-[18px] border border-driftwood/60 bg-white/85 p-4">
-          <div className="flex items-start justify-between gap-4">
-            <div className="min-w-0">
-              <p className="break-words font-serif text-lg text-deep-ocean">{preset.name}</p>
-              <p className="mt-1 text-xs uppercase tracking-[0.2em] text-charcoal/55">
-                {preset.groups.reduce((total, group) => total + group.options.length, 0)} choice
-                {preset.groups.reduce((total, group) => total + group.options.length, 0) === 1 ? '' : 's'}
-              </p>
-            </div>
-            <div className="flex shrink-0 items-center gap-1">
-              <button
-                type="button"
-                onClick={() => onEdit(preset)}
-                className="rounded-full p-2 text-charcoal/55 transition hover:bg-linen hover:text-deep-ocean"
-                aria-label={`Edit ${preset.name} preset`}
-              >
-                <Pencil className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() => onDelete(preset.id)}
-                className="rounded-full p-2 text-charcoal/50 transition hover:bg-red-50 hover:text-red-700"
-                aria-label={`Delete ${preset.name} preset`}
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-          {preset.groups.length > 0 && (
-            <p className="mt-3 text-sm leading-6 text-charcoal/65">
-              {preset.groups
-                .map((group) => {
-                  const preview = group.options.map((option) => option.label).filter(Boolean).join(', ');
-                  return `${group.label || 'Untitled'}${preview ? `: ${preview}` : ''}`;
-                })
-                .join(' | ')}
-            </p>
-          )}
-        </div>
+        <PresetChoiceCard
+          key={preset.id}
+          preset={preset}
+          onEdit={() => onEdit(preset)}
+          onDelete={() => onDelete(preset.id)}
+        />
       ))}
     </div>
   );
@@ -1558,6 +1555,9 @@ function CreateCategoryChoicesEditor({
 
       <CurrentCategoryChoices
         groups={groups}
+        title="Current Choices"
+        helperText=""
+        emptyText="No customer choices added yet."
         onEditGroup={onEditGroup}
         onRemoveGroup={(groupId) => onGroupsChange(groups.filter((group) => group.id !== groupId))}
       />
@@ -1602,7 +1602,7 @@ function PresetBrowser({
               No presets saved yet. Create a customer choice above and click Add As New Preset to reuse it later.
             </div>
           ) : (
-            <div className="grid gap-3 md:grid-cols-2">
+            <div className="grid items-stretch gap-3 md:grid-cols-2">
               {presets.map((preset) => (
                 <PresetChoiceCard
                   key={preset.id}
@@ -1623,28 +1623,50 @@ function PresetChoiceCard({
   preset,
   onUse,
   onEdit,
+  onDelete,
 }: {
   preset: VariationPreset;
-  onUse: () => void;
+  onUse?: () => void;
   onEdit: () => void;
+  onDelete?: () => void;
 }) {
   const groups = normalizeVariationGroups(preset.groups);
   const requiredLabels = new Set(groups.map((group) => (group.required !== false ? 'YES' : 'NO')));
   const requiredText = requiredLabels.size === 1 ? Array.from(requiredLabels)[0] : 'MIXED';
 
   return (
-    <div className="rounded-[18px] border border-driftwood/65 bg-white/90 p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div>
+    <div className="flex h-full flex-col rounded-[18px] border border-driftwood/65 bg-white/90 p-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
           <p className="font-serif text-xl text-deep-ocean">{preset.name}</p>
           <p className="mt-1 text-xs uppercase tracking-[0.18em] text-charcoal/55">
             Customer must choose: {requiredText}
           </p>
         </div>
+        <div className="flex shrink-0 items-center gap-2 self-start">
+          <button type="button" onClick={onEdit} className="lux-button--ghost px-3 py-2 text-[10px]">
+            Edit Preset
+          </button>
+          {onUse && (
+            <button type="button" onClick={onUse} className="lux-button px-3 py-2 text-[10px]">
+              Use Preset
+            </button>
+          )}
+          {onDelete && (
+            <button
+              type="button"
+              onClick={onDelete}
+              className="flex h-9 w-9 items-center justify-center rounded-[10px] text-charcoal/50 transition hover:bg-red-50 hover:text-red-700"
+              aria-label={`Delete ${preset.name} preset`}
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          )}
+        </div>
       </div>
 
       {groups.length > 0 ? (
-        <div className="mt-4 space-y-3">
+        <div className="mt-4 flex-1 space-y-3">
           {groups.map((group) => (
             <div key={group.id || group.label}>
               {groups.length > 1 && <p className="lux-label mb-1">{group.label}</p>}
@@ -1662,17 +1684,8 @@ function PresetChoiceCard({
           ))}
         </div>
       ) : (
-        <p className="mt-4 text-sm text-charcoal/55">No choices saved in this preset.</p>
+        <p className="mt-4 flex-1 text-sm text-charcoal/55">No choices saved in this preset.</p>
       )}
-
-      <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-end">
-        <button type="button" onClick={onEdit} className="lux-button--ghost px-4 py-2 text-[10px]">
-          Edit Preset
-        </button>
-        <button type="button" onClick={onUse} className="lux-button px-4 py-2 text-[10px]">
-          Use Preset
-        </button>
-      </div>
     </div>
   );
 }
@@ -1783,13 +1796,15 @@ function EditCategoryChoicesEditor({
 
 function CurrentCategoryChoices({
   groups,
+  title = 'Current Choices for This Category',
   helperText = 'These choices will be attached when you create the category.',
-  emptyText = 'No customer choices added yet. Products in this category will not show dropdown choices unless added later.',
+  emptyText = 'No customer choices added yet.',
   withTopBorder = true,
   onEditGroup,
   onRemoveGroup,
 }: {
   groups: VariationGroup[];
+  title?: string;
   helperText?: string;
   emptyText?: string;
   withTopBorder?: boolean;
@@ -1799,12 +1814,14 @@ function CurrentCategoryChoices({
   return (
     <section className={`space-y-4 ${withTopBorder ? 'border-t border-driftwood/60 pt-5' : ''}`}>
       <div>
-        <p className="ca-admin-heading text-lg">Current Choices for This Category</p>
-        <p className="mt-1 text-sm text-charcoal/60">{helperText}</p>
+        <p className="ca-admin-heading text-lg">{title}</p>
+        {helperText && <p className="mt-1 text-sm text-charcoal/60">{helperText}</p>}
       </div>
 
       {groups.length === 0 ? (
-        <div className="ca-admin-empty-state">{emptyText}</div>
+        <div className="rounded-[18px] border border-driftwood/60 bg-white/70 px-5 py-8 text-center text-sm text-charcoal/45">
+          {emptyText}
+        </div>
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
           {groups.map((group) => (

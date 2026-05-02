@@ -1489,6 +1489,8 @@ function mapLineItemsToEmailItems(lineItems: Stripe.LineItem[], currency: string
       productObj?.images?.[0] ||
       (line.price as any)?.product_data?.images?.[0] ||
       null;
+    const meta = extractOptionMetadata(line);
+    const optionDisplay = formatSelectedOptionsForEmail(meta.selectedOptionsJson, meta.optionGroupLabel, meta.optionValue);
     return {
       name,
       quantity: line.quantity ?? 1,
@@ -1497,6 +1499,8 @@ function mapLineItemsToEmailItems(lineItems: Stripe.LineItem[], currency: string
         line.amount_total ??
         (line.price?.unit_amount ?? 0) * (line.quantity ?? 1),
       imageUrl,
+      optionGroupLabel: optionDisplay.optionGroupLabel,
+      optionValue: optionDisplay.optionValue,
     } as EmailItem;
   });
 }
@@ -1529,6 +1533,7 @@ async function mapLineItemsToEmailItemsWithImages(
       productObj?.images?.[0] ||
       (line.price as any)?.product_data?.images?.[0] ||
       null;
+    const optionDisplay = formatSelectedOptionsForEmail(meta.selectedOptionsJson, meta.optionGroupLabel, meta.optionValue);
     return {
       name,
       quantity: line.quantity ?? 1,
@@ -1538,8 +1543,8 @@ async function mapLineItemsToEmailItemsWithImages(
         (line.price?.unit_amount ?? 0) * (line.quantity ?? 1),
       imageUrl,
       productId,
-      optionGroupLabel: meta.optionGroupLabel,
-      optionValue: meta.optionValue,
+      optionGroupLabel: optionDisplay.optionGroupLabel,
+      optionValue: optionDisplay.optionValue,
     };
   });
 
@@ -2483,6 +2488,60 @@ function extractOptionMetadata(line: Stripe.LineItem): {
     sourceStripePriceId: typeof rawStripePrice === 'string' && rawStripePrice.trim().length ? rawStripePrice.trim() : null,
     sourceProductSlug: typeof rawSlug === 'string' && rawSlug.trim().length ? rawSlug.trim() : null,
   };
+}
+
+function formatSelectedOptionsForEmail(
+  selectedOptionsJson: string | null,
+  fallbackLabel: string | null,
+  fallbackValue: string | null
+): { optionGroupLabel: string | null; optionValue: string | null } {
+  if (selectedOptionsJson) {
+    try {
+      const parsed = JSON.parse(selectedOptionsJson);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        const parts = parsed
+          .map((option) => {
+            const groupLabel = typeof option?.groupLabel === 'string' ? option.groupLabel.trim() : '';
+            const optionLabel = typeof option?.optionLabel === 'string' ? option.optionLabel.trim() : '';
+            if (!groupLabel || !optionLabel) return '';
+            const cents = Number(option?.priceIncreaseCents || 0);
+            const priceLabel =
+              Number.isFinite(cents) && cents > 0
+                ? ` (+$${(Math.round(cents) / 100).toFixed(2).replace(/\.00$/, '')})`
+                : '';
+            return `${groupLabel}: ${optionLabel}${priceLabel}`;
+          })
+          .filter(Boolean);
+        if (parts.length) {
+          if (parts.length === 1) {
+            const only = parsed.find((option) => {
+              const groupLabel = typeof option?.groupLabel === 'string' ? option.groupLabel.trim() : '';
+              const optionLabel = typeof option?.optionLabel === 'string' ? option.optionLabel.trim() : '';
+              return groupLabel && optionLabel;
+            });
+            const groupLabel = typeof only?.groupLabel === 'string' ? only.groupLabel.trim() : '';
+            const optionLabel = typeof only?.optionLabel === 'string' ? only.optionLabel.trim() : '';
+            const cents = Number(only?.priceIncreaseCents || 0);
+            const priceLabel =
+              Number.isFinite(cents) && cents > 0
+                ? ` (+$${(Math.round(cents) / 100).toFixed(2).replace(/\.00$/, '')})`
+                : '';
+            return {
+              optionGroupLabel: groupLabel || fallbackLabel,
+              optionValue: optionLabel ? `${optionLabel}${priceLabel}` : parts[0],
+            };
+          }
+          return {
+            optionGroupLabel: 'Choices',
+            optionValue: parts.join(', '),
+          };
+        }
+      }
+    } catch {
+      // Fall back to legacy option metadata below.
+    }
+  }
+  return { optionGroupLabel: fallbackLabel, optionValue: fallbackValue };
 }
 
 function formatShippingAddress(address: Stripe.Address | Stripe.ShippingAddress | null): string {

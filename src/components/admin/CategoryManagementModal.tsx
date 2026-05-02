@@ -122,6 +122,7 @@ export function CategoryManagementModal({
   const [editChoiceGroupId, setEditChoiceGroupId] = useState<string | null>(null);
   const [presetDraftId, setPresetDraftId] = useState<string | null>(null);
   const [presetBuilderDraft, setPresetBuilderDraft] = useState<ChoiceBuilderDraft>(() => emptyChoiceBuilderDraft());
+  const [isPresetBuilderOpen, setIsPresetBuilderOpen] = useState(false);
   const [presetPendingDelete, setPresetPendingDelete] = useState<VariationPreset | null>(null);
   const [isDeletingPreset, setIsDeletingPreset] = useState(false);
   const [assigningPreset, setAssigningPreset] = useState<VariationPreset | null>(null);
@@ -192,6 +193,7 @@ export function CategoryManagementModal({
   const resetPresetDraft = () => {
     setPresetDraftId(null);
     setPresetBuilderDraft(emptyChoiceBuilderDraft());
+    setIsPresetBuilderOpen(false);
   };
 
   const sanitizeShippingInput = (value: string): string => {
@@ -240,7 +242,7 @@ export function CategoryManagementModal({
       return;
     }
     updateDraftGroups('new', (groups) => [...groups, ...cloneGroups(preset.groups, preset.id)]);
-    setCategoryMessage('');
+    setCategoryMessage(`${preset.name} Added to Current Choices`);
   };
 
   const usePresetForEditCategory = (preset: VariationPreset) => {
@@ -252,7 +254,7 @@ export function CategoryManagementModal({
       return;
     }
     updateDraftGroups('edit', (groups) => [...groups, ...cloneGroups(preset.groups, preset.id)]);
-    setCategoryMessage('');
+    setCategoryMessage(`${preset.name} Added to ${editDraft.name || 'Category'}`);
   };
 
   const assignedCategoryIdsForPreset = (preset: VariationPreset) =>
@@ -268,7 +270,10 @@ export function CategoryManagementModal({
 
   const handleSavePresetAssignments = async () => {
     if (!assigningPreset) return;
+    const presetName = assigningPreset.name;
+    const previouslyAssignedIds = new Set(assignedCategoryIdsForPreset(assigningPreset));
     const selectedIds = new Set(assignmentCategoryIds);
+    const newlyAssigned = adminCategories.filter((cat) => selectedIds.has(cat.id) && !previouslyAssignedIds.has(cat.id));
     const previous = adminCategories;
     const nextCategories = adminCategories.map((cat) => {
       const groups = categoryGroups(cat);
@@ -299,7 +304,13 @@ export function CategoryManagementModal({
       onCategoriesChange(updatedList);
       setAssigningPreset(null);
       setAssignmentCategoryIds([]);
-      setCategoryMessage('Preset assignments saved.');
+      if (newlyAssigned.length === 1) {
+        setCategoryMessage(`${presetName} Added to ${newlyAssigned[0].name || 'Category'}`);
+      } else if (newlyAssigned.length > 1) {
+        setCategoryMessage(`${presetName} Added to ${newlyAssigned.length} Categories`);
+      } else {
+        setCategoryMessage('Preset assignments saved.');
+      }
     } catch (error) {
       console.error('Failed to save preset assignments', error);
       setAdminCategories(previous);
@@ -394,6 +405,7 @@ export function CategoryManagementModal({
           return [...withoutSaved, saved].sort((a, b) => a.name.localeCompare(b.name));
         });
         resetPresetDraft();
+        setIsPresetBuilderOpen(false);
         setCategoryMessage(presetId ? 'Preset updated.' : 'Preset saved.');
       }
     } catch (error) {
@@ -477,9 +489,9 @@ export function CategoryManagementModal({
         onCategoriesChange(updated);
         onCategorySelected?.(created.name);
         setNewDraft(emptyDraft());
+        setChoiceBuilderDraft(emptyChoiceBuilderDraft());
         setActiveChoicePanel(null);
-        setCategoryMessage('');
-        closeAll();
+        setCategoryMessage(`Success ${created.name} Created!`);
       }
     } catch (error) {
       console.error('Failed to create category', error);
@@ -572,6 +584,7 @@ export function CategoryManagementModal({
   const handleEditPreset = (preset: VariationPreset) => {
     setPresetDraftId(preset.id);
     setPresetBuilderDraft(groupToChoiceBuilderDraft(preset.groups[0] || createVariationGroup(preset.name)));
+    setIsPresetBuilderOpen(true);
     setCategoryMessage('');
   };
 
@@ -887,29 +900,43 @@ export function CategoryManagementModal({
             <StatusMessage message={categoryMessage} />
             <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-5 py-5 sm:px-7">
               <section className="space-y-4">
-                <div>
-                  <p className="ca-admin-heading text-lg">{presetDraftId ? 'Edit Preset' : 'Create Preset'}</p>
-                  <p className="mt-1 text-sm text-charcoal/60">Build the customer choice shoppers can select.</p>
-                </div>
-                <ChoiceBuilder
-                  draft={presetBuilderDraft}
-                  onDraftChange={setPresetBuilderDraft}
+                <ChoicePanelSelectorCard
+                  title={presetDraftId ? 'Edit Preset' : 'Create Preset'}
+                  subtitle="Create a reusable customer choice preset like Trim, Shell Type, or Set Size."
+                  actionLabel={isPresetBuilderOpen ? 'Hide' : 'Open'}
+                  active={isPresetBuilderOpen}
+                  onClick={() => {
+                    if (presetDraftId) return;
+                    setIsPresetBuilderOpen((prev) => !prev);
+                  }}
                 />
-                <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-                  {presetDraftId && (
-                    <button type="button" onClick={resetPresetDraft} className="lux-button--ghost px-5 py-3 text-[10px]">
-                      Cancel Edit
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={handleSavePreset}
-                    disabled={isSaving}
-                    className="lux-button px-5 py-3 text-[10px] disabled:opacity-50"
-                  >
-                    {isSaving ? 'Saving...' : presetDraftId ? 'Update Preset' : 'Save Preset'}
-                  </button>
-                </div>
+                {isPresetBuilderOpen && (
+                  <div className="space-y-4 rounded-[18px] border border-driftwood/60 bg-white/80 p-4">
+                    <div>
+                      <p className="ca-admin-heading text-lg">{presetDraftId ? 'Edit Preset' : 'Create Preset'}</p>
+                      <p className="mt-1 text-sm text-charcoal/60">Build the customer choice shoppers can select.</p>
+                    </div>
+                    <ChoiceBuilder
+                      draft={presetBuilderDraft}
+                      onDraftChange={setPresetBuilderDraft}
+                    />
+                    <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                      {presetDraftId && (
+                        <button type="button" onClick={resetPresetDraft} className="lux-button--ghost px-5 py-3 text-[10px]">
+                          Cancel Edit
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={handleSavePreset}
+                        disabled={isSaving}
+                        className="lux-button px-5 py-3 text-[10px] disabled:opacity-50"
+                      >
+                        {isSaving ? 'Saving...' : presetDraftId ? 'Update Preset' : 'Save Preset'}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </section>
 
               <section className="space-y-4 border-t border-driftwood/60 pt-5">
@@ -1001,17 +1028,17 @@ function LauncherView({
       </div>
       <div className="grid gap-3 px-5 py-5 sm:px-7">
         <LauncherCard
-          title="Create New"
+          title="Create New Category"
           description="Add a new category with subtitle, shipping, and customer choices."
           onClick={onOpenCreate}
         />
         <LauncherCard
-          title="Edit Existing"
+          title="Edit Existing Categories"
           description="Update category names, subtitles, shipping, order, and customer choices."
           onClick={onOpenEdit}
         />
         <LauncherCard
-          title="Manage Presets"
+          title="Manage Category Presets"
           description="Create and edit reusable customer choice presets for your product categories."
           onClick={onOpenPresets}
         />
@@ -1165,8 +1192,19 @@ function ModalFooter({ children }: { children: ReactNode }) {
 
 function StatusMessage({ message }: { message: string }) {
   if (!message) return null;
+  const normalizedMessage = message.trim().toLowerCase();
+  const isSuccess =
+    normalizedMessage.startsWith('success') ||
+    normalizedMessage.includes(' added to ') ||
+    normalizedMessage.includes('saved.');
   return (
-    <div className="mx-5 mt-5 rounded-shell border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 sm:mx-7">
+    <div
+      className={`mx-5 mt-5 rounded-shell border px-4 py-3 text-sm sm:mx-7 ${
+        isSuccess
+          ? 'border-deep-ocean/25 bg-seafoam/25 text-deep-ocean'
+          : 'border-amber-200 bg-amber-50 text-amber-800'
+      }`}
+    >
       {message}
     </div>
   );
@@ -1216,7 +1254,7 @@ function CategoryList({
                 <p className="break-words font-serif text-xl text-deep-ocean">{cat.name || 'Unnamed Category'}</p>
                 {cat.subtitle && <p className="mt-1 text-sm leading-6 text-charcoal/65">{cat.subtitle}</p>}
                 <div className="mt-4 flex flex-wrap gap-2.5">
-                  <CategoryStatBadge label="Order" value={index + 1} />
+                  <CategoryStatBadge label="Display Order" value={index + 1} />
                   <CategoryStatBadge label="Choices" value={groups.length} />
                   <CategoryStatBadge label="Shipping" value={shipping} />
                 </div>

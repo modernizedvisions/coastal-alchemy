@@ -13,6 +13,7 @@ import {
   useGiftPromotions,
 } from '../../lib/giftPromotions';
 import { mapCartItemToAnalyticsItem, trackBeginCheckout, trackViewCart } from '../../lib/analytics';
+import { formatChoiceLabel } from '../../lib/categoryOptions';
 
 export function CartDrawer() {
   const isOpen = useUIStore((state) => state.isCartDrawerOpen);
@@ -151,7 +152,7 @@ export function CartDrawer() {
                     <div className="mt-1 space-y-0.5">
                       {item.selectedOptions.map((option) => (
                         <p key={`${option.groupId}-${option.optionValue}`} className="ca-copy text-xs leading-5">
-                          {option.groupLabel}: {option.optionLabel}
+                          {option.groupLabel}: {formatChoiceLabel(option.optionLabel, option.priceIncreaseCents)}
                         </p>
                       ))}
                     </div>

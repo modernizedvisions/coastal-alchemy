@@ -51,6 +51,7 @@ type SelectedOption = {
   optionId?: string | null;
   optionLabel: string;
   optionValue: string;
+  priceIncreaseCents?: number;
 };
 
 type VariationGroup = {
@@ -58,7 +59,7 @@ type VariationGroup = {
   label: string;
   required?: boolean;
   enabled?: boolean;
-  options: Array<{ id: string; label: string; value: string; enabled?: boolean }>;
+  options: Array<{ id: string; label: string; value: string; priceIncreaseCents?: number; enabled?: boolean }>;
 };
 
 type PromotionRow = {
@@ -188,6 +189,10 @@ const parseVariationGroups = (value?: string | null): VariationGroup[] => {
                   id: typeof option?.id === 'string' ? option.id : `${groupIndex}-${optionIndex}`,
                   label: optionLabel,
                   value: typeof option?.value === 'string' && option.value.trim() ? option.value.trim() : normalizeCategoryKey(optionLabel),
+                  priceIncreaseCents:
+                    Number.isFinite(option?.priceIncreaseCents) && Number(option.priceIncreaseCents) > 0
+                      ? Math.round(Number(option.priceIncreaseCents))
+                      : 0,
                   enabled: option?.enabled !== false,
                 };
               })
@@ -225,6 +230,7 @@ const buildCategoryOptionGroupLookup = (categories: CategoryRow[]) => {
               id: `legacy-${index}`,
               label: option,
               value: normalizeCategoryKey(option),
+              priceIncreaseCents: 0,
               enabled: true,
             })),
           }]
@@ -262,10 +268,20 @@ const resolveSelectedOptions = (groups: VariationGroup[], rawSelected: unknown, 
       optionId: match.id,
       optionLabel: match.label,
       optionValue: match.value,
+      priceIncreaseCents:
+        Number.isFinite(match.priceIncreaseCents as number) && Number(match.priceIncreaseCents) > 0
+          ? Math.round(Number(match.priceIncreaseCents))
+          : 0,
     });
   }
   return selected;
 };
+
+const selectedOptionsPriceIncreaseCents = (selectedOptions?: SelectedOption[] | null) =>
+  (selectedOptions || []).reduce((total, option) => {
+    const cents = Number(option.priceIncreaseCents || 0);
+    return total + (Number.isFinite(cents) && cents > 0 ? Math.round(cents) : 0);
+  }, 0);
 
 const parseCategorySlugs = (value?: string | null): string[] => {
   if (!value) return [];
@@ -571,11 +587,13 @@ export const onRequestPost = async (context: {
       const codePercent = codePercentEligible ? codePromo?.percentOff || 0 : 0;
       const appliedPercent = Math.max(autoPercent, codePercent);
 
+      const priceIncreaseCents = selectedOptionsPriceIncreaseCents(resolvedSelectedOptions);
+      const configuredUnitPriceCents = (product.price_cents ?? 0) + priceIncreaseCents;
       const discountedCents = Math.max(
         0,
-        Math.round(((product.price_cents ?? 0) * (100 - appliedPercent)) / 100)
+        Math.round((configuredUnitPriceCents * (100 - appliedPercent)) / 100)
       );
-      const unitAmount = appliedPercent > 0 ? discountedCents : product.price_cents ?? 0;
+      const unitAmount = appliedPercent > 0 ? discountedCents : configuredUnitPriceCents;
       const metadata: Stripe.MetadataParam = {
         dd_canonical_product_id: product.id,
         dd_product_id: product.id,
@@ -584,7 +602,7 @@ export const onRequestPost = async (context: {
       if (product.stripe_price_id) metadata.dd_stripe_price_id = product.stripe_price_id;
       if (product.slug) metadata.dd_product_slug = product.slug;
       if (resolvedSelectedOptions?.length) {
-        metadata.option_group_label = resolvedSelectedOptions.length > 1 ? 'Options' : resolvedSelectedOptions[0].groupLabel;
+        metadata.option_group_label = resolvedSelectedOptions.length > 1 ? 'Choices' : resolvedSelectedOptions[0].groupLabel;
         metadata.option_value = resolvedSelectedOptions.map((option) => `${option.groupLabel}: ${option.optionLabel}`).join(', ');
         metadata.selected_options_json = JSON.stringify(resolvedSelectedOptions).slice(0, 500);
       }
@@ -609,7 +627,7 @@ export const onRequestPost = async (context: {
       });
       if (autoPercent === appliedPercent && autoPercent > 0) autoPercentApplied = true;
       maxPercentApplied = Math.max(maxPercentApplied, appliedPercent);
-      subtotalCents += (product.price_cents ?? 0) * quantity;
+      subtotalCents += configuredUnitPriceCents * quantity;
       itemsForShipping.push({
         category: product.category ?? null,
         shippingOverrideEnabled: product.shipping_override_enabled === 1,

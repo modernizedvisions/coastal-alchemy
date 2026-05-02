@@ -1,5 +1,6 @@
 import { adminFetch } from '../adminAuth';
 import type { OrderManualFulfillmentOverride, OrderFulfillmentStatus } from '../orderFulfillment';
+import type { SelectedVariationOption } from '../types';
 
 export type AdminOrderItem = {
   productId: string;
@@ -11,6 +12,7 @@ export type AdminOrderItem = {
   customOrderDisplayId?: string | null;
   optionGroupLabel?: string | null;
   optionValue?: string | null;
+  selectedOptions?: SelectedVariationOption[];
 };
 
 export type AdminOrder = {

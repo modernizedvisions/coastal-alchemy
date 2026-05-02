@@ -49,6 +49,7 @@ type VariationOption = {
   id: string;
   label: string;
   value: string;
+  priceIncreaseCents?: number;
   displayOrder?: number;
   enabled?: boolean;
 };
@@ -190,6 +191,10 @@ const normalizeVariationGroups = (value: unknown): VariationGroup[] => {
             id: typeof opt.id === 'string' && opt.id.trim() ? opt.id.trim() : `${groupIndex}-${optionIndex}`,
             label: optionLabel,
             value: typeof opt.value === 'string' && opt.value.trim() ? opt.value.trim() : toSlug(optionLabel),
+            priceIncreaseCents:
+              Number.isFinite(opt.priceIncreaseCents as number) && Number(opt.priceIncreaseCents) > 0
+                ? Math.round(Number(opt.priceIncreaseCents))
+                : 0,
             displayOrder: Number.isFinite(opt.displayOrder as number) ? Number(opt.displayOrder) : optionIndex,
             enabled: opt.enabled !== false,
           };
@@ -236,6 +241,7 @@ const legacyGroups = (label?: string | null, optionsJson?: string | null): Varia
         id: `legacy-${index}`,
         label: option,
         value: toSlug(option),
+        priceIncreaseCents: 0,
         displayOrder: index,
         enabled: true,
       })),
@@ -246,4 +252,3 @@ const legacyGroups = (label?: string | null, optionsJson?: string | null): Varia
 async function ensureCategorySchema(_db: D1Database) {
   return;
 }
-

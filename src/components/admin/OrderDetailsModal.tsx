@@ -4,6 +4,7 @@ import { formatEasternDateTime } from '../../lib/dates';
 import { adminFetchOrderShipments, type OrderShipment } from '../../lib/adminShipping';
 import { adminMarkOrderViewed, adminUpdateOrderFulfillment } from '../../lib/adminOrders';
 import { getOrderFulfillmentBadgeMeta, type OrderFulfillmentStatus } from '../../lib/orderFulfillment';
+import { formatChoiceLabel } from '../../lib/categoryOptions';
 
 interface OrderDetailsModalProps {
   open: boolean;
@@ -366,7 +367,7 @@ export function OrderDetailsModal({ open, order, onClose, onOrderPatched, onOpen
                           <div className="mt-1 space-y-0.5">
                             {item.selectedOptions.map((option) => (
                               <div key={`${option.groupId}-${option.optionValue}`} className="text-xs text-charcoal/70">
-                                {option.groupLabel}: {option.optionLabel}
+                                {option.groupLabel}: {formatChoiceLabel(option.optionLabel, option.priceIncreaseCents)}
                               </div>
                             ))}
                           </div>

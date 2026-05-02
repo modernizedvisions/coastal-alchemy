@@ -7,7 +7,13 @@ import { useCartStore } from '../store/cartStore';
 import { useUIStore } from '../store/uiStore';
 import { ProgressiveImage } from '@/components/ui/ProgressiveImage';
 import { getDiscountedCents, isPromotionEligible, usePromotions } from '@/lib/promotions';
-import { buildCategoryOptionLookup, flattenSelectedOptionsLabel, resolveCategoryOptionGroups } from '../lib/categoryOptions';
+import {
+  buildCategoryOptionLookup,
+  flattenSelectedOptionsLabel,
+  formatChoiceLabel,
+  resolveCategoryOptionGroups,
+  selectedOptionsPriceIncreaseCents,
+} from '../lib/categoryOptions';
 import { CANONICAL_ORIGIN, toAbsoluteAssetUrl, toCanonicalUrl, useJsonLd, useSeo } from '../lib/seo';
 import {
   mapProductToAnalyticsItem,
@@ -100,11 +106,13 @@ export function ProductDetailPage() {
           optionId: selected.id,
           optionLabel: selected.label,
           optionValue: selected.value,
+          priceIncreaseCents: selected.priceIncreaseCents || 0,
         };
       })
       .filter((option): option is NonNullable<typeof option> => Boolean(option));
   }, [optionGroups, selectedOptionsByGroup]);
   const selectedOptionsKey = flattenSelectedOptionsLabel(selectedOptions);
+  const priceIncreaseCents = selectedOptionsPriceIncreaseCents(selectedOptions);
   const missingRequiredGroups = optionGroups.filter((group) => group.required !== false && !selectedOptionsByGroup[group.id]);
   const hasSelectedOption = missingRequiredGroups.length === 0;
   const qtyInCart = useCartStore((state) =>
@@ -112,9 +120,12 @@ export function ProductDetailPage() {
   );
   const promoEligible = product ? isPromotionEligible(promotion, product) : false;
   const discountedPriceCents =
-    product?.priceCents !== undefined && product?.priceCents !== null && promoEligible && promotion
-      ? getDiscountedCents(product.priceCents, promotion.percentOff)
-      : product?.priceCents ?? null;
+    product?.priceCents !== undefined && product?.priceCents !== null
+      ? (promoEligible && promotion
+          ? getDiscountedCents(product.priceCents + priceIncreaseCents, promotion.percentOff)
+          : product.priceCents + priceIncreaseCents)
+      : null;
+  const configuredPriceCents = discountedPriceCents;
   const maxQty = product?.quantityAvailable ?? null;
   const maxSelectable =
     !product?.oneoff && maxQty !== null ? Math.max(0, maxQty - qtyInCart) : null;
@@ -139,7 +150,7 @@ export function ProductDetailPage() {
     if (!product || !hasPrice || isSold) return;
     if (product.oneoff && isOneOffInCart(product.id)) return;
     if (!hasSelectedOption) {
-      setOptionValidationMessage('Please choose all required options before adding this item to your cart.');
+      setOptionValidationMessage('Please choose all required choices before adding this item to your cart.');
       return;
     }
     if (!product.oneoff && !hasSelectableStock) return;
@@ -147,7 +158,7 @@ export function ProductDetailPage() {
     addItem({
       productId: product.id,
       name: product.name,
-      priceCents: product.priceCents ?? 0,
+      priceCents: (product.priceCents ?? 0) + priceIncreaseCents,
       quantity: effectiveQty,
       imageUrl: product.thumbnailUrl || product.imageUrl,
       oneoff: product.oneoff,
@@ -342,12 +353,12 @@ export function ProductDetailPage() {
                       {promoEligible && discountedPriceCents !== product.priceCents ? (
                         <>
                           <span className="text-sm text-[var(--ca-muted)] line-through">
-                            {formatPrice(product.priceCents)}
+                            {formatPrice(product.priceCents + priceIncreaseCents)}
                           </span>
-                          <span className="text-[1.6rem] text-[var(--ca-ink)]">{formatPrice(discountedPriceCents)}</span>
+                          <span className="text-[1.6rem] text-[var(--ca-ink)]">{formatPrice(configuredPriceCents)}</span>
                         </>
                       ) : (
-                        <span>{formatPrice(product.priceCents)}</span>
+                        <span>{formatPrice(configuredPriceCents)}</span>
                       )}
                     </div>
                   )}
@@ -356,7 +367,7 @@ export function ProductDetailPage() {
 
                 {optionGroups.length > 0 && (
                   <div className="border border-[var(--ca-border)] bg-white px-5 py-4 space-y-3">
-                    <p className="ca-eyebrow text-[10px]">Choose Options</p>
+                    <p className="ca-eyebrow text-[10px]">Choose</p>
                     {optionGroups.map((group) => (
                       <div key={group.id}>
                         <label className="mb-2 block">
@@ -376,7 +387,7 @@ export function ProductDetailPage() {
                             .filter((option) => option.enabled !== false)
                             .map((option) => (
                               <option key={option.id} value={option.value}>
-                                {option.label}
+                                {formatChoiceLabel(option.label, option.priceIncreaseCents)}
                               </option>
                             ))}
                         </select>
@@ -425,8 +436,7 @@ export function ProductDetailPage() {
                     disabled={
                       !canPurchase ||
                       (product?.oneoff && isOneOffInCart(product.id)) ||
-                      (!product?.oneoff && !hasSelectableStock) ||
-                      !hasSelectedOption
+                      (!product?.oneoff && !hasSelectableStock)
                     }
                     className="ca-button ca-button-filled w-full justify-center"
                   >
@@ -591,8 +601,8 @@ export function ProductDetailPage() {
                 <p className="text-xs uppercase tracking-[0.22em] text-[var(--ca-muted)]">Total</p>
                 <p className="ca-card-price text-lg">
                   {promoEligible && discountedPriceCents !== product.priceCents
-                    ? formatPrice(discountedPriceCents)
-                    : formatPrice(product.priceCents)}
+                    ? formatPrice(configuredPriceCents)
+                    : formatPrice(configuredPriceCents)}
                 </p>
               </div>
             )}
@@ -601,8 +611,7 @@ export function ProductDetailPage() {
               disabled={
                 !canPurchase ||
                 (product?.oneoff && isOneOffInCart(product.id)) ||
-                (!product?.oneoff && maxQty !== null && effectiveQty > maxQty) ||
-                !hasSelectedOption
+                (!product?.oneoff && maxQty !== null && effectiveQty > maxQty)
               }
               className="ca-button ca-button-filled flex-1 justify-center"
             >

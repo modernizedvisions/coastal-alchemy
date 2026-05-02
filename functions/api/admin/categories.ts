@@ -54,6 +54,7 @@ type VariationOption = {
   id: string;
   label: string;
   value: string;
+  priceIncreaseCents?: number;
   displayOrder?: number;
   enabled?: boolean;
 };
@@ -173,6 +174,10 @@ const normalizeVariationGroups = (value: unknown): VariationGroup[] => {
             id: typeof opt.id === 'string' && opt.id.trim() ? opt.id.trim() : crypto.randomUUID(),
             label: optionLabel,
             value,
+            priceIncreaseCents:
+              Number.isFinite(opt.priceIncreaseCents as number) && Number(opt.priceIncreaseCents) > 0
+                ? Math.round(Number(opt.priceIncreaseCents))
+                : 0,
             displayOrder: Number.isFinite(opt.displayOrder as number) ? Number(opt.displayOrder) : optionIndex,
             enabled: opt.enabled !== false,
           };
@@ -219,6 +224,7 @@ const legacyGroups = (label?: string | null, optionsJson?: string | null): Varia
         id: crypto.randomUUID(),
         label: option,
         value: toSlug(option),
+        priceIncreaseCents: 0,
         displayOrder: index,
         enabled: true,
       })),
@@ -596,4 +602,3 @@ const json = (data: unknown, status = 200) =>
     status,
     headers: { 'Content-Type': 'application/json' },
   });
-

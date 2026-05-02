@@ -187,6 +187,7 @@ export interface VariationOption {
   id: string;
   label: string;
   value: string;
+  priceIncreaseCents?: number;
   displayOrder?: number;
   enabled?: boolean;
 }
@@ -208,6 +209,7 @@ export interface SelectedVariationOption {
   optionId?: string | null;
   optionLabel: string;
   optionValue: string;
+  priceIncreaseCents?: number;
 }
 
 export interface VariationPreset {

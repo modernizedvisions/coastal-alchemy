@@ -29,6 +29,7 @@ export const createVariationOption = (label: string, index = 0): VariationOption
   id: crypto.randomUUID(),
   label: label.trim(),
   value: slugifyOptionValue(label),
+  priceIncreaseCents: 0,
   displayOrder: index,
   enabled: true,
 });
@@ -61,6 +62,11 @@ export const normalizeVariationGroups = (groups: VariationGroup[] | undefined | 
             id: option.id || crypto.randomUUID(),
             label: optionLabel,
             value,
+            priceIncreaseCents:
+              Number.isFinite((option as VariationOption).priceIncreaseCents as number) &&
+              ((option as VariationOption).priceIncreaseCents as number) > 0
+                ? Math.round((option as VariationOption).priceIncreaseCents as number)
+                : 0,
             displayOrder: option.displayOrder ?? optionIndex,
             enabled: option.enabled !== false,
           } satisfies VariationOption;
@@ -129,4 +135,18 @@ export const resolveCategoryOptionGroup = (
 export const flattenSelectedOptionsLabel = (selectedOptions?: SelectedVariationOption[] | null) => {
   const options = Array.isArray(selectedOptions) ? selectedOptions : [];
   return options.map((option) => `${option.groupLabel}: ${option.optionLabel}`).join(', ');
+};
+
+export const selectedOptionsPriceIncreaseCents = (selectedOptions?: SelectedVariationOption[] | null) => {
+  const options = Array.isArray(selectedOptions) ? selectedOptions : [];
+  return options.reduce((total, option) => {
+    const cents = Number(option.priceIncreaseCents || 0);
+    return total + (Number.isFinite(cents) && cents > 0 ? Math.round(cents) : 0);
+  }, 0);
+};
+
+export const formatChoiceLabel = (label: string, priceIncreaseCents?: number | null) => {
+  const cents = Number(priceIncreaseCents || 0);
+  if (!Number.isFinite(cents) || cents <= 0) return label;
+  return `${label} +$${(Math.round(cents) / 100).toFixed(2).replace(/\.00$/, '')}`;
 };

@@ -66,6 +66,7 @@ export async function createEmbeddedCheckoutSession(
       optionId?: string | null;
       optionLabel: string;
       optionValue: string;
+      priceIncreaseCents?: number;
     }> | null;
   }[],
   promoCode?: string

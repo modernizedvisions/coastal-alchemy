@@ -13,6 +13,7 @@ import {
   useGiftPromotions,
 } from '../lib/giftPromotions';
 import type { CheckoutPromoSummary } from '../lib/payments/checkout';
+import { formatChoiceLabel } from '../lib/categoryOptions';
 
 const SESSION_MAX_AGE_MS = 10 * 60 * 1000;
 const sessionTimestampKey = (sessionId: string) => `checkout_session_created_at_${sessionId}`;
@@ -456,7 +457,7 @@ export function CheckoutPage() {
                   <div className="ca-copy text-sm">No items to display.</div>
                 )}
                 {previewItemsWithPricing.map((item) => (
-                  <div key={`${item.id}-${item.name}`} className="ca-line">
+                  <div key={`${item.id}-${item.optionValue || item.name}`} className="ca-line">
                     {item.imageUrl ? (
                       <div className="ca-line-media">
                         <img src={item.imageUrl} alt={item.name || 'Item'} loading="lazy" />
@@ -475,7 +476,7 @@ export function CheckoutPage() {
                         <div className="mt-1 space-y-0.5">
                           {(item as any).selectedOptions.map((option: any) => (
                             <p key={`${option.groupId}-${option.optionValue}`} className="ca-copy text-xs">
-                              {option.groupLabel}: {option.optionLabel}
+                              {option.groupLabel}: {formatChoiceLabel(option.optionLabel, option.priceIncreaseCents)}
                             </p>
                           ))}
                         </div>

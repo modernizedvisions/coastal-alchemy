@@ -113,8 +113,8 @@ export function CategoryManagementModal({
   const [editDraft, setEditDraft] = useState<CategoryDraft | null>(null);
   const [adminCategories, setAdminCategories] = useState<Category[]>([]);
   const [presets, setPresets] = useState<VariationPreset[]>([]);
-  const [selectedNewPresetId, setSelectedNewPresetId] = useState('');
   const [selectedEditPresetId, setSelectedEditPresetId] = useState('');
+  const [showCreatePresets, setShowCreatePresets] = useState(false);
   const [choiceBuilderDraft, setChoiceBuilderDraft] = useState<ChoiceBuilderDraft>(() => emptyChoiceBuilderDraft());
   const [editChoiceBuilderDraft, setEditChoiceBuilderDraft] = useState<ChoiceBuilderDraft>(() => emptyChoiceBuilderDraft());
   const [editChoiceGroupId, setEditChoiceGroupId] = useState<string | null>(null);
@@ -174,8 +174,8 @@ export function CategoryManagementModal({
     setCategoryMessage('');
     setEditCategoryId(null);
     setEditDraft(null);
-    setSelectedNewPresetId('');
     setSelectedEditPresetId('');
+    setShowCreatePresets(false);
     setChoiceBuilderDraft(emptyChoiceBuilderDraft());
     setEditChoiceBuilderDraft(emptyChoiceBuilderDraft());
     setEditChoiceGroupId(null);
@@ -231,6 +231,17 @@ export function CategoryManagementModal({
     const preset = presets.find((item) => item.id === presetId);
     if (!preset) return;
     updateDraftGroups(target, (groups) => [...groups, ...cloneGroups(preset.groups)]);
+  };
+
+  const usePresetForNewCategory = (preset: VariationPreset) => {
+    const presetLabels = new Set(normalizeVariationGroups(preset.groups).map((group) => group.label.trim().toLowerCase()).filter(Boolean));
+    const duplicate = newDraft.optionGroups.find((group) => presetLabels.has(group.label.trim().toLowerCase()));
+    if (duplicate) {
+      setCategoryMessage(`"${duplicate.label}" is already in Current Choices for This Category.`);
+      return;
+    }
+    updateDraftGroups('new', (groups) => [...groups, ...cloneGroups(preset.groups)]);
+    setCategoryMessage('');
   };
 
   const uniquePresetName = (nameInput: string): string => {
@@ -400,7 +411,7 @@ export function CategoryManagementModal({
         onCategoriesChange(updated);
         onCategorySelected?.(created.name);
         setNewDraft(emptyDraft());
-        setSelectedNewPresetId('');
+        setShowCreatePresets(false);
         setCategoryMessage('');
         closeAll();
       }
@@ -662,13 +673,14 @@ export function CategoryManagementModal({
               <CreateCategoryChoicesEditor
                 groups={newDraft.optionGroups}
                 presets={presets}
-                selectedPresetId={selectedNewPresetId}
                 builderDraft={choiceBuilderDraft}
-                onSelectedPresetChange={setSelectedNewPresetId}
+                showPresets={showCreatePresets}
+                onTogglePresets={() => setShowCreatePresets((prev) => !prev)}
                 onBuilderDraftChange={setChoiceBuilderDraft}
-                onUsePreset={() => {
-                  applyPreset('new', selectedNewPresetId);
-                  setSelectedNewPresetId('');
+                onUsePreset={usePresetForNewCategory}
+                onEditPreset={(preset) => {
+                  handleEditPreset(preset);
+                  setToolView('presets');
                 }}
                 onAddBuilderChoice={addBuilderChoiceToCategory}
                 onAddBuilderAsPreset={() => {
@@ -1481,11 +1493,12 @@ function ChoiceBuilder({
 function CreateCategoryChoicesEditor({
   groups,
   presets,
-  selectedPresetId,
   builderDraft,
-  onSelectedPresetChange,
+  showPresets,
+  onTogglePresets,
   onBuilderDraftChange,
   onUsePreset,
+  onEditPreset,
   onAddBuilderChoice,
   onAddBuilderAsPreset,
   onEditGroup,
@@ -1493,11 +1506,12 @@ function CreateCategoryChoicesEditor({
 }: {
   groups: VariationGroup[];
   presets: VariationPreset[];
-  selectedPresetId: string;
   builderDraft: ChoiceBuilderDraft;
-  onSelectedPresetChange: (id: string) => void;
+  showPresets: boolean;
+  onTogglePresets: () => void;
   onBuilderDraftChange: (draft: ChoiceBuilderDraft) => void;
-  onUsePreset: () => void;
+  onUsePreset: (preset: VariationPreset) => void;
+  onEditPreset: (preset: VariationPreset) => void;
   onAddBuilderChoice: () => boolean;
   onAddBuilderAsPreset: () => void;
   onEditGroup: (group: VariationGroup) => void;
@@ -1512,43 +1526,11 @@ function CreateCategoryChoicesEditor({
         </p>
       </div>
 
-      <div className="rounded-[18px] border border-driftwood/60 bg-white/80 p-4">
-        <div className="grid gap-3 lg:grid-cols-[minmax(190px,0.55fr)_minmax(260px,1fr)_auto] lg:items-end">
-          <div className="lg:pb-1">
-            <p className="ca-admin-heading text-base">Use Preset</p>
-            <p className="mt-1 text-sm text-charcoal/60">Choose a saved preset and add it to this category.</p>
-          </div>
-          <div>
-            <label className="lux-label mb-2 block">Saved Preset</label>
-            <select
-              value={selectedPresetId}
-              onChange={(e) => onSelectedPresetChange(e.target.value)}
-              className="lux-input min-h-[46px] text-base"
-            >
-              <option value="">Select preset</option>
-              {presets.map((preset) => (
-                <option key={preset.id} value={preset.id}>
-                  {preset.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <button
-            type="button"
-            disabled={!selectedPresetId}
-            onClick={onUsePreset}
-            className="lux-button--ghost px-5 py-3 text-[10px] disabled:opacity-50"
-          >
-            Add Preset to Category
-          </button>
-        </div>
-      </div>
-
       <div className="space-y-4">
         <div>
           <p className="ca-admin-heading text-lg">New Customer Choice</p>
           <p className="mt-1 text-sm text-charcoal/60">
-            Choice Name is the dropdown label customers will see. Choices are the dropdown values.
+            Create a choice customers can select on products in this category.
           </p>
         </div>
         <ChoiceBuilder draft={builderDraft} onDraftChange={onBuilderDraftChange} />
@@ -1566,12 +1548,132 @@ function CreateCategoryChoicesEditor({
           </div>
       </div>
 
+      <PresetBrowser
+        presets={presets}
+        expanded={showPresets}
+        onToggle={onTogglePresets}
+        onUsePreset={onUsePreset}
+        onEditPreset={onEditPreset}
+      />
+
       <CurrentCategoryChoices
         groups={groups}
         onEditGroup={onEditGroup}
         onRemoveGroup={(groupId) => onGroupsChange(groups.filter((group) => group.id !== groupId))}
       />
     </section>
+  );
+}
+
+function PresetBrowser({
+  presets,
+  expanded,
+  onToggle,
+  onUsePreset,
+  onEditPreset,
+}: {
+  presets: VariationPreset[];
+  expanded: boolean;
+  onToggle: () => void;
+  onUsePreset: (preset: VariationPreset) => void;
+  onEditPreset: (preset: VariationPreset) => void;
+}) {
+  return (
+    <section className="rounded-[18px] border border-driftwood/60 bg-white/80">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex w-full flex-col gap-2 px-4 py-4 text-left sm:flex-row sm:items-center sm:justify-between"
+        aria-expanded={expanded}
+      >
+        <span>
+          <span className="ca-admin-heading block text-base">Use Existing Presets</span>
+          <span className="mt-1 block text-sm text-charcoal/60">Browse saved presets and add them to this category.</span>
+        </span>
+        <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-deep-ocean">
+          {expanded ? 'Hide' : 'Browse'}
+        </span>
+      </button>
+
+      {expanded && (
+        <div className="border-t border-driftwood/55 px-4 py-4">
+          {presets.length === 0 ? (
+            <div className="ca-admin-empty-state">
+              No presets saved yet. Create a customer choice above and click Add As New Preset to reuse it later.
+            </div>
+          ) : (
+            <div className="grid gap-3 md:grid-cols-2">
+              {presets.map((preset) => (
+                <PresetChoiceCard
+                  key={preset.id}
+                  preset={preset}
+                  onUse={() => onUsePreset(preset)}
+                  onEdit={() => onEditPreset(preset)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function PresetChoiceCard({
+  preset,
+  onUse,
+  onEdit,
+}: {
+  preset: VariationPreset;
+  onUse: () => void;
+  onEdit: () => void;
+}) {
+  const groups = normalizeVariationGroups(preset.groups);
+  const requiredLabels = new Set(groups.map((group) => (group.required !== false ? 'YES' : 'NO')));
+  const requiredText = requiredLabels.size === 1 ? Array.from(requiredLabels)[0] : 'MIXED';
+
+  return (
+    <div className="rounded-[18px] border border-driftwood/65 bg-white/90 p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="font-serif text-xl text-deep-ocean">{preset.name}</p>
+          <p className="mt-1 text-xs uppercase tracking-[0.18em] text-charcoal/55">
+            Customer must choose: {requiredText}
+          </p>
+        </div>
+      </div>
+
+      {groups.length > 0 ? (
+        <div className="mt-4 space-y-3">
+          {groups.map((group) => (
+            <div key={group.id || group.label}>
+              {groups.length > 1 && <p className="lux-label mb-1">{group.label}</p>}
+              <ul className="space-y-1 text-sm text-charcoal/70">
+                {group.options.map((option) => (
+                  <li key={option.id || option.value || option.label}>
+                    - {option.label}
+                    {option.priceIncreaseCents && option.priceIncreaseCents > 0
+                      ? ` +$${(option.priceIncreaseCents / 100).toFixed(2).replace(/\.00$/, '')}`
+                      : ''}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="mt-4 text-sm text-charcoal/55">No choices saved in this preset.</p>
+      )}
+
+      <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-end">
+        <button type="button" onClick={onEdit} className="lux-button--ghost px-4 py-2 text-[10px]">
+          Edit Preset
+        </button>
+        <button type="button" onClick={onUse} className="lux-button px-4 py-2 text-[10px]">
+          Use Preset
+        </button>
+      </div>
+    </div>
   );
 }
 

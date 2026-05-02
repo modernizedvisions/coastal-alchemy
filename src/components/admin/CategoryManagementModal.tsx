@@ -579,12 +579,12 @@ export function CategoryManagementModal({
   const currentEditCategory = adminCategories.find((cat) => cat.id === editCategoryId) || null;
   const modalWidth =
     toolView === 'launcher'
-      ? 'w-[min(720px,calc(100vw-1.5rem))] max-w-none'
-      : 'w-[min(900px,calc(100vw-1.5rem))] max-w-none';
+      ? '!w-[calc(100vw-1.5rem)] sm:!w-[min(calc(100vw-3rem),42rem)] !max-w-none !max-h-[90vh]'
+      : '!w-[calc(100vw-1.5rem)] sm:!w-[min(calc(100vw-3rem),64rem)] !max-w-none !max-h-[90vh]';
 
   return (
     <Dialog open={open} onOpenChange={(next) => !next && closeAll()} contentClassName={modalWidth}>
-      <DialogContent className="flex max-h-[calc(100vh-2rem)] flex-col overflow-hidden p-0">
+      <DialogContent className="flex max-h-[90vh] flex-col overflow-hidden p-0">
         {toolView === 'launcher' && (
           <LauncherView
             onClose={closeAll}
@@ -1263,6 +1263,10 @@ function moneyInputToCents(value: string): number {
   return Number.isFinite(parsed) && parsed > 0 ? Math.round(parsed * 100) : 0;
 }
 
+const choicePlaceholders = ['Blue', 'Clam Shell', 'Set of 6'];
+
+const getChoicePlaceholder = (index: number) => choicePlaceholders[index] ?? 'Gold';
+
 function PriceIncreaseInput({
   valueCents,
   onChange,
@@ -1448,7 +1452,7 @@ function CreateCategoryChoicesEditor({
                   <input
                     value={choice.label}
                     onChange={(e) => updateChoice(choice.id, { label: e.target.value })}
-                    placeholder="Gold, Oyster Shell, Set of 4"
+                    placeholder={getChoicePlaceholder(builderDraft.choices.findIndex((item) => item.id === choice.id))}
                     className="lux-input min-h-[44px] text-base"
                   />
                   <div>
@@ -1796,7 +1800,7 @@ function OptionGroupsEditor({
                             ),
                           }))
                         }
-                        placeholder={optionIndex === 0 ? 'Gold, Oyster Shell, Set of 4' : 'Choice Name'}
+                        placeholder={getChoicePlaceholder(optionIndex)}
                         className="lux-input min-h-[44px] text-base"
                       />
                     </div>

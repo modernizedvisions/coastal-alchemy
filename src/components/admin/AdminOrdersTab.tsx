@@ -47,7 +47,7 @@ export function AdminOrdersTab({
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder="Search by order ID, customer, or product..."
-          className="lux-input sm:max-w-md text-sm"
+          className="lux-input ca-admin-order-search sm:max-w-md text-sm"
         />
         <button
           type="button"

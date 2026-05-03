@@ -12,6 +12,7 @@ interface AdminMessage {
   id: string;
   name: string;
   email: string;
+  phone?: string | null;
   message: string;
   imageUrl?: string | null;
   createdAt: string;
@@ -49,6 +50,24 @@ export const AdminMessagesTab: React.FC<AdminMessagesTabProps> = ({ onCreateCust
 
   const getTypeLabel = (type?: string | null) =>
     type === 'custom_order' ? 'Custom Order' : 'Message';
+
+  const formatPhoneForDisplay = (phone?: string | null) => {
+    const raw = (phone || '').trim();
+    if (!raw) return '';
+    const digits = raw.replace(/\D/g, '');
+    if (digits.length === 10) {
+      return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+    }
+    if (digits.length === 11 && digits.startsWith('1')) {
+      return `(${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7)}`;
+    }
+    return raw;
+  };
+
+  const copyEmailToClipboard = (email: string) => {
+    void navigator.clipboard?.writeText(email);
+    toast.success('Email copied to clipboard!');
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -296,109 +315,151 @@ export const AdminMessagesTab: React.FC<AdminMessagesTabProps> = ({ onCreateCust
         </>
       )}
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="relative">
-          <div className="absolute right-3 top-3 flex items-center gap-2">
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen} contentClassName="max-w-3xl">
+        <DialogContent className="relative p-0">
+          <div className="sticky top-0 z-10 border-b border-[var(--ca-border)] bg-white px-5 py-4 sm:px-6">
+            <div className="flex items-start justify-between gap-4 pr-24">
+              <div className="min-w-0">
+                <p className="ca-admin-eyebrow mb-1">Message</p>
+                <h2 className="ca-admin-heading truncate text-3xl leading-tight">
+                  {selectedMessage?.name || 'Message Details'}
+                </h2>
+                {selectedMessage && (
+                  <p className="ca-admin-subheading mt-1 text-sm">
+                    {getTypeLabel(selectedMessage.type)}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="absolute right-3 top-3 z-20 flex items-center gap-2">
             <button
               type="button"
               onClick={handleDeleteMessage}
-              className="lux-button--ghost px-2.5 py-1 text-[10px] !text-rose-700 flex items-center"
+              className="ca-admin-button-danger px-2.5 py-1 text-[10px]"
               aria-label="Delete message"
+              title="Delete message"
             >
               <Trash2 className="h-4 w-4" />
             </button>
             <button
               type="button"
               onClick={handleCloseDialog}
-              className="lux-button--ghost px-3 py-1 text-[10px]"
+              className="ca-admin-button-secondary px-3 py-1 text-[10px]"
             >
               CLOSE
             </button>
           </div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="lux-heading text-lg">Message Details</h2>
-          </div>
-          {selectedMessage?.type === 'custom_order' && onCreateCustomOrderFromMessage && (
-            <div className="mb-4">
-              <button
-                type="button"
-                onClick={handleCreateCustomOrder}
-                className="lux-button px-4 py-2 text-[10px]"
-              >
-                Create Custom Order
-              </button>
-            </div>
-          )}
 
-          <div className="max-h-[80vh] overflow-y-auto overflow-x-hidden">
+          <div className="max-h-[calc(92vh-86px)] overflow-y-auto overflow-x-hidden px-5 py-5 sm:px-6">
             {selectedMessage && (
-              <div className="space-y-4">
-                <div>
-                  <p className="lux-label text-[10px]">Type</p>
-                  <p className="text-sm text-charcoal">{getTypeLabel(selectedMessage.type)}</p>
-                </div>
-                <div>
-                  <p className="lux-label text-[10px]">Name</p>
-                  <p className="text-sm text-charcoal">{selectedMessage.name || 'Unknown'}</p>
-                </div>
-                <div>
-                  <p className="lux-label text-[10px]">Email</p>
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm text-charcoal">{selectedMessage.email || '-'}</p>
-                    {selectedMessage.email && (
-                      <Copy
-                        className="h-4 w-4 cursor-pointer text-deep-ocean/60 hover:text-deep-ocean transition"
-                        onClick={() => {
-                          navigator.clipboard.writeText(selectedMessage.email);
-                          toast.success('Email copied to clipboard!');
-                        }}
-                      />
-                    )}
-                  </div>
-                </div>
-                <div>
-                  <p className="lux-label text-[10px]">Message</p>
-                  <p className="whitespace-pre-wrap break-words text-sm text-charcoal">
-                    {selectedMessage.message || '-'}
-                  </p>
-                </div>
-                {selectedMessage.type === 'custom_order' && (
-                  <div>
-                    <p className="lux-label text-[10px]">Categories</p>
-                    {selectedMessage.categoryNames && selectedMessage.categoryNames.length > 0 ? (
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {selectedMessage.categoryNames.map((category) => (
-                          <span
-                            key={`${selectedMessage.id}-category-${category}`}
-                            className="lux-chip"
-                          >
-                            {category}
-                          </span>
-                        ))}
-                      </div>
-                    ) : selectedMessage.categoryName ? (
-                      <p className="text-sm text-charcoal">{selectedMessage.categoryName}</p>
-                    ) : (
-                      <p className="text-sm text-charcoal/50">None selected</p>
-                    )}
+              <div className="space-y-5">
+                {selectedMessage.type === 'custom_order' && onCreateCustomOrderFromMessage && (
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={handleCreateCustomOrder}
+                      className="ca-admin-button-primary px-4 py-2 text-[10px]"
+                    >
+                      Create Custom Order
+                    </button>
                   </div>
                 )}
+
+                <section className="ca-admin-card-soft p-4">
+                  <h3 className="ca-admin-heading mb-4 text-xl">Contact Details</h3>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                      <p className="lux-label text-[10px]">Name</p>
+                      <p className="mt-1 text-sm text-[var(--ca-ink)]">{selectedMessage.name || 'Unknown'}</p>
+                    </div>
+                    <div>
+                      <p className="lux-label text-[10px]">Email</p>
+                      {selectedMessage.email ? (
+                        <div className="mt-1 flex min-w-0 items-center gap-2">
+                          <p className="min-w-0 break-all text-sm text-[var(--ca-ink)]">{selectedMessage.email}</p>
+                          <button
+                            type="button"
+                            className="ca-admin-button-secondary shrink-0 px-2 py-1 text-[10px]"
+                            onClick={() => copyEmailToClipboard(selectedMessage.email)}
+                            aria-label="Copy email address"
+                            title="Copy email address"
+                          >
+                            <Copy className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      ) : (
+                        <p className="mt-1 text-sm text-[var(--ca-muted)]">-</p>
+                      )}
+                    </div>
+                    <div>
+                      <p className="lux-label text-[10px]">Phone</p>
+                      <p className="mt-1 text-sm text-[var(--ca-ink)]">
+                        {formatPhoneForDisplay(selectedMessage.phone) || (
+                          <span className="text-[var(--ca-muted)]">-</span>
+                        )}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="lux-label text-[10px]">Date</p>
+                      <p className="mt-1 text-sm text-[var(--ca-ink)]">
+                        {selectedMessage.createdAt ? formatEasternDateTime(selectedMessage.createdAt) : (
+                          <span className="text-[var(--ca-muted)]">-</span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                </section>
+
+                <section className="ca-admin-card-soft p-4">
+                  <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                    <h3 className="ca-admin-heading text-xl">Message</h3>
+                    <span className="ca-admin-badge px-3 py-1">{getTypeLabel(selectedMessage.type)}</span>
+                  </div>
+                  <p className="whitespace-pre-wrap break-words text-sm leading-7 text-[var(--ca-ink)]">
+                    {selectedMessage.message || '-'}
+                  </p>
+
+                  {selectedMessage.type === 'custom_order' && (
+                    <div className="mt-4 border-t border-[var(--ca-border)] pt-4">
+                      <p className="lux-label text-[10px]">Categories</p>
+                      {selectedMessage.categoryNames && selectedMessage.categoryNames.length > 0 ? (
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {selectedMessage.categoryNames.map((category) => (
+                            <span
+                              key={`${selectedMessage.id}-category-${category}`}
+                              className="ca-admin-badge px-3 py-1"
+                            >
+                              {category}
+                            </span>
+                          ))}
+                        </div>
+                      ) : selectedMessage.categoryName ? (
+                        <p className="mt-1 text-sm text-[var(--ca-ink)]">{selectedMessage.categoryName}</p>
+                      ) : (
+                        <p className="mt-1 text-sm text-[var(--ca-muted)]">None selected</p>
+                      )}
+                    </div>
+                  )}
+                </section>
+
                 {selectedMessage.type === 'custom_order' &&
                   (selectedMessage.inspoTitle || selectedMessage.inspoImageUrl) && (
-                    <div className="lux-panel p-3">
-                      <p className="lux-label text-[10px] mb-2">Inspired by</p>
+                    <section className="ca-admin-card-soft p-4">
+                      <p className="lux-label text-[10px] mb-3">Inspired By</p>
                       <div className="flex items-center gap-3">
                         {selectedMessage.inspoImageUrl && (
                           <img
                             src={selectedMessage.inspoImageUrl}
                             alt={selectedMessage.inspoTitle || 'Inspiration'}
-                            className="h-12 w-12 rounded-shell border border-driftwood/60 object-cover"
+                            className="h-14 w-14 border border-[var(--ca-border)] object-cover"
                             loading="lazy"
                             decoding="async"
                           />
                         )}
-                        <div className="flex-1">
-                          <p className="text-sm text-charcoal">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm text-[var(--ca-ink)]">
                             {selectedMessage.inspoTitle || 'Custom inspiration'}
                           </p>
                           {selectedMessage.inspoImageUrl && (
@@ -406,39 +467,40 @@ export const AdminMessagesTab: React.FC<AdminMessagesTabProps> = ({ onCreateCust
                               href={selectedMessage.inspoImageUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-xs font-medium text-deep-ocean hover:underline"
+                              className="mt-1 inline-flex text-xs font-medium uppercase tracking-[0.18em] text-[var(--ca-navy)] hover:underline"
                             >
-                              View image
+                              View Image
                             </a>
                           )}
                         </div>
                       </div>
-                    </div>
+                    </section>
                   )}
+
                 {selectedMessage.imageUrl && (
-                  <div className="mt-4">
-                    <div className="mb-2 flex items-center justify-between">
-                      <span className="lux-label text-[10px]">Image</span>
+                  <section className="ca-admin-card-soft p-4">
+                    <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                      <h3 className="ca-admin-heading text-xl">Reference Image</h3>
                       <a
                         href={selectedMessage.imageUrl}
                         download
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs font-medium text-deep-ocean hover:underline"
+                        className="ca-admin-button-secondary px-3 py-2 text-[10px]"
                       >
-                        Download image
+                        Download Image
                       </a>
                     </div>
-                    <div className="overflow-hidden rounded-shell border border-driftwood/60 bg-linen/80">
+                    <div className="border border-[var(--ca-border)] bg-white p-2">
                       <img
                         src={selectedMessage.imageUrl}
                         alt={selectedMessage.name || 'Uploaded image'}
-                        className="block h-auto w-full max-h-[70vh] object-contain"
+                        className="block h-auto max-h-[58vh] w-full object-contain"
                         loading="lazy"
                         decoding="async"
                       />
                     </div>
-                  </div>
+                  </section>
                 )}
               </div>
             )}
@@ -462,4 +524,3 @@ export const AdminMessagesTab: React.FC<AdminMessagesTabProps> = ({ onCreateCust
     </div>
   );
 };
-

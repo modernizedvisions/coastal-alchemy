@@ -400,6 +400,10 @@
   .ca-admin-button-primary,
   .ca-admin-shell .lux-button,
   .ca-admin-modal .lux-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
     border: 1px solid var(--ca-navy) !important;
     background: var(--ca-navy) !important;
     color: #fff !important;
@@ -424,6 +428,10 @@
   .ca-admin-shell .lux-button--outline,
   .ca-admin-modal .lux-button--ghost,
   .ca-admin-modal .lux-button--outline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
     border: 1px solid var(--ca-border-strong) !important;
     background: var(--ca-paper) !important;
     color: var(--ca-navy) !important;
@@ -447,6 +455,10 @@
   }
 
   .ca-admin-button-danger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
     border: 1px solid rgba(190, 18, 60, 0.32) !important;
     background: #fff7f8 !important;
     color: #9f1239 !important;
@@ -457,6 +469,7 @@
   .ca-admin-shell .lux-input,
   .ca-admin-modal .lux-input,
   .ca-admin-input {
+    font-family: "Inter", sans-serif !important;
     border: 1px solid var(--ca-border) !important;
     background: var(--ca-paper) !important;
     border-radius: 0 !important;
@@ -525,10 +538,22 @@
   }
 
   .ca-admin-modal {
+    font-family: "Inter", sans-serif;
     border: 1px solid var(--ca-border) !important;
     background: var(--ca-paper) !important;
     border-radius: 0 !important;
     box-shadow: 0 18px 48px rgba(21, 40, 63, 0.16) !important;
+  }
+
+  .ca-admin-modal h4,
+  .ca-admin-modal .font-semibold.text-charcoal,
+  .ca-admin-modal .font-medium.text-charcoal {
+    color: var(--ca-ink) !important;
+  }
+
+  .ca-admin-order-search::placeholder {
+    font-size: 0.72rem !important;
+    letter-spacing: 0.08em !important;
   }
 
   .ca-admin-empty-state {

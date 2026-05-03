@@ -555,11 +555,11 @@ export function ShippingLabelsModal({ open, order, onClose, onOpenSettings, onOr
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-deep-ocean/40 px-3 py-6 backdrop-blur-[2px]">
-      <div className="lux-card bg-white relative w-full max-w-5xl p-6 max-h-[90vh] overflow-y-auto">
+      <div className="ca-admin-modal relative w-full max-w-5xl p-6 max-h-[90vh] overflow-y-auto">
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-3 top-3 lux-button--ghost px-3 py-1 text-[10px]"
+          className="absolute right-3 top-3 ca-admin-button-secondary px-3 py-1 text-[10px]"
         >
           CLOSE
         </button>
@@ -567,7 +567,7 @@ export function ShippingLabelsModal({ open, order, onClose, onOpenSettings, onOr
         <div className="space-y-5">
           <div>
             <p className="lux-label text-[10px] mb-1">Shipping Labels</p>
-            <div className="text-xl font-semibold text-charcoal">
+            <div className="ca-admin-heading text-2xl">
               Order {order.displayOrderId || order.id}
             </div>
           </div>
@@ -627,7 +627,7 @@ export function ShippingLabelsModal({ open, order, onClose, onOpenSettings, onOr
                 <p className="lux-label text-[10px]">Parcels</p>
                 <button
                   type="button"
-                  className="lux-button--ghost px-3 py-1 text-[10px] disabled:opacity-50"
+                  className="ca-admin-button-secondary px-3 py-1 text-[10px] disabled:opacity-50"
                   disabled={isAdding}
                   onClick={() => void handleAddParcel()}
                 >
@@ -759,7 +759,7 @@ export function ShippingLabelsModal({ open, order, onClose, onOpenSettings, onOr
                             {canRefreshLabel && (
                               <button
                                 type="button"
-                                className="lux-button--ghost px-3 py-2 text-[10px] disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="ca-admin-button-secondary px-3 py-2 text-[10px] disabled:opacity-50 disabled:cursor-not-allowed"
                                 disabled={isParcelLoading}
                                 onClick={() => void handleRefreshLabel(shipment)}
                               >
@@ -774,7 +774,7 @@ export function ShippingLabelsModal({ open, order, onClose, onOpenSettings, onOr
                                 href={shipment.labelUrl}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="lux-button--ghost px-3 py-2 text-[10px]"
+                                className="ca-admin-button-secondary px-3 py-2 text-[10px]"
                               >
                                 Download Label (PDF)
                               </a>
@@ -783,7 +783,7 @@ export function ShippingLabelsModal({ open, order, onClose, onOpenSettings, onOr
                                 type="button"
                                 title={downloadDisabledTitle}
                                 disabled
-                                className="lux-button--ghost px-3 py-2 text-[10px] opacity-50 cursor-not-allowed"
+                                className="ca-admin-button-secondary px-3 py-2 text-[10px] opacity-50 cursor-not-allowed"
                               >
                                 Download Label (PDF)
                               </button>
@@ -791,7 +791,7 @@ export function ShippingLabelsModal({ open, order, onClose, onOpenSettings, onOr
                             {!isComplete && (
                               <button
                                 type="button"
-                                className="lux-button--ghost px-3 py-2 text-[10px] disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="ca-admin-button-secondary px-3 py-2 text-[10px] disabled:opacity-50 disabled:cursor-not-allowed"
                                 title={customNeedsSaveBeforeQuotes ? 'Save custom dimensions before getting a quote.' : undefined}
                                 disabled={customNeedsSaveBeforeQuotes || !canBuyLabel || isParcelLoading}
                                 onClick={() => void handleGetQuotes(shipment)}
@@ -802,7 +802,7 @@ export function ShippingLabelsModal({ open, order, onClose, onOpenSettings, onOr
                             {!isComplete && (
                               <button
                                 type="button"
-                                className="lux-button px-3 py-2 text-[10px]"
+                                className="ca-admin-button-primary px-3 py-2 text-[10px]"
                                 disabled={!shipFromReady || !!quoteWarning || !canBuyLabel || isParcelLoading}
                                 onClick={() => void handleBuyLabel(shipment)}
                               >
@@ -812,7 +812,7 @@ export function ShippingLabelsModal({ open, order, onClose, onOpenSettings, onOr
                             {!isComplete && canRemove && (
                               <button
                                 type="button"
-                                className="lux-button--ghost px-2 py-1 text-[10px] !text-rose-700"
+                                className="ca-admin-button-danger px-2 py-1 text-[10px]"
                                 onClick={() => void handleRemoveParcel(shipment)}
                               >
                                 <Trash2 className="h-4 w-4" />
@@ -827,7 +827,7 @@ export function ShippingLabelsModal({ open, order, onClose, onOpenSettings, onOr
                               <div>
                                 <label className="lux-label mb-2 block">Box Preset</label>
                                 <select
-                                  className="lux-input w-full text-[11px] uppercase tracking-[0.2em] font-semibold"
+                                  className="ca-admin-input w-full px-3 py-3 text-xs"
                                   disabled={draft.useCustom}
                                   value={draft.boxPresetId}
                                   onChange={(e) => updateDraft(shipment.id, { boxPresetId: e.target.value })}
@@ -857,7 +857,7 @@ export function ShippingLabelsModal({ open, order, onClose, onOpenSettings, onOr
                                     <div>
                                       <label className="lux-label mb-2 block">Length (in)</label>
                                       <input
-                                        className="lux-input w-full min-w-0"
+                                        className="ca-admin-input w-full min-w-0 px-3 py-3"
                                         value={draft.customLengthIn}
                                         onChange={(e) => updateDraft(shipment.id, { customLengthIn: e.target.value })}
                                       />
@@ -865,7 +865,7 @@ export function ShippingLabelsModal({ open, order, onClose, onOpenSettings, onOr
                                     <div>
                                       <label className="lux-label mb-2 block">Width (in)</label>
                                       <input
-                                        className="lux-input w-full min-w-0"
+                                        className="ca-admin-input w-full min-w-0 px-3 py-3"
                                         value={draft.customWidthIn}
                                         onChange={(e) => updateDraft(shipment.id, { customWidthIn: e.target.value })}
                                       />
@@ -873,7 +873,7 @@ export function ShippingLabelsModal({ open, order, onClose, onOpenSettings, onOr
                                     <div>
                                       <label className="lux-label mb-2 block">Height (in)</label>
                                       <input
-                                        className="lux-input w-full min-w-0"
+                                        className="ca-admin-input w-full min-w-0 px-3 py-3"
                                         value={draft.customHeightIn}
                                         onChange={(e) => updateDraft(shipment.id, { customHeightIn: e.target.value })}
                                       />
@@ -886,7 +886,7 @@ export function ShippingLabelsModal({ open, order, onClose, onOpenSettings, onOr
                                 <div className="w-full max-w-[240px]">
                                   <label className="lux-label mb-2 block">Weight (lb)</label>
                                   <input
-                                    className="lux-input w-full"
+                                    className="ca-admin-input w-full px-3 py-3"
                                     value={draft.weightLb}
                                     onChange={(e) => updateDraft(shipment.id, { weightLb: e.target.value })}
                                   />
@@ -894,7 +894,7 @@ export function ShippingLabelsModal({ open, order, onClose, onOpenSettings, onOr
                                 {draft.useCustom && (
                                   <button
                                     type="button"
-                                    className="lux-button--ghost px-3 py-2 text-[10px]"
+                                    className="ca-admin-button-secondary px-3 py-2 text-[10px]"
                                     onClick={() =>
                                       void withShipmentBusy(shipment.id, 'saving', async () => persistShipmentDraft(shipment.id))
                                     }

@@ -198,6 +198,7 @@ CREATE TABLE IF NOT EXISTS custom_orders (
   image_storage_key TEXT,
   amount INTEGER,
   shipping_cents INTEGER NOT NULL DEFAULT 0,
+  show_on_sold_products INTEGER NOT NULL DEFAULT 0,
   message_id TEXT,
   status TEXT DEFAULT 'pending',
   payment_link TEXT,

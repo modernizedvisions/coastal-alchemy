@@ -265,11 +265,11 @@ export function OrderDetailsModal({ open, order, onClose, onOrderPatched, onOpen
 
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-deep-ocean/40 px-3 py-6 backdrop-blur-[2px]">
-      <div className="lux-card bg-white relative w-full max-w-xl p-6 max-h-[85vh] overflow-y-auto">
+      <div className="ca-admin-modal relative w-full max-w-xl p-6 max-h-[85vh] overflow-y-auto">
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-3 top-3 lux-button--ghost px-3 py-1 text-[10px]"
+          className="absolute right-3 top-3 ca-admin-button-secondary px-3 py-1 text-[10px]"
         >
           CLOSE
         </button>
@@ -277,7 +277,7 @@ export function OrderDetailsModal({ open, order, onClose, onOrderPatched, onOpen
         <div className="space-y-5">
           <div>
             <p className="lux-label text-[10px] mb-1">Order</p>
-            <div className="text-xl font-semibold text-charcoal">Order {idLabel}</div>
+            <div className="ca-admin-heading text-2xl">Order {idLabel}</div>
             <p className="text-sm text-charcoal/70">Placed {placedAt}</p>
           </div>
 
@@ -294,13 +294,13 @@ export function OrderDetailsModal({ open, order, onClose, onOrderPatched, onOpen
             <section className="lux-panel p-4">
               <p className="lux-label text-[10px] mb-2">Order Status</p>
               <div className="flex flex-wrap gap-2 text-xs font-semibold">
-                <span className="inline-flex items-center rounded-ui bg-emerald-50 px-3 py-1 text-emerald-700 border border-emerald-100">
+                <span className="ca-admin-badge inline-flex items-center px-3 py-1">
                   Completed
                 </span>
-                <span className="inline-flex items-center rounded-ui bg-blue-50 px-3 py-1 text-blue-700 border border-blue-100">
+                <span className="ca-admin-badge inline-flex items-center px-3 py-1">
                   Paid
                 </span>
-                <span className="inline-flex items-center rounded-ui bg-linen/80 px-3 py-1 text-charcoal/80 border border-driftwood/60">
+                <span className="ca-admin-badge inline-flex items-center px-3 py-1">
                   {placedAt}
                 </span>
               </div>
@@ -309,14 +309,14 @@ export function OrderDetailsModal({ open, order, onClose, onOrderPatched, onOpen
             <section className="lux-panel p-3">
               <div className="flex items-center justify-between gap-2">
                 <p className="lux-label text-[10px]">Fulfillment Status</p>
-                <span className={`inline-flex items-center rounded-ui px-3 py-1 text-xs font-semibold ${fulfillmentBadge.className}`}>
+                <span className={`ca-admin-badge inline-flex items-center px-3 py-1 ${fulfillmentBadge.className}`}>
                   {fulfillmentBadge.label}
                 </span>
               </div>
               <div className="mt-2 grid grid-cols-2 gap-2">
                 <button
                   type="button"
-                  className="lux-button h-10 w-full px-3 text-[10px] disabled:opacity-60"
+                  className="ca-admin-button-primary h-10 w-full px-3 text-[10px] disabled:opacity-60"
                   disabled={fulfillmentSaving}
                   onClick={() => void handleSetFulfillment('shipped')}
                 >
@@ -324,7 +324,7 @@ export function OrderDetailsModal({ open, order, onClose, onOrderPatched, onOpen
                 </button>
                 <select
                   aria-label="Set fulfillment status"
-                  className="lux-input h-10 w-full text-xs"
+                  className="ca-admin-input h-10 w-full text-xs px-3"
                   value={overrideSelection}
                   disabled={fulfillmentSaving}
                   onChange={(event) =>
@@ -424,7 +424,7 @@ export function OrderDetailsModal({ open, order, onClose, onOrderPatched, onOpen
                 <p className="lux-label text-[10px]">Shipping Labels</p>
                 <button
                   type="button"
-                  className="lux-button--ghost px-3 py-1 text-[10px]"
+                  className="ca-admin-button-secondary px-3 py-1 text-[10px]"
                   onClick={() => onOpenShippingLabels?.(order)}
                 >
                   Create Shipping Labels
@@ -454,7 +454,7 @@ export function OrderDetailsModal({ open, order, onClose, onOrderPatched, onOpen
                               href={shipment.labelUrl}
                               target="_blank"
                               rel="noreferrer"
-                              className="lux-button--ghost px-2 py-1 text-[10px]"
+                              className="ca-admin-button-secondary px-2 py-1 text-[10px]"
                             >
                               Download PDF
                             </a>
@@ -466,7 +466,7 @@ export function OrderDetailsModal({ open, order, onClose, onOrderPatched, onOpen
                             {trackingNumber && (
                               <button
                                 type="button"
-                                className="lux-button--ghost px-2 py-1 text-[10px]"
+                                className="ca-admin-button-secondary px-2 py-1 text-[10px]"
                                 onClick={() => void navigator.clipboard?.writeText(trackingNumber)}
                               >
                                 Copy

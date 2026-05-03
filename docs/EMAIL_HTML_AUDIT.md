@@ -6,15 +6,15 @@ Scope: Customer order confirmation email rendering and send path (Resend + Strip
 
 - `functions/_lib/email.ts` - `sendEmail(args, env)`; provider is Resend via `fetch('https://api.resend.com/emails')`; payload includes `from`, `to[]`, `subject`, `html`, `text`, `reply_to`, `attachments`.
 - `functions/api/webhooks/stripe.ts` - `onRequestPost` (Stripe webhook):
-  - Customer confirmation (shop order): `sendEmail` to `customerEmail`, subject `Dover Designs - Order Confirmed (${orderLabel})`, `html` + `text` from `renderOrderConfirmationEmailHtml/Text`.
-  - Owner new sale (shop order): `sendEmail` to `ownerTo`, subject `NEW SALE - Dover Designs (${orderLabel})`, `html` + `text` from `renderOwnerNewSaleEmailHtml/Text`.
-  - Custom invoice payment (customer): `sendEmail` to `customerEmail`, subject `Payment received - Dover Designs`, `html` + `text` inline.
+  - Customer confirmation (shop order): `sendEmail` to `customerEmail`, subject `Thank you for your Coastal Alchemy order (${orderLabel})`, `html` + `text` from `renderOrderConfirmationEmailHtml/Text`.
+  - Owner new sale (shop order): `sendEmail` to `ownerTo`, subject `New Coastal Alchemy order received (${orderLabel})`, `html` + `text` from `renderOwnerNewSaleEmailHtml/Text`.
+  - Custom invoice payment (customer): `sendEmail` to `customerEmail`, subject `Payment received - Coastal Alchemy`, `html` + `text` inline.
   - Custom invoice payment (owner): `sendEmail` to `ownerTo`, subject from `renderOwnerInvoicePaidEmail` in `functions/_lib/emailTemplates.ts`.
-  - Custom order payment (customer): `sendEmail` to `confirmationCustomerEmail`, subject `Dover Designs - Order Confirmed (${orderLabel})`, `html` + `text` from `renderOrderConfirmationEmailHtml/Text`.
-  - Custom order payment (owner): `sendEmail` to `ownerTo`, subject `NEW SALE - Dover Designs (${orderLabel})`, `html` + `text` from `renderOwnerNewSaleEmailHtml/Text`.
-- `functions/api/admin/custom-orders/[id]/send-payment-link.ts` - customer payment link email: subject `Dover Designs - Custom Order`, `html` + `text` inline.
-- `functions/api/custom-invoices/create.ts` - customer invoice email: subject `Invoice from Dover Designs - ${amountFormatted}`, `html` + `text` inline.
-- `functions/api/messages.ts` - owner inquiry email: subject `New Inquiry - Dover Designs`, `html` + `text` + optional attachment.
+  - Custom order payment (customer): `sendEmail` to `confirmationCustomerEmail`, subject `Thank you for your Coastal Alchemy order (${orderLabel})`, `html` + `text` from `renderOrderConfirmationEmailHtml/Text`.
+  - Custom order payment (owner): `sendEmail` to `ownerTo`, subject `New Coastal Alchemy order received (${orderLabel})`, `html` + `text` from `renderOwnerNewSaleEmailHtml/Text`.
+- `functions/api/admin/custom-orders/[id]/send-payment-link.ts` - customer payment link email: subject `Your Coastal Alchemy custom order is ready`, `html` + `text` inline.
+- `functions/api/custom-invoices/create.ts` - customer invoice email: subject `Invoice from Coastal Alchemy - ${amountFormatted}`, `html` + `text` inline.
+- `functions/api/messages.ts` - owner inquiry email: subject `New Coastal Alchemy inquiry from [Name]` or `New custom order request from [Name]`, `html` + `text` + optional attachment.
 - `functions/api/email/test.ts` - test endpoint for owner new sale template.
 
 ## 2) Trigger event and path (customer confirmation)

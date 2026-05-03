@@ -147,22 +147,35 @@ async function sendInvoiceEmail(args: {
   invoiceUrl: string;
 }): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
   const amountFormatted = formatAmount(args.amountCents, args.currency);
-  const subject = `Invoice from Dover Designs - ${amountFormatted}`;
+  const subject = `Invoice from Coastal Alchemy - ${amountFormatted}`;
 
   const html = `
-    <div style="font-family: Inter, Arial, sans-serif; color: #0f172a; padding: 12px; line-height: 1.5;">
-      <h2 style="margin: 0 0 12px; font-size: 18px; font-weight: 700;">Your custom order invoice</h2>
-      <p style="margin: 0 0 8px;">${args.customerName ? `Hi ${escapeHtml(args.customerName)},` : 'Hi,'}</p>
-      <p style="margin: 0 0 12px;">${escapeHtml(args.description)}</p>
-      <p style="margin: 0 0 16px; font-weight: 600;">Amount due: ${amountFormatted}</p>
-      <p style="margin: 0 0 16px;">
-        <a href="${args.invoiceUrl}" style="display:inline-block; background:#0f172a; color:#fff; padding:10px 16px; border-radius:999px; text-decoration:none; font-weight:600;">
+    <div style="background:#FBF9F5; padding:24px; font-family: Inter, Arial, sans-serif; color:#1F2530; line-height:1.5;">
+      <div style="max-width:640px; margin:0 auto;">
+        <div style="text-align:center; padding:10px 0 18px;">
+          <div style="font-family: Georgia, 'Times New Roman', serif; font-size:22px; letter-spacing:0.18em; color:#243A5E;">COASTAL ALCHEMY</div>
+          <div style="margin-top:6px; color:#5B6470; font-size:12px;">Handmade coastal pieces, crafted one at a time.</div>
+        </div>
+        <div style="background:#ffffff; border:1px solid #E6DFD4; border-radius:12px; padding:24px;">
+      <h2 style="margin:0 0 12px; font-family:Georgia, 'Times New Roman', serif; font-size:24px; font-weight:500; color:#1F2530;">Your Coastal Alchemy custom invoice</h2>
+      <p style="margin:0 0 8px;">${args.customerName ? `Hi ${escapeHtml(args.customerName)},` : 'Hi,'}</p>
+      <p style="margin:0 0 12px; color:#5B6470;">${escapeHtml(args.description)}</p>
+      <p style="margin:0 0 16px; font-weight:600; color:#1F2530;">Amount due: ${amountFormatted}</p>
+      <p style="margin:0 0 16px;">
+        <a href="${args.invoiceUrl}" style="display:inline-block; background:#243A5E; color:#fff; padding:12px 18px; border-radius:999px; text-decoration:none; font-weight:600; font-size:13px; letter-spacing:0.14em; text-transform:uppercase;">
           Pay Invoice
         </a>
       </p>
-      <p style="margin: 0; font-size: 12px; color: #475569;">If the button doesn't work, copy and paste this link:<br/>
-        <a href="${args.invoiceUrl}" style="color:#0f172a;">${args.invoiceUrl}</a>
+      <p style="margin:0; font-size:12px; color:#5B6470;">If the button doesn't work, copy and paste this link:<br/>
+        <a href="${args.invoiceUrl}" style="color:#243A5E;">${args.invoiceUrl}</a>
       </p>
+        </div>
+        <div style="text-align:center; color:#5B6470; font-size:12px; line-height:1.6; padding:18px 8px 0;">
+          <div style="font-family:Georgia, 'Times New Roman', serif; color:#243A5E; letter-spacing:0.1em;">Coastal Alchemy</div>
+          <div>Naples, Florida</div>
+          <div>Thank you for supporting handmade work.</div>
+        </div>
+      </div>
     </div>
   `;
 
@@ -171,7 +184,7 @@ async function sendInvoiceEmail(args: {
       to: args.to,
       subject,
       html,
-      text: `Your custom order invoice\n\nDescription: ${args.description}\nAmount: ${amountFormatted}\nPay here: ${args.invoiceUrl}`,
+      text: `Coastal Alchemy custom order invoice\n\nDescription: ${args.description}\nAmount: ${amountFormatted}\nPay here: ${args.invoiceUrl}\n\nCoastal Alchemy - Naples, Florida\nThank you for supporting handmade work.`,
     },
     args.env
   );

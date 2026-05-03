@@ -16,13 +16,14 @@ export type CustomOrderPaymentLinkEmailParams = {
 export function renderCustomOrderPaymentLinkEmailHtml(
   params: CustomOrderPaymentLinkEmailParams
 ): string {
-  const brand = params.brandName || 'Order';
+  const brand = params.brandName || 'Coastal Alchemy';
   const orderLabel = params.orderLabel || '';
   const showOrderLabel = !!orderLabel;
   const baseFont = "'Inter', 'Helvetica Neue', Arial, sans-serif";
   const serifFont = "'Cormorant Garamond', Georgia, 'Times New Roman', serif";
-  const baseColor = '#2F4F4F';
-  const mutedColor = '#5f6f75';
+  const baseColor = '#243A5E';
+  const inkColor = '#1F2530';
+  const mutedColor = '#5B6470';
   const borderColor = '#E6DFD4';
   const totals = resolveEmailMoneyTotals({
     order: {
@@ -62,30 +63,31 @@ export function renderCustomOrderPaymentLinkEmailHtml(
     img { border:0; line-height:100%; }
     body, table, td, a, p, div, span { font-family:${baseFont}; }
     .container { width:100%; background:#FBF9F5; }
-    .inner { width:600px; max-width:600px; background:#ffffff; border-radius:28px; border:1px solid ${borderColor}; overflow:hidden; box-shadow:0 24px 56px rgba(31,41,51,0.12); }
+    .inner { width:600px; max-width:600px; background:#ffffff; border-radius:12px; border:1px solid ${borderColor}; overflow:hidden; box-shadow:0 16px 42px rgba(31,41,51,0.08); }
     .pad { padding:32px 24px; }
     .inner-pad { padding:30px 28px 32px; }
     .section { padding-bottom:24px; }
-    .brand { font-size:20px; font-weight:600; color:${baseColor}; font-family:${serifFont}; letter-spacing:0.04em; }
+    .brand { font-size:20px; font-weight:600; color:${baseColor}; font-family:${serifFont}; letter-spacing:0.18em; text-transform:uppercase; }
+    .tagline { display:block; margin-top:5px; font-size:12px; color:${mutedColor}; letter-spacing:0; font-family:${baseFont}; font-weight:400; text-transform:none; }
     .order-label { font-size:12px; letter-spacing:0.12em; text-transform:uppercase; color:${mutedColor}; white-space:nowrap; }
-    .title { font-size:28px; font-weight:600; color:${baseColor}; margin:0 0 6px; font-family:${serifFont}; letter-spacing:0.02em; }
+    .title { font-size:28px; font-weight:500; color:${inkColor}; margin:0 0 6px; font-family:${serifFont}; letter-spacing:0.02em; }
     .subtitle { font-size:14px; color:${mutedColor}; margin:8px 0 0; }
-    .button { display:inline-block; padding:12px 22px; background:${baseColor}; color:#ffffff; text-decoration:none; border-radius:9999px; font-size:14px; font-weight:600; letter-spacing:0.08em; }
+    .button { display:inline-block; padding:12px 22px; background:${baseColor}; color:#ffffff; text-decoration:none; border-radius:9999px; font-size:13px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; }
     .subhead { font-size:13px; letter-spacing:0.18em; text-transform:uppercase; color:${mutedColor}; margin:0 0 8px; }
     .item-row td { padding:14px 0; border-bottom:1px solid #ededed; vertical-align:top; }
     .item-info { width:100%; }
     .item-media { display:inline-block; width:56px; height:56px; vertical-align:top; }
     .item-text { display:inline-block; vertical-align:top; margin-left:12px; max-width:420px; }
-    .item-img { width:56px; height:56px; border:1px solid ${borderColor}; object-fit:cover; display:block; border-radius:14px; }
-    .item-placeholder { width:56px; height:56px; border:1px solid ${borderColor}; background:#f3f4f6; display:block; border-radius:14px; }
-    .item-name { font-size:16px; font-weight:600; color:${baseColor}; font-family:${serifFont}; }
+    .item-img { width:56px; height:56px; border:1px solid ${borderColor}; object-fit:cover; display:block; border-radius:8px; }
+    .item-placeholder { width:56px; height:56px; border:1px solid ${borderColor}; background:#FBF9F5; display:block; border-radius:8px; }
+    .item-name { font-size:16px; font-weight:600; color:${inkColor}; font-family:${serifFont}; }
     .item-desc { display:block; font-size:13px; color:${mutedColor}; margin-top:4px; line-height:1.5; font-weight:400; }
     .item-price { font-size:15px; font-weight:600; color:${baseColor}; white-space:nowrap; }
     .totals-label { padding:4px 0; font-size:14px; color:${mutedColor}; }
     .totals-value { padding:4px 0; font-size:14px; color:${baseColor}; font-weight:600; }
     .totals-start td { padding-top:16px; border-top:1px solid #ededed; }
     .total-row td { padding-top:10px; font-size:16px; font-weight:700; color:${baseColor}; }
-    .footer { padding-top:16px; font-size:12px; color:${mutedColor}; }
+    .footer { padding-top:16px; font-size:12px; color:${mutedColor}; line-height:1.6; }
     @media screen and (max-width: 640px) {
       .pad { padding:24px 16px 30px; }
       .inner-pad { padding:24px 18px 28px; }
@@ -103,13 +105,14 @@ export function renderCustomOrderPaymentLinkEmailHtml(
             <td class="inner-pad">
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                 <tr>
-                  <td class="section brand">${escapeHtml(brand)}</td>
+                  <td class="section brand">${escapeHtml(brand)}<span class="tagline">Handmade coastal pieces, crafted one at a time.</span></td>
                   <td class="section order-label" align="right" style="white-space:nowrap;">${showOrderLabel ? `ORDER # ${escapeHtml(orderLabel)}` : ''}</td>
                 </tr>
                 <tr>
                   <td class="section" colspan="2">
-                    <p class="title">Click the link below for your custom order!</p>
-                    <a href="${escapeHtml(params.ctaUrl)}" class="button" style="display:inline-block; padding:12px 20px; background:${baseColor}; color:#ffffff !important; text-decoration:none !important; border-radius:9999px; font-size:14px; font-weight:600;">Pay Now</a>
+                    <p class="title">Your Coastal Alchemy custom order is ready</p>
+                    <p class="subtitle">We've prepared your handmade coastal piece and payment link. Complete payment when you're ready, and reply with any questions.</p>
+                    <a href="${escapeHtml(params.ctaUrl)}" class="button" style="display:inline-block; padding:12px 20px; background:${baseColor}; color:#ffffff !important; text-decoration:none !important; border-radius:9999px; font-size:13px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase;">Complete Payment</a>
                   </td>
                 </tr>
                 <tr>
@@ -144,7 +147,12 @@ export function renderCustomOrderPaymentLinkEmailHtml(
                   <td align="right">${formatMoney(totalCents)}</td>
                 </tr>
                 <tr>
-                  <td class="footer" colspan="2">If you have any questions, reply to this email.</td>
+                  <td class="footer" colspan="2">
+                    If you have any questions, reply to this email.<br/>
+                    Coastal Alchemy<br/>
+                    Naples, Florida<br/>
+                    Thank you for supporting handmade work.
+                  </td>
                 </tr>
               </table>
             </td>
@@ -181,7 +189,7 @@ export function renderCustomOrderPaymentLinkEmailText(
   const subtotalCents = resolvedSubtotal;
   const totalCents = resolvedTotal;
   const lines = [
-    `${params.brandName || 'Dover Designs'} Custom Order Payment`,
+    `${params.brandName || 'Coastal Alchemy'} Custom Order Payment`,
     params.orderLabel ? `Order: ${params.orderLabel}` : null,
     params.description ? `Details: ${params.description}` : null,
     `Subtotal: ${formatMoney(subtotalCents)}`,
@@ -189,7 +197,8 @@ export function renderCustomOrderPaymentLinkEmailText(
     'Tax: Calculated at checkout',
     `Total: ${formatMoney(totalCents)}`,
     '',
-    `Pay Now: ${params.ctaUrl}`,
+    `Complete Payment: ${params.ctaUrl}`,
+    'Coastal Alchemy - Naples, Florida',
   ].filter(Boolean) as string[];
 
   return lines.join('\n');

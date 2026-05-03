@@ -57,8 +57,8 @@ export async function onRequestPost(context: { request: Request; env: EmailEnv }
     statusLabel: 'PAID',
     customerName: 'Sample Customer',
     customerEmail: 'customer@example.com',
-    shippingAddress: 'Sample Customer\n123 Bay St\nChesapeake, VA 23320\nUS',
-    billingAddress: 'Sample Customer\n123 Bay St\nChesapeake, VA 23320\nUS',
+    shippingAddress: 'Sample Customer\n123 Gulf Shore Blvd\nNaples, FL 34102\nUS',
+    billingAddress: 'Sample Customer\n123 Gulf Shore Blvd\nNaples, FL 34102\nUS',
     paymentMethod: 'Card ending in 4242',
     items: [
       { name: 'Ornament Shell', qtyLabel: 'x1', lineTotal: '$45.00', imageUrl: 'https://placehold.co/56x56' },
@@ -75,7 +75,7 @@ export async function onRequestPost(context: { request: Request; env: EmailEnv }
   const result = await sendEmail(
     {
       to,
-      subject: 'NEW SALE - Dover Designs (TEST)',
+      subject: 'New Coastal Alchemy order received (TEST)',
       text,
       html,
     },

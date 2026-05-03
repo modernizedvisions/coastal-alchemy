@@ -14,7 +14,7 @@ type BuildTrackedSiteUrlOptions = {
   siteOrigin?: string | null;
 };
 
-const DEFAULT_SITE_ORIGIN = 'https://dover-designs.com';
+const DEFAULT_SITE_ORIGIN = 'https://coastalalchemy.com';
 
 const trimOrNull = (value: unknown): string | null => {
   if (typeof value !== 'string') return null;
@@ -35,9 +35,9 @@ const normalizeOrigin = (value: string | null | undefined): string | null => {
   }
 };
 
-const isKnownDoverHost = (hostname: string): boolean => {
+const isKnownDefaultHost = (hostname: string): boolean => {
   const lower = hostname.toLowerCase();
-  return lower === 'dover-designs.com' || lower === 'www.dover-designs.com' || lower.endsWith('.dover-designs.com');
+  return lower === 'coastalalchemy.com' || lower === 'www.coastalalchemy.com' || lower.endsWith('.coastalalchemy.com');
 };
 
 const isFirstPartySiteUrl = (url: URL, options?: BuildTrackedSiteUrlOptions): boolean => {
@@ -49,7 +49,7 @@ const isFirstPartySiteUrl = (url: URL, options?: BuildTrackedSiteUrlOptions): bo
       return false;
     }
   }
-  return isKnownDoverHost(url.hostname);
+  return isKnownDefaultHost(url.hostname);
 };
 
 export function buildTrackedSiteUrl(
@@ -105,4 +105,3 @@ export function buildTrackedEmailSiteUrl(
     options
   );
 }
-

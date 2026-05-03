@@ -34,17 +34,17 @@ type BaseEmailModel = {
 };
 
 export function renderOwnerNewOrderEmail(model: BaseEmailModel) {
-  const subject = `New Order - Dover Designs (${model.orderLabel})`;
+  const subject = `New Coastal Alchemy order received (${model.orderLabel})`;
   return buildEmail({ ...model, title: 'New Order Received', subject });
 }
 
 export function renderOwnerCustomOrderPaidEmail(model: BaseEmailModel) {
-  const subject = `Custom Order Paid - Dover Designs (${model.orderLabel})`;
+  const subject = `Custom Order Paid - Coastal Alchemy (${model.orderLabel})`;
   return buildEmail({ ...model, title: 'Custom Order Paid', subject });
 }
 
 export function renderOwnerInvoicePaidEmail(model: BaseEmailModel & { invoiceId: string }) {
-  const subject = `Invoice Paid - Dover Designs (${model.invoiceId || model.orderLabel})`;
+  const subject = `Invoice Paid - Coastal Alchemy (${model.invoiceId || model.orderLabel})`;
   return buildEmail({
     ...model,
     title: 'Invoice Paid',
@@ -65,78 +65,95 @@ function buildEmail(model: BaseEmailModel & { subject: string }) {
       const price = formatAmount(item.amountCents, currency);
       const img = sanitizeUrl(
         item.imageUrl ||
-          'https://placehold.co/56x56/edf2f7/475569?text=%20'
+          'https://placehold.co/56x56/FBF9F5/243A5E?text=%20'
       );
       return `
         <tr>
           <td style="padding: 8px 0; vertical-align: top;">
             <div style="display:flex; gap:12px; align-items:center;">
-              <img src="${img}" alt="${escapeHtml(item.name)}" width="56" height="56" style="border-radius:12px; object-fit:cover; border:1px solid #e5e7eb;" />
-              <div style="font-family: 'Helvetica Neue', Arial, sans-serif; color:#0f172a; font-size:14px; line-height:1.4;">
-                <div style="font-family: Georgia, 'Times New Roman', serif; font-size:15px; font-weight:600; color:#0f172a;">${escapeHtml(item.name)}</div>
-                ${qtyLabel ? `<div style="color:#475569;">Quantity: ${qtyLabel}</div>` : ''}
+              <img src="${img}" alt="${escapeHtml(item.name)}" width="56" height="56" style="border-radius:8px; object-fit:cover; border:1px solid #E6DFD4;" />
+              <div style="font-family: 'Helvetica Neue', Arial, sans-serif; color:#1F2530; font-size:14px; line-height:1.4;">
+                <div style="font-family: Georgia, 'Times New Roman', serif; font-size:16px; font-weight:600; color:#1F2530;">${escapeHtml(item.name)}</div>
+                ${qtyLabel ? `<div style="color:#5B6470;">Quantity: ${qtyLabel}</div>` : ''}
+                ${
+                  item.optionGroupLabel && item.optionValue
+                    ? `<div style="color:#5B6470; font-size:13px;">${escapeHtml(item.optionGroupLabel)}: ${escapeHtml(item.optionValue)}</div>`
+                    : ''
+                }
               </div>
             </div>
           </td>
-          <td style="padding: 8px 0; text-align: right; font-family: 'Helvetica Neue', Arial, sans-serif; color:#0f172a; font-size:14px; white-space: nowrap;">${price}</td>
+          <td style="padding: 8px 0; text-align: right; font-family: 'Helvetica Neue', Arial, sans-serif; color:#1F2530; font-size:14px; white-space: nowrap;">${price}</td>
         </tr>
       `;
     })
     .join('');
 
   const html = `
-    <div style="background:#f6f7f9; padding:24px; font-family: 'Helvetica Neue', Arial, sans-serif; color:#0f172a;">
-      <div style="max-width:640px; margin:0 auto; background:#ffffff; border:1px solid #e5e7eb; border-radius:16px; padding:24px;">
-        <h1 style="margin:0 0 12px; font-family: Georgia, 'Times New Roman', serif; font-size:22px; color:#0f172a;">${escapeHtml(model.title)}</h1>
-        <p style="margin:0 0 16px; color:#475569; font-size:14px;">${escapeHtml(model.orderLabel)}</p>
-        ${model.description ? `<p style="margin:0 0 12px; color:#475569; font-size:14px;">${escapeHtml(model.description)}</p>` : ''}
-        ${model.note ? `<p style="margin:0 0 12px; color:#475569; font-size:14px;">${escapeHtml(model.note)}</p>` : ''}
+    <div style="background:#FBF9F5; padding:24px; font-family: 'Helvetica Neue', Arial, sans-serif; color:#1F2530;">
+      <div style="max-width:640px; margin:0 auto;">
+        <div style="text-align:center; padding:10px 0 18px;">
+          <div style="font-family: Georgia, 'Times New Roman', serif; font-size:22px; letter-spacing:0.18em; color:#243A5E;">COASTAL ALCHEMY</div>
+          <div style="margin-top:6px; color:#5B6470; font-size:12px;">Handmade coastal pieces, crafted one at a time.</div>
+        </div>
+      <div style="background:#ffffff; border:1px solid #E6DFD4; border-radius:12px; padding:24px;">
+        <h1 style="margin:0 0 12px; font-family: Georgia, 'Times New Roman', serif; font-size:24px; color:#1F2530;">${escapeHtml(model.title)}</h1>
+        <p style="margin:0 0 16px; color:#5B6470; font-size:14px;">${escapeHtml(model.orderLabel)}</p>
+        ${model.description ? `<p style="margin:0 0 12px; color:#5B6470; font-size:14px;">${escapeHtml(model.description)}</p>` : ''}
+        ${model.note ? `<p style="margin:0 0 12px; color:#5B6470; font-size:14px;">${escapeHtml(model.note)}</p>` : ''}
 
-        <div style="margin:16px 0; padding:16px; background:#f8fafc; border:1px solid #e5e7eb; border-radius:12px;">
-          <div style="display:flex; justify-content:space-between; font-size:14px; color:#475569; margin-bottom:4px;">
-            <span style="color:#0f172a; font-weight:600;">Customer</span>
+        <div style="margin:16px 0; padding:16px; background:#FBF9F5; border:1px solid #E6DFD4; border-radius:10px;">
+          <div style="display:flex; justify-content:space-between; font-size:14px; color:#5B6470; margin-bottom:4px;">
+            <span style="color:#1F2530; font-weight:600;">Customer</span>
             <span>${escapeHtml(model.customerName || 'Unknown')}</span>
           </div>
-          <div style="display:flex; justify-content:space-between; font-size:14px; color:#475569;">
-            <span style="color:#0f172a; font-weight:600;">Email</span>
+          <div style="display:flex; justify-content:space-between; font-size:14px; color:#5B6470;">
+            <span style="color:#1F2530; font-weight:600;">Email</span>
             <span>${escapeHtml(model.customerEmail || 'Unknown')}</span>
           </div>
-          <div style="margin-top:8px; font-size:14px; color:#475569;">
-            <div style="color:#0f172a; font-weight:600; margin-bottom:4px;">Shipping</div>
+          <div style="margin-top:8px; font-size:14px; color:#5B6470;">
+            <div style="color:#1F2530; font-weight:600; margin-bottom:4px;">Shipping</div>
             <div>${hasAddress ? address : 'No shipping address provided.'}</div>
           </div>
-          <div style="margin-top:8px; font-size:13px; color:#94a3b8;">${formatDate(createdAt)}</div>
+          <div style="margin-top:8px; font-size:13px; color:#5B6470;">${formatDate(createdAt)}</div>
         </div>
 
         <table style="width:100%; border-collapse:collapse; margin-top:8px;">
           <tbody>
-            ${itemRowsHtml || `<tr><td style="padding:8px 0; color:#475569;">No items</td></tr>`}
+            ${itemRowsHtml || `<tr><td style="padding:8px 0; color:#5B6470;">No items</td></tr>`}
           </tbody>
         </table>
 
-        <div style="margin-top:16px; border-top:1px solid #e5e7eb; padding-top:12px;">
-          <div style="display:flex; justify-content:space-between; font-size:14px; color:#475569; margin-bottom:6px;">
+        <div style="margin-top:16px; border-top:1px solid #E6DFD4; padding-top:12px;">
+          <div style="display:flex; justify-content:space-between; font-size:14px; color:#5B6470; margin-bottom:6px;">
             <span>Subtotal</span><span>${formatAmount(subtotalCents, currency)}</span>
           </div>
-          <div style="display:flex; justify-content:space-between; font-size:14px; color:#475569; margin-bottom:6px;">
+          <div style="display:flex; justify-content:space-between; font-size:14px; color:#5B6470; margin-bottom:6px;">
             <span>Shipping</span><span>${formatShippingAmount(shippingCents, currency)}</span>
           </div>
-          <div style="display:flex; justify-content:space-between; font-size:16px; color:#0f172a; font-weight:700; margin-top:8px;">
+          <div style="display:flex; justify-content:space-between; font-size:16px; color:#1F2530; font-weight:700; margin-top:8px;">
             <span>Total</span><span>${formatAmount(totalCents, currency)}</span>
           </div>
         </div>
 
         ${model.adminUrl ? `
           <div style="margin-top:20px;">
-            <a href="${sanitizeUrl(model.adminUrl)}" style="display:inline-block; padding:12px 16px; background:#0f172a; color:#ffffff; text-decoration:none; border-radius:10px; font-weight:600; font-size:14px;">View in Admin</a>
+            <a href="${sanitizeUrl(model.adminUrl)}" style="display:inline-block; padding:12px 16px; background:#243A5E; color:#ffffff; text-decoration:none; border-radius:999px; font-weight:600; font-size:13px; letter-spacing:0.12em; text-transform:uppercase;">View in Admin</a>
           </div>
         ` : ''}
+      </div>
+      <div style="text-align:center; color:#5B6470; font-size:12px; line-height:1.6; padding:18px 8px 0;">
+        <div style="font-family: Georgia, 'Times New Roman', serif; color:#243A5E; letter-spacing:0.1em;">Coastal Alchemy</div>
+        <div>Naples, Florida</div>
+        <div>Thank you for supporting handmade work.</div>
+      </div>
       </div>
     </div>
   `;
 
   const textLines = [
     model.title,
+    'Coastal Alchemy',
     `Order: ${model.orderLabel}`,
     model.description ? `Description: ${model.description}` : null,
     model.note ? `Note: ${model.note}` : null,
@@ -145,13 +162,19 @@ function buildEmail(model: BaseEmailModel & { subject: string }) {
     'Items:',
     ...model.items.map((item) => {
       const qty = item.quantity > 1 ? ` x${item.quantity}` : '';
-      return `- ${item.name}${qty}: ${formatAmount(item.amountCents, currency)}`;
+      const option =
+        item.optionGroupLabel && item.optionValue
+          ? ` (${item.optionGroupLabel}: ${item.optionValue})`
+          : '';
+      return `- ${item.name}${qty}${option}: ${formatAmount(item.amountCents, currency)}`;
     }),
     `Subtotal: ${formatAmount(subtotalCents, currency)}`,
     `Shipping: ${formatShippingAmount(shippingCents, currency)}`,
     `Total: ${formatAmount(totalCents, currency)}`,
     `Time: ${formatDate(createdAt)}`,
     model.adminUrl ? `Admin: ${model.adminUrl}` : null,
+    'Coastal Alchemy - Naples, Florida',
+    'Thank you for supporting handmade work.',
   ].filter(Boolean) as string[];
 
   return {

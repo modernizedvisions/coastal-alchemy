@@ -35,7 +35,7 @@ type ParsedAttachment = {
   contentType?: string;
 };
 
-const SUBJECT = 'New Inquiry - Dover Designs';
+const BRAND_NAME = 'Coastal Alchemy';
 
 export async function onRequestPost(context: { env: MessageEnv; request: Request }): Promise<Response> {
   try {
@@ -161,12 +161,18 @@ export async function onRequestPost(context: { env: MessageEnv; request: Request
       console.warn('[messages] Invalid image data URL; sending without attachment');
     }
 
+    const subject =
+      type === 'custom_order'
+        ? `New custom order request from ${name}`
+        : `New Coastal Alchemy inquiry from ${name}`;
     const textLines = [
+      `${BRAND_NAME} inquiry`,
       `New inquiry from ${name}`,
       `Email: ${email}`,
       `Type: ${type === 'custom_order' ? 'Custom Order' : 'Message'}`,
       categoryNames.length ? `Category: ${categoryNames.join(', ')}` : '',
       inspoTitle ? `Inspired by: ${inspoTitle}` : '',
+      `Received: ${createdAt}`,
       '',
       message,
       '',
@@ -177,8 +183,9 @@ export async function onRequestPost(context: { env: MessageEnv; request: Request
     const typeLabel = type === 'custom_order' ? 'Custom Order' : 'Message';
     const baseFont = "'Inter', 'Helvetica Neue', Arial, sans-serif";
     const serifFont = "'Cormorant Garamond', Georgia, 'Times New Roman', serif";
-    const baseColor = '#2F4F4F';
-    const mutedColor = '#5f6f75';
+    const baseColor = '#243A5E';
+    const inkColor = '#1F2530';
+    const mutedColor = '#5B6470';
     const borderColor = '#E6DFD4';
     const messageHtml = escapeHtml(message).replace(/\n/g, '<br/>');
     const inspoBlock =
@@ -211,28 +218,29 @@ export async function onRequestPost(context: { env: MessageEnv; request: Request
     img { border:0; line-height:100%; }
     body, table, td, a, p, div, span { font-family:${baseFont}; }
     .container { width:100%; background:#FBF9F5; }
-    .inner { width:600px; max-width:600px; background:#ffffff; border-radius:28px; border:1px solid ${borderColor}; overflow:hidden; box-shadow:0 24px 56px rgba(31,41,51,0.12); }
+    .inner { width:600px; max-width:600px; background:#ffffff; border-radius:12px; border:1px solid ${borderColor}; overflow:hidden; box-shadow:0 16px 42px rgba(31,41,51,0.08); }
     .pad { padding:32px 22px 36px; }
     .inner-pad { padding:30px 28px 32px; }
     .section { padding-bottom:22px; }
-    .brand { font-size:20px; font-weight:600; color:${baseColor}; font-family:${serifFont}; letter-spacing:0.04em; }
+    .brand { font-size:20px; font-weight:600; color:${baseColor}; font-family:${serifFont}; letter-spacing:0.18em; text-transform:uppercase; }
+    .tagline { display:block; margin-top:5px; font-size:12px; color:${mutedColor}; letter-spacing:0; font-family:${baseFont}; font-weight:400; text-transform:none; }
     .order-label { font-size:12px; letter-spacing:0.12em; text-transform:uppercase; color:${mutedColor}; white-space:nowrap; }
-    .title { font-size:28px; font-weight:600; color:${baseColor}; margin:0 0 6px; font-family:${serifFont}; letter-spacing:0.02em; }
+    .title { font-size:28px; font-weight:500; color:${inkColor}; margin:0 0 6px; font-family:${serifFont}; letter-spacing:0.02em; }
     .subtitle { font-size:14px; color:${mutedColor}; margin:0; }
-    .button { display:inline-block; padding:12px 22px; background:${baseColor}; color:#ffffff !important; text-decoration:none !important; border-radius:9999px; font-size:14px; font-weight:600; letter-spacing:0.08em; }
+    .button { display:inline-block; padding:12px 22px; background:${baseColor}; color:#ffffff !important; text-decoration:none !important; border-radius:9999px; font-size:13px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; }
     .subhead { font-size:13px; letter-spacing:0.18em; text-transform:uppercase; color:${mutedColor}; margin:0 0 8px; }
     .meta-table td { padding:6px 0; font-size:14px; color:${mutedColor}; }
     .meta-label { width:140px; font-size:12px; letter-spacing:0.12em; text-transform:uppercase; color:${mutedColor}; }
     .meta-value { font-size:14px; color:${baseColor}; font-weight:600; }
-    .message-box { padding:16px 18px; border:1px solid #ededed; border-radius:18px; background:#FBF9F5; color:${baseColor}; font-size:15px; line-height:1.6; }
+    .message-box { padding:16px 18px; border:1px solid #ededed; border-radius:10px; background:#FBF9F5; color:${inkColor}; font-size:15px; line-height:1.6; }
     .info-title { font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:${mutedColor}; margin:0 0 6px; white-space:nowrap; }
     .info { font-size:14px; color:${baseColor}; line-height:1.5; margin:0; }
-    .inspo-box { margin-top:16px; padding:14px 16px; border:1px solid #ededed; border-radius:18px; background:#ffffff; }
+    .inspo-box { margin-top:16px; padding:14px 16px; border:1px solid #ededed; border-radius:10px; background:#ffffff; }
     .inspo-row { display:flex; gap:12px; align-items:center; }
-    .inspo-img { width:56px; height:56px; border-radius:14px; border:1px solid ${borderColor}; object-fit:cover; display:block; }
+    .inspo-img { width:56px; height:56px; border-radius:8px; border:1px solid ${borderColor}; object-fit:cover; display:block; }
     .inspo-title { font-size:14px; font-weight:600; color:${baseColor}; }
     .inspo-link { display:inline-block; margin-top:4px; font-size:12px; color:${baseColor}; text-decoration:underline; }
-    .footer { padding-top:16px; font-size:12px; color:${mutedColor}; }
+    .footer { padding-top:16px; font-size:12px; color:${mutedColor}; line-height:1.6; }
     @media screen and (max-width: 640px) {
       .pad { padding:24px 16px 30px; }
       .inner-pad { padding:24px 18px 28px; }
@@ -250,13 +258,13 @@ export async function onRequestPost(context: { env: MessageEnv; request: Request
             <td class="inner-pad">
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                 <tr>
-                  <td class="section brand">Dover Designs</td>
+                  <td class="section brand">${BRAND_NAME.toUpperCase()}<span class="tagline">Handmade coastal pieces, crafted one at a time.</span></td>
                   <td class="section order-label" align="right">Inquiry</td>
                 </tr>
                 <tr>
                   <td class="section" colspan="2">
-                    <p class="title">New Inquiry</p>
-                    <p class="subtitle">${escapeHtml(typeLabel)} received from the contact form.</p>
+                    <p class="title">${type === 'custom_order' ? 'New custom order request' : 'New Coastal Alchemy inquiry'}</p>
+                    <p class="subtitle">${escapeHtml(typeLabel)} received from the Coastal Alchemy contact form.</p>
                     <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin-top:14px;">
                       <tr>
                         <td bgcolor="${baseColor}" style="border-radius:9999px;">
@@ -290,6 +298,10 @@ export async function onRequestPost(context: { env: MessageEnv; request: Request
                         <td class="meta-label">Attachment</td>
                         <td class="meta-value">${attachmentLine}</td>
                       </tr>
+                      <tr>
+                        <td class="meta-label">Received</td>
+                        <td class="meta-value">${escapeHtml(createdAt)}</td>
+                      </tr>
                     </table>
                   </td>
                 </tr>
@@ -298,6 +310,13 @@ export async function onRequestPost(context: { env: MessageEnv; request: Request
                     <p class="subhead">Message</p>
                     <div class="message-box">${messageHtml}</div>
                     ${inspoBlock}
+                  </td>
+                </tr>
+                <tr>
+                  <td class="footer" colspan="2">
+                    ${BRAND_NAME}<br/>
+                    Naples, Florida<br/>
+                    Thank you for supporting handmade work.
                   </td>
                 </tr>
               </table>
@@ -314,7 +333,7 @@ export async function onRequestPost(context: { env: MessageEnv; request: Request
     const emailResult = await sendEmail(
       {
         to: ownerTo,
-        subject: SUBJECT,
+        subject,
         text: textLines.join('\n'),
         html,
         replyTo: email,

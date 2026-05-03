@@ -270,7 +270,7 @@ export type OwnerNewSaleParams = {
 };
 
 export function renderOwnerNewSaleEmailHtml(params: OwnerNewSaleParams): string {
-  const brand = 'The Chesapeake Shell';
+  const brand = 'Coastal Alchemy';
   const orderLabel = params.orderNumber || 'Order';
   const baseFont = "'Playfair Display', Georgia, 'Times New Roman', serif";
   const baseColor = '#111827';
@@ -391,7 +391,7 @@ export function renderOwnerNewSaleEmailHtml(params: OwnerNewSaleParams): string 
           <tr>
             <td class="section" colspan="2">
               <p class="title">New Sale!</p>
-              <p class="subtitle">A new order has been placed on The Chesapeake Shell.</p>
+              <p class="subtitle">A new order has been placed on Coastal Alchemy.</p>
               <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin-top:14px;">
                 <tr>
                   <td bgcolor="${baseColor}" style="border-radius:9999px;">
@@ -445,7 +445,7 @@ export function renderOwnerNewSaleEmailHtml(params: OwnerNewSaleParams): string 
 
 export function renderOwnerNewSaleEmailText(params: OwnerNewSaleParams): string {
   const lines = [
-    'NEW SALE - The Chesapeake Shell',
+    'NEW SALE - Coastal Alchemy',
     `Order: ${params.orderNumber}`,
     `Type: ${params.orderTypeLabel}`,
     `Status: ${params.statusLabel}`,
@@ -636,7 +636,7 @@ export function renderCustomOrderPaymentLinkEmailText(
   const subtotalCents = Number.isFinite(params.amountCents as number) ? Number(params.amountCents) : 0;
   const totalCents = subtotalCents + shippingCents;
   const lines = [
-    `${params.brandName || 'The Chesapeake Shell'} Custom Order Payment`,
+    `${params.brandName || 'Coastal Alchemy'} Custom Order Payment`,
     params.orderLabel ? `Order: ${params.orderLabel}` : null,
     params.description ? `Details: ${params.description}` : null,
     `Subtotal: ${formatMoney(subtotalCents)}`,
@@ -673,7 +673,7 @@ No external helper files are imported by the templates above; all helper functio
 - Customer Order Confirmed (standard checkout)
 ```ts
           const html = renderOrderConfirmationEmailHtml({
-            brandName: 'The Chesapeake Shell',
+            brandName: 'Coastal Alchemy',
             orderNumber: orderLabel,
             orderDate,
             customerName: shippingName || session.customer_details?.name || null,
@@ -689,7 +689,7 @@ No external helper files are imported by the templates above; all helper functio
             primaryCtaLabel: 'View Order Details',
           });
           const text = renderOrderConfirmationEmailText({
-            brandName: 'The Chesapeake Shell',
+            brandName: 'Coastal Alchemy',
             orderNumber: orderLabel,
             orderDate,
             customerName: shippingName || session.customer_details?.name || null,
@@ -705,7 +705,7 @@ No external helper files are imported by the templates above; all helper functio
             primaryCtaLabel: 'View Order Details',
           });
 
-        const subject = `The Chesapeake Shell - Order Confirmed (${orderLabel})`;
+        const subject = `Coastal Alchemy - Order Confirmed (${orderLabel})`;
         if (emailDebug) {
           const preview = (html || '').replace(/\s+/g, ' ').slice(0, 300);
           console.log('[email] customer confirmation prepared', {
@@ -732,7 +732,7 @@ No external helper files are imported by the templates above; all helper functio
 - Customer Order Confirmed (custom order checkout)
 ```ts
           const html = renderOrderConfirmationEmailHtml({
-            brandName: 'The Chesapeake Shell',
+            brandName: 'Coastal Alchemy',
             orderNumber: orderLabel,
             orderDate,
             customerName: shippingName || session.customer_details?.name || null,
@@ -748,7 +748,7 @@ No external helper files are imported by the templates above; all helper functio
             primaryCtaLabel: 'View Order Details',
           });
           const text = renderOrderConfirmationEmailText({
-            brandName: 'The Chesapeake Shell',
+            brandName: 'Coastal Alchemy',
             orderNumber: orderLabel,
             orderDate,
             customerName: shippingName || session.customer_details?.name || null,
@@ -764,7 +764,7 @@ No external helper files are imported by the templates above; all helper functio
             primaryCtaLabel: 'View Order Details',
           });
 
-        const subject = `The Chesapeake Shell - Order Confirmed (${orderLabel})`;
+        const subject = `Coastal Alchemy - Order Confirmed (${orderLabel})`;
         if (emailDebug) {
           const preview = (html || '').replace(/\s+/g, ' ').slice(0, 300);
           console.log('[email] customer confirmation prepared', {
@@ -828,7 +828,7 @@ No external helper files are imported by the templates above; all helper functio
           const emailResult = await sendEmail(
             {
               to: ownerTo,
-              subject: `NEW SALE - The Chesapeake Shell (${orderLabel})`,
+              subject: `NEW SALE - Coastal Alchemy (${orderLabel})`,
               html,
               text,
             },
@@ -887,7 +887,7 @@ No external helper files are imported by the templates above; all helper functio
           const emailResult = await sendEmail(
             {
               to: ownerTo,
-              subject: `NEW SALE - The Chesapeake Shell (${orderLabel})`,
+              subject: `NEW SALE - Coastal Alchemy (${orderLabel})`,
               html,
               text,
             },
@@ -910,7 +910,7 @@ No external helper files are imported by the templates above; all helper functio
 - Custom Order Payment Link email
 ```ts
     const html = renderCustomOrderPaymentLinkEmailHtml({
-      brandName: 'The Chesapeake Shell',
+      brandName: 'Coastal Alchemy',
       orderLabel: displayId,
       ctaUrl: session.url,
       amountCents: amount,
@@ -920,7 +920,7 @@ No external helper files are imported by the templates above; all helper functio
       description: order.description || null,
     });
     const text = renderCustomOrderPaymentLinkEmailText({
-      brandName: 'The Chesapeake Shell',
+      brandName: 'Coastal Alchemy',
       orderLabel: displayId,
       ctaUrl: session.url,
       amountCents: amount,
@@ -932,7 +932,7 @@ No external helper files are imported by the templates above; all helper functio
 
     console.log('[email] custom order send', {
       to: customerEmail,
-      subject: 'The Chesapeake Shell Custom Order Payment',
+      subject: 'Coastal Alchemy Custom Order Payment',
       hasHtml: !!html,
       htmlLen: html.length,
       hasText: !!text,
@@ -946,7 +946,7 @@ No external helper files are imported by the templates above; all helper functio
     const emailResult = await sendEmail(
       {
         to: customerEmail,
-        subject: 'The Chesapeake Shell Custom Order Payment',
+        subject: 'Coastal Alchemy Custom Order Payment',
         html,
         text,
       },

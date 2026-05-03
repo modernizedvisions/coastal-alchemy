@@ -27,7 +27,7 @@ export type EmailAttachment = {
   contentType?: string;
 };
 
-export const DEFAULT_FROM_EMAIL = 'Dover Designs <doverdesignsshells@gmail.com>';
+export const DEFAULT_FROM_EMAIL = 'Coastal Alchemy <hello@coastalalchemy.com>';
 
 export function resolveFromEmail(env: EmailEnv): string {
   return env.RESEND_FROM || env.RESEND_FROM_EMAIL || env.EMAIL_FROM || DEFAULT_FROM_EMAIL;

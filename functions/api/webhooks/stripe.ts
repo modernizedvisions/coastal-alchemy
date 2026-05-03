@@ -602,7 +602,7 @@ export const onRequestPost = async (context: {
 
         try {
           const html = renderOrderConfirmationEmailHtml({
-            brandName: 'Dover Designs',
+            brandName: 'Coastal Alchemy',
             orderNumber: orderLabel,
             orderDate,
             customerName: shippingName || session.customer_details?.name || null,
@@ -620,7 +620,7 @@ export const onRequestPost = async (context: {
             primaryCtaLabel: 'View Order Details',
           });
           const text = renderOrderConfirmationEmailText({
-            brandName: 'Dover Designs',
+            brandName: 'Coastal Alchemy',
             orderNumber: orderLabel,
             orderDate,
             customerName: shippingName || session.customer_details?.name || null,
@@ -638,7 +638,7 @@ export const onRequestPost = async (context: {
             primaryCtaLabel: 'View Order Details',
           });
 
-        const subject = `Dover Designs - Order Confirmed (${orderLabel})`;
+        const subject = `Thank you for your Coastal Alchemy order (${orderLabel})`;
         const customerTo = isValidEmailRecipient(customerEmail) ? customerEmail : null;
         if (customerEmail && !customerTo) {
           warnInvalidRecipient('shop_customer', customerEmail);
@@ -799,7 +799,7 @@ export const onRequestPost = async (context: {
             stripeUrl,
           });
 
-          const ownerSubject = `NEW SALE - Dover Designs (${orderLabel})`;
+          const ownerSubject = `New Coastal Alchemy order received (${orderLabel})`;
         const ownerRecipient = isValidEmailRecipient(ownerTo) ? ownerTo : null;
         if (ownerTo && !ownerRecipient) {
           warnInvalidRecipient('shop_owner', ownerTo);
@@ -1196,16 +1196,29 @@ async function handleCustomInvoicePayment(args: {
 
   if (customerEmail) {
     try {
-      const subject = 'Payment received - Dover Designs';
+      const subject = 'Payment received - Coastal Alchemy';
       const html = `
-            <div style="font-family: Inter, Arial, sans-serif; color: #0f172a; padding: 12px; line-height: 1.5;">
-              <h2 style="margin: 0 0 12px; font-size: 18px; font-weight: 700;">Thank you for your payment</h2>
-              <p style="margin: 0 0 8px;">We received your payment for invoice ${invoiceId}.</p>
-              <p style="margin: 0 0 12px; font-weight: 600;">Amount: ${invoiceAmount}</p>
-              <p style="margin: 0 0 12px;">You can revisit your invoice here: <a href="${invoiceLink}" style="color:#0f172a;">${invoiceLink}</a></p>
+            <div style="background:#FBF9F5; padding:24px; font-family: Inter, Arial, sans-serif; color:#1F2530; line-height:1.5;">
+              <div style="max-width:640px; margin:0 auto;">
+                <div style="text-align:center; padding:10px 0 18px;">
+                  <div style="font-family: Georgia, 'Times New Roman', serif; font-size:22px; letter-spacing:0.18em; color:#243A5E;">COASTAL ALCHEMY</div>
+                  <div style="margin-top:6px; color:#5B6470; font-size:12px;">Handmade coastal pieces, crafted one at a time.</div>
+                </div>
+                <div style="background:#ffffff; border:1px solid #E6DFD4; border-radius:12px; padding:24px;">
+                  <h2 style="margin:0 0 12px; font-family:Georgia, 'Times New Roman', serif; font-size:24px; font-weight:500;">Thank you for your payment</h2>
+                  <p style="margin:0 0 8px; color:#5B6470;">We received your payment for invoice ${invoiceId}.</p>
+                  <p style="margin:0 0 12px; font-weight:600;">Amount: ${invoiceAmount}</p>
+                  <p style="margin:0 0 12px; color:#5B6470;">You can revisit your invoice here: <a href="${invoiceLink}" style="color:#243A5E;">${invoiceLink}</a></p>
+                </div>
+                <div style="text-align:center; color:#5B6470; font-size:12px; line-height:1.6; padding:18px 8px 0;">
+                  <div style="font-family:Georgia, 'Times New Roman', serif; color:#243A5E; letter-spacing:0.1em;">Coastal Alchemy</div>
+                  <div>Naples, Florida</div>
+                  <div>Thank you for supporting handmade work.</div>
+                </div>
+              </div>
             </div>
           `;
-      const text = `Thank you for your payment.\nInvoice: ${invoiceId}\nAmount: ${invoiceAmount}\nView invoice: ${invoiceLink}`;
+      const text = `Thank you for your payment.\nInvoice: ${invoiceId}\nAmount: ${invoiceAmount}\nView invoice: ${invoiceLink}\n\nCoastal Alchemy - Naples, Florida\nThank you for supporting handmade work.`;
       logEmailPrepare(emailDebug, {
         kind: 'custom_invoice_customer',
         branch,
@@ -1876,7 +1889,7 @@ async function handleCustomOrderPayment(args: {
 
     try {
       const html = renderOrderConfirmationEmailHtml({
-        brandName: 'Dover Designs',
+        brandName: 'Coastal Alchemy',
         orderNumber: orderLabel,
         orderDate,
         customerName: customOrder.customer_name || shippingName || session.customer_details?.name || null,
@@ -1894,7 +1907,7 @@ async function handleCustomOrderPayment(args: {
         primaryCtaLabel: 'View Order Details',
       });
       const text = renderOrderConfirmationEmailText({
-        brandName: 'Dover Designs',
+        brandName: 'Coastal Alchemy',
         orderNumber: orderLabel,
         orderDate,
         customerName: customOrder.customer_name || shippingName || session.customer_details?.name || null,
@@ -1912,7 +1925,7 @@ async function handleCustomOrderPayment(args: {
         primaryCtaLabel: 'View Order Details',
       });
 
-      const subject = `Dover Designs - Order Confirmed (${orderLabel})`;
+      const subject = `Thank you for your Coastal Alchemy order (${orderLabel})`;
       const customerTo = isValidEmailRecipient(confirmationCustomerEmail) ? confirmationCustomerEmail : null;
       if (confirmationCustomerEmail && !customerTo) {
         warnInvalidRecipient('custom_customer', confirmationCustomerEmail);
@@ -2077,7 +2090,7 @@ async function handleCustomOrderPayment(args: {
       stripeUrl,
     });
 
-    const ownerSubject = `NEW SALE - Dover Designs (${orderLabel})`;
+    const ownerSubject = `New Coastal Alchemy order received (${orderLabel})`;
     const ownerRecipient = isValidEmailRecipient(ownerTo) ? ownerTo : null;
     if (ownerTo && !ownerRecipient) {
       warnInvalidRecipient('custom_owner', ownerTo);

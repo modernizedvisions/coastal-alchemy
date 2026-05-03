@@ -1301,7 +1301,7 @@ export function AdminPage() {
               <p className="ca-admin-eyebrow mb-2">Coastal Alchemy</p>
               <h1 className="ca-admin-heading text-4xl sm:text-5xl leading-tight">Studio Admin</h1>
               <p className="ca-admin-subheading mt-2 max-w-2xl text-sm sm:text-base">
-                Manage products, orders, custom requests, images, promotions, and site content.
+                Manage products, orders, custom requests, site content, and settings.
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">

@@ -3,6 +3,7 @@ import type { Category } from '../../lib/types';
 import { Loader2, Trash2 } from 'lucide-react';
 import { adminUploadImageUnified } from '../../lib/adminApi';
 import { ProgressiveImage } from '../ui/ProgressiveImage';
+import { ConfirmDialog } from '../ui/ConfirmDialog';
 
 interface CategoryCardEditorProps {
   category: Category;
@@ -16,6 +17,7 @@ export function CategoryCardEditor({ category, onUpdate, onDelete, isBusy }: Cat
   const [isSavingName, setIsSavingName] = useState(false);
   const [isUpdatingImage, setIsUpdatingImage] = useState(false);
   const [isOptimizingImage, setIsOptimizingImage] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const handleSaveName = async () => {
@@ -34,9 +36,8 @@ export function CategoryCardEditor({ category, onUpdate, onDelete, isBusy }: Cat
   };
 
   const handleDelete = async () => {
-    const confirmed = window.confirm(`Delete category "${category.name}"?`);
-    if (!confirmed) return;
     await onDelete(category.id);
+    setIsDeleteConfirmOpen(false);
   };
 
   const handleImageSelected = async (file: File) => {
@@ -56,88 +57,99 @@ export function CategoryCardEditor({ category, onUpdate, onDelete, isBusy }: Cat
   };
 
   return (
-    <div className="lux-card overflow-hidden flex flex-col">
-      <div className="relative aspect-[3/4] bg-linen/70">
-        {category.imageUrl ? (
-          <ProgressiveImage
-            src={category.imageUrl}
-            alt={category.name}
-            className="h-full w-full"
-            imgClassName="h-full w-full object-cover"
-            loading="lazy"
-            decoding="async"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center text-[11px] uppercase tracking-[0.2em] font-semibold text-charcoal/50">No Image</div>
-        )}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/50 to-transparent" />
-        <div className="absolute inset-x-0 bottom-3 flex justify-center">
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="pointer-events-auto lux-button--ghost px-4 py-1 text-[10px]"
-            disabled={isBusy || isUpdatingImage}
-          >
-            {isOptimizingImage ? 'Optimizing...' : isUpdatingImage ? 'Saving...' : 'Edit Image'}
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) handleImageSelected(file);
-              if (fileInputRef.current) fileInputRef.current.value = '';
-            }}
-          />
-        </div>
-      </div>
-
-      <div className="p-4 space-y-3">
-        <div className="flex items-start gap-2">
-          <div className="flex-1">
-            <label className="lux-label text-[10px]">Name</label>
+    <>
+      <div className="lux-card overflow-hidden flex flex-col">
+        <div className="relative aspect-[3/4] bg-linen/70">
+          {category.imageUrl ? (
+            <ProgressiveImage
+              src={category.imageUrl}
+              alt={category.name}
+              className="h-full w-full"
+              imgClassName="h-full w-full object-cover"
+              loading="lazy"
+              decoding="async"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-[11px] uppercase tracking-[0.2em] font-semibold text-charcoal/50">No Image</div>
+          )}
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/50 to-transparent" />
+          <div className="absolute inset-x-0 bottom-3 flex justify-center">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="pointer-events-auto lux-button--ghost px-4 py-1 text-[10px]"
+              disabled={isBusy || isUpdatingImage}
+            >
+              {isOptimizingImage ? 'Optimizing...' : isUpdatingImage ? 'Saving...' : 'Edit Image'}
+            </button>
             <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="lux-input text-sm mt-1"
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleImageSelected(file);
+                if (fileInputRef.current) fileInputRef.current.value = '';
+              }}
             />
           </div>
-          <button
-            type="button"
-            onClick={handleSaveName}
-            disabled={isBusy || isSavingName || name.trim() === category.name || !name.trim()}
-            className="lux-button px-3 py-2 text-[10px] disabled:opacity-50"
-          >
-            {isSavingName ? 'Saving...' : 'Rename'}
-          </button>
         </div>
 
-        <div className="flex items-center justify-between">
-          <label className="flex items-center gap-2 text-sm text-charcoal">
-            <input
-              type="checkbox"
-              checked={!!category.showOnHomePage}
-              onChange={handleToggleHome}
-              disabled={isBusy}
-              className="h-4 w-4 rounded-[4px] border-driftwood/70 text-deep-ocean"
-            />
-            Show on Home Page
-          </label>
+        <div className="p-4 space-y-3">
+          <div className="flex items-start gap-2">
+            <div className="flex-1">
+              <label className="lux-label text-[10px]">Name</label>
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="lux-input text-sm mt-1"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={handleSaveName}
+              disabled={isBusy || isSavingName || name.trim() === category.name || !name.trim()}
+              className="lux-button px-3 py-2 text-[10px] disabled:opacity-50"
+            >
+              {isSavingName ? 'Saving...' : 'Rename'}
+            </button>
+          </div>
 
-          <button
-            type="button"
-            onClick={handleDelete}
-            disabled={isBusy}
-            className="inline-flex items-center gap-1 text-sm text-rose-700 hover:text-red-700"
-          >
-            <Trash2 className="h-4 w-4" />
-            Delete
-          </button>
+          <div className="flex items-center justify-between">
+            <label className="flex items-center gap-2 text-sm text-charcoal">
+              <input
+                type="checkbox"
+                checked={!!category.showOnHomePage}
+                onChange={handleToggleHome}
+                disabled={isBusy}
+                className="h-4 w-4 rounded-[4px] border-driftwood/70 text-deep-ocean"
+              />
+              Show on Home Page
+            </label>
+
+            <button
+              type="button"
+              onClick={() => setIsDeleteConfirmOpen(true)}
+              disabled={isBusy}
+              className="inline-flex items-center gap-1 text-sm text-rose-700 hover:text-red-700"
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+      <ConfirmDialog
+        open={isDeleteConfirmOpen}
+        title="Delete category?"
+        description={`Delete "${category.name}" from Coastal Alchemy categories? This action can't be undone.`}
+        confirmText="Delete"
+        onConfirm={handleDelete}
+        onCancel={() => setIsDeleteConfirmOpen(false)}
+        confirmDisabled={isBusy}
+      />
+    </>
   );
 }
 
@@ -153,5 +165,4 @@ export function CategoryCardSkeleton() {
     </div>
   );
 }
-
 

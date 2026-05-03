@@ -28,7 +28,7 @@ export type OrderConfirmationEmailParams = {
 };
 
 export function renderOrderConfirmationEmailHtml(params: OrderConfirmationEmailParams): string {
-  const brand = params.brandName || 'Order';
+  const brand = params.brandName || 'Coastal Alchemy';
   const orderLabel = params.orderNumber || 'Order';
   const shippingAddress = params.shippingAddress || '';
   const billingAddress = params.billingAddress || '';
@@ -36,8 +36,9 @@ export function renderOrderConfirmationEmailHtml(params: OrderConfirmationEmailP
   const primaryCtaLabel = params.primaryCtaLabel || 'View Order Details';
   const baseFont = "'Inter', 'Helvetica Neue', Arial, sans-serif";
   const serifFont = "'Cormorant Garamond', Georgia, 'Times New Roman', serif";
-  const baseColor = '#2F4F4F';
-  const mutedColor = '#5f6f75';
+  const baseColor = '#243A5E';
+  const inkColor = '#1F2530';
+  const mutedColor = '#5B6470';
   const borderColor = '#E6DFD4';
 
   const itemRows =
@@ -123,22 +124,24 @@ export function renderOrderConfirmationEmailHtml(params: OrderConfirmationEmailP
     img { border:0; line-height:100%; }
     body, table, td, a, p, div, span { font-family:${baseFont}; }
     .container { width:100%; background:#FBF9F5; }
-    .inner { width:600px; max-width:600px; background:#ffffff; border-radius:28px; border:1px solid ${borderColor}; overflow:hidden; box-shadow:0 24px 56px rgba(31,41,51,0.12); }
+    .inner { width:600px; max-width:600px; background:#ffffff; border-radius:12px; border:1px solid ${borderColor}; overflow:hidden; box-shadow:0 16px 42px rgba(31,41,51,0.08); }
     .pad { padding:32px 22px 36px; }
     .inner-pad { padding:30px 28px 32px; }
     .section { padding-bottom:24px; }
-    .brand { font-size:20px; font-weight:600; color:${baseColor}; font-family:${serifFont}; letter-spacing:0.04em; }
+    .brand { font-size:20px; font-weight:600; color:${baseColor}; font-family:${serifFont}; letter-spacing:0.18em; text-transform:uppercase; }
+    .tagline { display:block; margin-top:5px; font-size:12px; color:${mutedColor}; letter-spacing:0; font-family:${baseFont}; font-weight:400; text-transform:none; }
     .order-label { font-size:12px; letter-spacing:0.12em; text-transform:uppercase; color:${mutedColor}; white-space:nowrap; }
-    .title { font-size:28px; font-weight:600; color:${baseColor}; margin:0 0 6px; font-family:${serifFont}; letter-spacing:0.02em; }
-    .button { display:inline-block; padding:12px 22px; background:${baseColor}; color:#ffffff; text-decoration:none; border-radius:9999px; font-size:14px; font-weight:600; letter-spacing:0.08em; }
+    .title { font-size:28px; font-weight:500; color:${inkColor}; margin:0 0 8px; font-family:${serifFont}; letter-spacing:0.02em; }
+    .intro { margin:0 0 16px; font-size:15px; line-height:1.6; color:${mutedColor}; }
+    .button { display:inline-block; padding:12px 22px; background:${baseColor}; color:#ffffff; text-decoration:none; border-radius:9999px; font-size:13px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase; }
     .subhead { font-size:13px; letter-spacing:0.18em; text-transform:uppercase; color:${mutedColor}; margin:0 0 8px; }
     .item-row td { padding:14px 0; border-bottom:1px solid #ededed; vertical-align:top; }
     .item-info { width:100%; }
     .item-media { display:inline-block; width:56px; height:56px; vertical-align:top; }
     .item-text { display:inline-block; vertical-align:top; margin-left:12px; max-width:420px; }
-    .item-img { width:56px; height:56px; border:1px solid ${borderColor}; object-fit:cover; display:block; border-radius:14px; }
-    .item-placeholder { width:56px; height:56px; border:1px solid ${borderColor}; background:#f3f4f6; display:block; border-radius:14px; }
-    .item-name { font-size:16px; font-weight:600; color:${baseColor}; font-family:${serifFont}; }
+    .item-img { width:56px; height:56px; border:1px solid ${borderColor}; object-fit:cover; display:block; border-radius:8px; }
+    .item-placeholder { width:56px; height:56px; border:1px solid ${borderColor}; background:#FBF9F5; display:block; border-radius:8px; }
+    .item-name { font-size:16px; font-weight:600; color:${inkColor}; font-family:${serifFont}; }
     .item-qty { font-size:13px; font-weight:500; color:${mutedColor}; }
     .item-option { display:block; font-size:12px; color:${mutedColor}; margin-top:2px; }
     .item-price { font-size:15px; font-weight:600; color:${baseColor}; white-space:nowrap; }
@@ -149,7 +152,7 @@ export function renderOrderConfirmationEmailHtml(params: OrderConfirmationEmailP
     .total-row td { padding-top:10px; font-size:16px; font-weight:700; color:${baseColor}; }
     .info-title { font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:${mutedColor}; margin:0 0 6px; white-space:nowrap; }
     .info { font-size:14px; color:${baseColor}; line-height:1.5; margin:0; }
-    .footer { padding-top:16px; font-size:12px; color:${mutedColor}; }
+    .footer { padding-top:16px; font-size:12px; color:${mutedColor}; line-height:1.6; }
     @media screen and (max-width: 640px) {
       .pad { padding:24px 16px 30px; }
       .inner-pad { padding:24px 18px 28px; }
@@ -167,13 +170,14 @@ export function renderOrderConfirmationEmailHtml(params: OrderConfirmationEmailP
             <td class="inner-pad">
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                 <tr>
-                  <td class="section brand">${escapeHtml(brand)}</td>
+                  <td class="section brand">${escapeHtml(brand)}<span class="tagline">Handmade coastal pieces, crafted one at a time.</span></td>
                   <td class="section order-label" align="right" style="white-space:nowrap;">ORDER # ${escapeHtml(orderLabel)}</td>
                 </tr>
                 <tr>
                   <td class="section" colspan="2">
-                    <p class="title">Thank you for your purchase!</p>
-                    <a href="${escapeHtml(params.primaryCtaUrl)}" class="button" style="display:inline-block; padding:12px 20px; background:${baseColor}; color:#ffffff !important; text-decoration:none !important; border-radius:9999px; font-size:14px; font-weight:600;">${escapeHtml(primaryCtaLabel)}</a>
+                    <p class="title">Thank you for your Coastal Alchemy order</p>
+                    <p class="intro">Thank you for your order. We're so excited to make these coastal pieces for you. You'll receive another note once your order is on its way.</p>
+                    <a href="${escapeHtml(params.primaryCtaUrl)}" class="button" style="display:inline-block; padding:12px 20px; background:${baseColor}; color:#ffffff !important; text-decoration:none !important; border-radius:9999px; font-size:13px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase;">${escapeHtml(primaryCtaLabel)}</a>
                   </td>
                 </tr>
                 <tr>
@@ -205,7 +209,12 @@ export function renderOrderConfirmationEmailHtml(params: OrderConfirmationEmailP
                   </td>
                 </tr>
                 <tr>
-                  <td class="footer" colspan="2">If you have any questions, reply to this email.</td>
+                  <td class="footer" colspan="2">
+                    If you have any questions, reply to this email.<br/>
+                    <strong style="color:${baseColor}; font-family:${serifFont}; letter-spacing:0.08em;">Coastal Alchemy</strong><br/>
+                    Naples, Florida<br/>
+                    Thank you for supporting handmade work.
+                  </td>
                 </tr>
               </table>
             </td>
@@ -221,7 +230,7 @@ export function renderOrderConfirmationEmailHtml(params: OrderConfirmationEmailP
 export function renderOrderConfirmationEmailText(params: OrderConfirmationEmailParams): string {
   const primaryCtaLabel = params.primaryCtaLabel || 'Visit Store';
   const lines = [
-    `${params.brandName || 'Order'} - Order Confirmed`,
+    `${params.brandName || 'Coastal Alchemy'} - Order Confirmed`,
     `Order: ${params.orderNumber || ''}`.trim(),
     `Placed: ${params.orderDate || ''}`.trim(),
     `Customer: ${params.customerName || 'Customer'}`,
@@ -248,6 +257,8 @@ export function renderOrderConfirmationEmailText(params: OrderConfirmationEmailP
     '',
     `${primaryCtaLabel}: ${params.primaryCtaUrl}`,
     'If you have any questions, reply to this email.',
+    'Coastal Alchemy - Naples, Florida',
+    'Thank you for supporting handmade work.',
   ].filter(Boolean) as string[];
 
   return lines.join('\n');

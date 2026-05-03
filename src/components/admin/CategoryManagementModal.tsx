@@ -145,7 +145,9 @@ export function CategoryManagementModal({
   const [presetBuilderDraft, setPresetBuilderDraft] = useState<ChoiceBuilderDraft>(() => emptyChoiceBuilderDraft());
   const [isPresetBuilderOpen, setIsPresetBuilderOpen] = useState(false);
   const [presetPendingDelete, setPresetPendingDelete] = useState<VariationPreset | null>(null);
+  const [categoryPendingDelete, setCategoryPendingDelete] = useState<Category | null>(null);
   const [isDeletingPreset, setIsDeletingPreset] = useState(false);
+  const [isDeletingCategory, setIsDeletingCategory] = useState(false);
   const [assigningPreset, setAssigningPreset] = useState<VariationPreset | null>(null);
   const [assignmentCategoryIds, setAssignmentCategoryIds] = useState<string[]>([]);
   const [isSavingAssignments, setIsSavingAssignments] = useState(false);
@@ -196,6 +198,7 @@ export function CategoryManagementModal({
     setToolView('launcher');
     setCategoryMessage('');
     setPresetPendingDelete(null);
+    setCategoryPendingDelete(null);
     setAssigningPreset(null);
     onClose();
   };
@@ -638,12 +641,13 @@ export function CategoryManagementModal({
   };
 
   const handleDeleteCategory = async (cat: Category) => {
-    if (!window.confirm('Delete this category?')) return;
+    setIsDeletingCategory(true);
     try {
       await adminDeleteCategory(cat.id);
       const updated = normalizeCategoriesList(adminCategories.filter((c) => c.id !== cat.id));
       setAdminCategories(updated);
       onCategoriesChange(updated);
+      setCategoryPendingDelete(null);
       if (editCategoryId === cat.id) {
         setEditCategoryId(null);
         setEditDraft(null);
@@ -651,6 +655,8 @@ export function CategoryManagementModal({
     } catch (error) {
       console.error('Failed to delete category', error);
       setCategoryMessage('Could not delete category.');
+    } finally {
+      setIsDeletingCategory(false);
     }
   };
 
@@ -915,7 +921,7 @@ export function CategoryManagementModal({
                   isReordering={isReordering}
                   onMove={handleMoveCategory}
                   onEdit={startEditCategory}
-                  onDelete={handleDeleteCategory}
+                  onDelete={setCategoryPendingDelete}
                 />
               )}
             </div>
@@ -1040,6 +1046,24 @@ export function CategoryManagementModal({
       onCancel={() => setPresetPendingDelete(null)}
       onConfirm={() => {
         if (presetPendingDelete) void handleDeletePreset(presetPendingDelete.id);
+      }}
+    />
+    <ConfirmDialog
+      open={Boolean(categoryPendingDelete)}
+      title="Delete category?"
+      description={
+        categoryPendingDelete
+          ? `Delete "${categoryPendingDelete.name}" from Coastal Alchemy categories? This action can't be undone.`
+          : "This action can't be undone."
+      }
+      cancelText="Cancel"
+      confirmText="Delete Category"
+      confirmVariant="danger"
+      confirmDisabled={isDeletingCategory}
+      cancelDisabled={isDeletingCategory}
+      onCancel={() => setCategoryPendingDelete(null)}
+      onConfirm={() => {
+        if (categoryPendingDelete) void handleDeleteCategory(categoryPendingDelete);
       }}
     />
     <PresetAssignmentDialog

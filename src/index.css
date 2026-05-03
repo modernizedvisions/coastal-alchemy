@@ -331,7 +331,7 @@
 
   .ca-admin-shell {
     min-height: 100vh;
-    background: linear-gradient(180deg, var(--ca-paper) 0%, #fbf9f5 58%, #f6f1e9 100%);
+    background: #ffffff;
     color: var(--ca-ink);
     font-family: "Inter", sans-serif;
     font-weight: 300;
@@ -352,7 +352,7 @@
   .ca-admin-modal .lux-panel,
   .ca-admin-card-soft {
     border: 1px solid var(--ca-border) !important;
-    background: #fbf9f5 !important;
+    background: #ffffff !important;
     border-radius: 0 !important;
     box-shadow: none !important;
   }
@@ -440,7 +440,7 @@
   .ca-admin-shell .lux-button--outline:hover,
   .ca-admin-modal .lux-button--ghost:hover,
   .ca-admin-modal .lux-button--outline:hover {
-    background: #fbf9f5 !important;
+    background: #f5f5f5 !important;
     border-color: var(--ca-navy) !important;
     color: var(--ca-navy-deep) !important;
     transform: none !important;
@@ -482,7 +482,7 @@
   }
 
   .ca-admin-shell thead {
-    background: #fbf9f5 !important;
+    background: #ffffff !important;
     color: var(--ca-navy) !important;
   }
 
@@ -505,7 +505,7 @@
   }
 
   .ca-admin-shell tbody tr:hover {
-    background: #fbf9f5;
+    background: #f5f5f5;
   }
 
   .ca-admin-badge,
@@ -513,7 +513,7 @@
   .ca-admin-shell .lux-pill,
   .ca-admin-shell .lux-pill--cart {
     border: 1px solid var(--ca-border-strong) !important;
-    background: #fbf9f5 !important;
+    background: #ffffff !important;
     color: var(--ca-navy) !important;
     border-radius: 0 !important;
     box-shadow: none !important;
@@ -533,7 +533,7 @@
 
   .ca-admin-empty-state {
     border: 1px dashed var(--ca-border-strong);
-    background: #fbf9f5;
+    background: #ffffff;
     border-radius: 0;
     color: var(--ca-muted);
   }
@@ -559,7 +559,7 @@
 
   .ca-admin-tab:hover {
     border-color: var(--ca-navy);
-    background: #fbf9f5;
+    background: #f5f5f5;
   }
 
   .ca-admin-tab.is-active {
@@ -605,6 +605,7 @@
 
   .ca-admin-shell .bg-linen,
   .ca-admin-shell .bg-linen\/40,
+  .ca-admin-shell .bg-linen\/45,
   .ca-admin-shell .bg-linen\/50,
   .ca-admin-shell .bg-linen\/55,
   .ca-admin-shell .bg-linen\/60,
@@ -612,9 +613,19 @@
   .ca-admin-shell .bg-linen\/70,
   .ca-admin-shell .bg-linen\/75,
   .ca-admin-shell .bg-linen\/80,
+  .ca-admin-shell .bg-linen\/85,
   .ca-admin-shell .bg-linen\/90,
+  .ca-admin-shell .bg-sand,
+  .ca-admin-shell .bg-sand\/50,
+  .ca-admin-shell .bg-sand\/60,
+  .ca-admin-shell .bg-sand\/70,
+  .ca-admin-shell .bg-sand\/75,
+  .ca-admin-shell .bg-sand\/80,
+  .ca-admin-shell .bg-sand\/90,
+  .ca-admin-shell .bg-warm-linen,
   .ca-admin-modal .bg-linen,
   .ca-admin-modal .bg-linen\/40,
+  .ca-admin-modal .bg-linen\/45,
   .ca-admin-modal .bg-linen\/50,
   .ca-admin-modal .bg-linen\/55,
   .ca-admin-modal .bg-linen\/60,
@@ -622,8 +633,33 @@
   .ca-admin-modal .bg-linen\/70,
   .ca-admin-modal .bg-linen\/75,
   .ca-admin-modal .bg-linen\/80,
-  .ca-admin-modal .bg-linen\/90 {
-    background-color: #fbf9f5 !important;
+  .ca-admin-modal .bg-linen\/85,
+  .ca-admin-modal .bg-linen\/90,
+  .ca-admin-modal .bg-sand,
+  .ca-admin-modal .bg-sand\/50,
+  .ca-admin-modal .bg-sand\/60,
+  .ca-admin-modal .bg-sand\/70,
+  .ca-admin-modal .bg-sand\/75,
+  .ca-admin-modal .bg-sand\/80,
+  .ca-admin-modal .bg-sand\/90,
+  .ca-admin-modal .bg-warm-linen {
+    background-color: #ffffff !important;
+  }
+
+  .ca-admin-shell .hover\:bg-linen:hover,
+  .ca-admin-shell .hover\:bg-linen\/70:hover,
+  .ca-admin-shell .hover\:bg-linen\/80:hover,
+  .ca-admin-shell .hover\:bg-sand:hover,
+  .ca-admin-shell .hover\:bg-sand\/70:hover,
+  .ca-admin-shell .hover\:bg-sand\/75:hover,
+  .ca-admin-shell .hover\:bg-sand\/80:hover,
+  .ca-admin-modal .hover\:bg-linen:hover,
+  .ca-admin-modal .hover\:bg-linen\/70:hover,
+  .ca-admin-modal .hover\:bg-linen\/80:hover,
+  .ca-admin-modal .hover\:bg-sand:hover,
+  .ca-admin-modal .hover\:bg-sand\/70:hover,
+  .ca-admin-modal .hover\:bg-sand\/80:hover {
+    background-color: #f5f5f5 !important;
   }
 
   .ca-admin-shell .text-charcoal,
@@ -747,7 +783,7 @@
     flex-shrink: 0;
     border: 1px solid var(--ca-border-strong) !important;
     border-radius: 9999px !important;
-    background: #fbf9f5 !important;
+    background: #f1f1f1 !important;
     box-shadow: inset 0 1px 2px rgba(21, 40, 63, 0.08);
     transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   }
@@ -798,7 +834,7 @@
     cursor: pointer;
     border: 1px solid var(--ca-border-strong) !important;
     border-radius: 9999px !important;
-    background: #fbf9f5 !important;
+    background: #f1f1f1 !important;
     transition: background 0.2s ease, border-color 0.2s ease;
   }
 

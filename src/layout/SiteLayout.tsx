@@ -270,10 +270,10 @@ function SiteLayoutInner() {
         </div>
       )}
 
-      <footer className="bg-white border-t border-[var(--ca-border)] py-14 text-[var(--ca-ink)]">
+      <footer className="bg-white border-t border-[var(--ca-border)] py-14 pb-[110px] md:pb-14 text-[var(--ca-ink)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-10 md:grid-cols-[2fr_1fr_1fr] md:items-start">
-            <div className="max-w-sm">
+          <div className="grid gap-10 text-center md:text-left md:grid-cols-[2fr_1fr_1fr] md:items-start">
+            <div className="max-w-sm mx-auto md:mx-0">
               <div className="font-serif text-2xl uppercase tracking-[0.22em]">COASTAL ALCHEMY</div>
               <p className="ca-copy mt-4 text-sm">
                 Hand-painted shells and coastal pieces, made one at a time on the Gulf Coast in Naples, Florida.
@@ -282,7 +282,7 @@ function SiteLayoutInner() {
 
             <div>
               <h2 className="mb-4 text-[0.68rem] font-semibold uppercase tracking-[0.28em] text-[var(--ca-navy)]">Explore</h2>
-              <nav className="flex flex-col gap-2 text-sm text-[var(--ca-muted)]">
+              <nav className="flex flex-col items-center gap-2 text-sm text-[var(--ca-muted)] md:items-start">
                 <Link to="/shop" className="hover:text-[var(--ca-ink)] transition-colors">Shop</Link>
                 <Link to="/gallery" className="hover:text-[var(--ca-ink)] transition-colors">Gallery</Link>
                 <Link to="/custom-orders" className="hover:text-[var(--ca-ink)] transition-colors">Custom Orders</Link>
@@ -292,41 +292,40 @@ function SiteLayoutInner() {
 
             <div>
               <h2 className="mb-4 text-[0.68rem] font-semibold uppercase tracking-[0.28em] text-[var(--ca-navy)]">Follow</h2>
-              <div className="flex items-center gap-3 text-[var(--ca-muted)]">
-              <a
-                href="https://www.instagram.com/coastalalchemy/"
-                target="_blank"
-                rel="noreferrer"
-                aria-label="Visit Coastal Alchemy on Instagram"
-                className="p-2 border border-[var(--ca-border)] text-[var(--ca-navy)] hover:bg-[var(--ca-paper)] transition-colors"
-              >
-                <Instagram className="h-5 w-5" />
-              </a>
+              <div className="flex items-center justify-center gap-3 text-[var(--ca-muted)] md:justify-start">
+                <a
+                  href="https://www.instagram.com/coastalalchemy/"
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="Visit Coastal Alchemy on Instagram"
+                  className="p-2 border border-[var(--ca-border)] text-[var(--ca-navy)] hover:bg-[var(--ca-paper)] transition-colors"
+                >
+                  <Instagram className="h-5 w-5" />
+                </a>
               </div>
-              <a href="mailto:hello@coastalalchemy.com" className="mt-4 inline-block text-sm text-[var(--ca-muted)] hover:text-[var(--ca-ink)] transition-colors">
-                hello@coastalalchemy.com
-              </a>
             </div>
           </div>
 
-          <div className="mt-12 flex flex-col gap-4 border-t border-[var(--ca-border)] pt-6 text-sm text-[var(--ca-muted)] md:flex-row md:items-center md:justify-between">
-            <p>&copy; 2026 Coastal Alchemy. All rights reserved.</p>
-            <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+          <div className="mt-12 flex flex-col items-center gap-4 border-t border-[var(--ca-border)] pt-6 text-center text-sm text-[var(--ca-muted)] md:flex-row md:items-start md:justify-between md:text-left">
+            <div className="flex flex-col gap-1">
+              <p>&copy; 2026 Coastal Alchemy. All rights reserved.</p>
+              <p>
+                Built by{' '}
+                <a
+                  href="https://modernizedvisions.agency"
+                  className="underline decoration-1 underline-offset-2 hover:text-[var(--ca-navy)] transition-colors"
+                >
+                  Modernized Visions
+                </a>
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 md:mr-6">
               <Link to="/terms" className="hover:text-linen transition-colors">
                 Terms
               </Link>
               <Link to="/privacy" className="hover:text-linen transition-colors">
                 Privacy
               </Link>
-              <span>
-                Built by{' '}
-              <a
-                href="https://modernizedvisions.agency"
-                className="underline decoration-1 underline-offset-2 hover:text-[var(--ca-navy)] transition-colors"
-              >
-                Modernized Visions
-              </a>
-              </span>
             </div>
           </div>
         </div>

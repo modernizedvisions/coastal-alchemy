@@ -139,9 +139,7 @@ export function TermsPage() {
 
       <div>
         <h2 className="text-lg font-serif font-semibold text-gray-900 mb-2">13) CONTACT</h2>
-        <p>If you have questions about these Terms, contact us at:</p>
-        <p>Email: hello@coastalalchemy.com</p>
-        <p>Or use the contact form on the Site.</p>
+        <p>If you have questions about these Terms, please use the contact form on the Site.</p>
       </div>
     </LegalPageLayout>
   );

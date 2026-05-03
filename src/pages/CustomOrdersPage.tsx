@@ -100,7 +100,7 @@ export default function CustomOrdersPage() {
             <div className="ca-eyebrow mb-4">The Process</div>
             <h2 className="ca-section-title">How a commission comes together</h2>
           </div>
-          <div className="ca-grid ca-grid-4">
+          <div className="ca-grid ca-grid-4 ca-mobile-center-grid">
             {steps.map((step) => (
               <div key={step.n} className="border-t border-[var(--ca-border-strong)] pt-5">
                 <div className="mb-2 font-serif text-4xl tracking-[0.04em] text-[var(--ca-navy)]">{step.n}</div>

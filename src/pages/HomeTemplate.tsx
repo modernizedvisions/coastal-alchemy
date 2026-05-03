@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { ArrowUpRight } from 'lucide-react';
 import { ContactForm } from '../components/ContactForm';
 import type { HomeFeaturedCategoryTile } from '../lib/types';
 
@@ -38,20 +39,20 @@ export default function HomeTemplate({
   }, [activeHeroImages.length, heroRotationEnabled]);
 
   return (
-    <div className="ca-page">
+    <div className="ca-page pb-[88px] md:pb-0">
       <section className="border-b border-[var(--ca-border)] bg-white">
         <div className="ca-container grid min-h-[78vh] grid-cols-1 items-center gap-10 py-12 md:grid-cols-[1fr_1.15fr] md:py-16 lg:gap-20">
-          <div className="max-w-xl">
+          <div className="max-w-xl text-center md:text-left mx-auto md:mx-0">
             <div className="ca-eyebrow mb-6">Hand-Painted · Naples, Florida</div>
             <h1 className="ca-hero-title mb-6">
               Quiet pieces from
               <br />
               the Gulf Coast.
             </h1>
-            <p className="ca-copy mb-8 max-w-lg text-lg">
+            <p className="ca-copy mb-8 max-w-lg mx-auto md:mx-0 text-lg">
               Coastal Alchemy is a small studio of hand-painted shells, framed collections, and tabletop pieces - made one at a time, the way the ocean made them.
             </p>
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-3 justify-center md:justify-start">
               <Link to="/shop" className="ca-button ca-button-filled">
                 Shop the Collection
               </Link>
@@ -198,6 +199,16 @@ export default function HomeTemplate({
           </div>
         </div>
       </section>
+
+      <div
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--ca-border)] bg-white px-4 py-3 md:hidden"
+        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 0.75rem)' }}
+      >
+        <Link to="/shop" className="ca-button ca-button-filled w-full">
+          Shop Collection
+          <ArrowUpRight className="h-4 w-4" />
+        </Link>
+      </div>
     </div>
   );
 }

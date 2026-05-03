@@ -56,7 +56,7 @@ export function AboutPage() {
       </section>
 
       <section className="ca-section border-y border-[var(--ca-border)]">
-        <div className="ca-container ca-grid ca-grid-3">
+        <div className="ca-container ca-grid ca-grid-3 ca-mobile-center-grid">
           <div>
             <div className="ca-eyebrow mb-3">Sourced</div>
             <h3 className="ca-card-title mb-3">Mostly Gulf Coast</h3>

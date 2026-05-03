@@ -95,10 +95,10 @@ export default function HomeTemplate({
             <p className="ca-copy">
               Each piece begins on a long walk - collecting scallops, oysters, and the small, strange shells the tide leaves on Naples beaches. They're cleaned, cured, and painted by hand in soft, layered washes, then finished simply, deliberately.
             </p>
-            <p className="ca-copy">
+            <p className="ca-copy mt-6">
               The result is a piece of the coast you can keep on a shelf, a wall, or a tablescape - quiet, considered, and made to last.
             </p>
-            <Link to="/about" className="ca-button ca-button-ghost mt-3">
+            <Link to="/about" className="ca-button ca-button-filled mt-8">
               About Coastal Alchemy
             </Link>
           </div>
@@ -135,7 +135,7 @@ export default function HomeTemplate({
             )}
           </div>
           <div className="mt-12 text-center">
-            <Link to="/shop" className="ca-button">
+            <Link to="/shop" className="ca-button ca-button-filled">
               Shop All
             </Link>
           </div>
@@ -150,10 +150,10 @@ export default function HomeTemplate({
             <p className="ca-copy">
               I take a small number of custom commissions each season - framed shell collections sized to your wall, palettes built around your fabrics, sets of painted shells for a beach house, or a single meaningful piece for a wedding gift.
             </p>
-            <p className="ca-copy">
+            <p className="ca-copy mt-6">
               Tell me about the room, the colors, the moment. I'll come back with a sketch and a quote.
             </p>
-            <Link to="/custom-orders" className="ca-button ca-button-filled">
+            <Link to="/custom-orders" className="ca-button ca-button-filled mt-8">
               Start an Inquiry
             </Link>
           </div>
@@ -167,7 +167,7 @@ export default function HomeTemplate({
         <div className="ca-container max-w-3xl">
           <div className="ca-eyebrow mb-4">From a recent client</div>
           <h2 className="ca-section-title italic">
-            "She painted a shadow box for the front hall of our beach house in Port Royal - it's the first thing every guest stops in front of, and it feels completely ours."
+            "She made us a framed seashell portrait — dozens of hand-painted shells. It's the prettiest thing in our house."
           </h2>
           <div className="mt-5 text-[0.7rem] uppercase tracking-[0.22em] text-[var(--ca-muted)]">
             Mary Beth K. · Naples, FL
@@ -188,10 +188,6 @@ export default function HomeTemplate({
                 Coastal Alchemy
               </strong>
               Naples, Florida
-              <br />
-              hello@coastalalchemy.com
-              <br />
-              By appointment only
             </p>
           </div>
           <div className="ca-form-skin">

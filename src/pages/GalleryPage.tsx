@@ -138,7 +138,7 @@ export function GalleryPage() {
           )}
 
           <div className="mt-12 text-center">
-            <Link to="/shop" className="ca-button">
+            <Link to="/shop" className="ca-button ca-button-filled">
               Shop The Collection
             </Link>
           </div>

@@ -118,9 +118,7 @@ export function PrivacyPage() {
 
       <div>
         <h2 className="text-lg font-serif font-semibold text-gray-900 mb-2">12) CONTACT</h2>
-        <p>If you have questions about this Privacy Policy, contact us at:</p>
-        <p>Email: hello@coastalalchemy.com</p>
-        <p>Or use the contact form on the Site.</p>
+        <p>If you have questions about this Privacy Policy, please use the contact form on the Site.</p>
       </div>
     </LegalPageLayout>
   );

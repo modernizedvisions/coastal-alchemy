@@ -18,7 +18,7 @@ export function ContactPage() {
             <div className="ca-eyebrow mb-4">The Studio</div>
             <h2 className="ca-section-title mb-5">Naples, Florida.</h2>
             <p className="ca-copy">
-              The studio is by appointment only. Most projects start with an email - if it's a custom piece, head to the{' '}
+              Most projects start with a quick note - if it's a custom piece, head to the{' '}
               <Link to="/custom-orders" className="border-b border-[var(--ca-navy)] text-[var(--ca-ink)]">
                 custom orders
               </Link>{' '}
@@ -29,10 +29,6 @@ export function ContactPage() {
                 Coastal Alchemy
               </strong>
               Naples, Florida
-              <br />
-              hello@coastalalchemy.com
-              <br />
-              <span className="text-sm">By appointment only</span>
             </p>
 
             <div className="mt-12 border-t border-[var(--ca-border-strong)] pt-8">

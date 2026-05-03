@@ -75,7 +75,7 @@ export async function onRequestPost(context: { request: Request; env: EmailEnv }
   const result = await sendEmail(
     {
       to,
-      subject: 'New Coastal Alchemy order received (TEST)',
+      subject: 'Coastal Alchemy - Order Received 25-123',
       text,
       html,
     },

@@ -585,6 +585,10 @@ export const onRequestPost = async (context: {
         const confirmationUrl = buildTrackedEmailSiteUrl(confirmationUrlBase, 'order_confirmation', {
           siteOrigin: siteUrl || null,
         });
+        const contactUrlBase = siteUrl ? `${siteUrl}/contact` : '/contact';
+        const contactUrl = buildTrackedEmailSiteUrl(contactUrlBase, 'order_confirmation', {
+          siteOrigin: siteUrl || null,
+        });
         const orderLabel = insertResult.displayOrderId || insertResult.orderId;
         logEmailBranch(emailDebug, {
           branch,
@@ -618,6 +622,7 @@ export const onRequestPost = async (context: {
             total: totalsForEmail.totalCents,
             primaryCtaUrl: confirmationUrl,
             primaryCtaLabel: 'View Order Details',
+            contactUrl,
           });
           const text = renderOrderConfirmationEmailText({
             brandName: 'Coastal Alchemy',
@@ -636,9 +641,10 @@ export const onRequestPost = async (context: {
             total: totalsForEmail.totalCents,
             primaryCtaUrl: confirmationUrl,
             primaryCtaLabel: 'View Order Details',
+            contactUrl,
           });
 
-        const subject = `Thank you for your Coastal Alchemy order (${orderLabel})`;
+        const subject = `Coastal Alchemy - Order Confirmation ${orderLabel || ''}`.trim();
         const customerTo = isValidEmailRecipient(customerEmail) ? customerEmail : null;
         if (customerEmail && !customerTo) {
           warnInvalidRecipient('shop_customer', customerEmail);
@@ -799,7 +805,7 @@ export const onRequestPost = async (context: {
             stripeUrl,
           });
 
-          const ownerSubject = `New Coastal Alchemy order received (${orderLabel})`;
+          const ownerSubject = `Coastal Alchemy - Order Received ${orderLabel || ''}`.trim();
         const ownerRecipient = isValidEmailRecipient(ownerTo) ? ownerTo : null;
         if (ownerTo && !ownerRecipient) {
           warnInvalidRecipient('shop_owner', ownerTo);
@@ -1886,6 +1892,10 @@ async function handleCustomOrderPayment(args: {
         imageUrl: resolvedImage.url || null,
       },
     ];
+    const contactUrlBase = siteUrl ? `${siteUrl}/contact` : '/contact';
+    const contactUrl = buildTrackedEmailSiteUrl(contactUrlBase, 'order_confirmation', {
+      siteOrigin: siteUrl || null,
+    });
 
     try {
       const html = renderOrderConfirmationEmailHtml({
@@ -1905,6 +1915,7 @@ async function handleCustomOrderPayment(args: {
         total: totalsForEmail.totalCents,
         primaryCtaUrl: confirmationUrl,
         primaryCtaLabel: 'View Order Details',
+        contactUrl,
       });
       const text = renderOrderConfirmationEmailText({
         brandName: 'Coastal Alchemy',
@@ -1923,9 +1934,10 @@ async function handleCustomOrderPayment(args: {
         total: totalsForEmail.totalCents,
         primaryCtaUrl: confirmationUrl,
         primaryCtaLabel: 'View Order Details',
+        contactUrl,
       });
 
-      const subject = `Thank you for your Coastal Alchemy order (${orderLabel})`;
+      const subject = `Coastal Alchemy - Order Confirmation ${orderLabel || ''}`.trim();
       const customerTo = isValidEmailRecipient(confirmationCustomerEmail) ? confirmationCustomerEmail : null;
       if (confirmationCustomerEmail && !customerTo) {
         warnInvalidRecipient('custom_customer', confirmationCustomerEmail);
@@ -2090,7 +2102,7 @@ async function handleCustomOrderPayment(args: {
       stripeUrl,
     });
 
-    const ownerSubject = `New Coastal Alchemy order received (${orderLabel})`;
+    const ownerSubject = `Coastal Alchemy - Order Received ${orderLabel || ''}`.trim();
     const ownerRecipient = isValidEmailRecipient(ownerTo) ? ownerTo : null;
     if (ownerTo && !ownerRecipient) {
       warnInvalidRecipient('custom_owner', ownerTo);

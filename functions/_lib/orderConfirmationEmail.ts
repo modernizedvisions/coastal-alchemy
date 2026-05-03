@@ -25,6 +25,7 @@ export type OrderConfirmationEmailParams = {
   total: number;
   primaryCtaUrl: string;
   primaryCtaLabel?: string;
+  contactUrl?: string;
 };
 
 export function renderOrderConfirmationEmailHtml(params: OrderConfirmationEmailParams): string {
@@ -34,6 +35,7 @@ export function renderOrderConfirmationEmailHtml(params: OrderConfirmationEmailP
   const billingAddress = params.billingAddress || '';
   const paymentMethod = params.paymentMethod || 'Card';
   const primaryCtaLabel = params.primaryCtaLabel || 'View Order Details';
+  const contactUrl = params.contactUrl || '/contact';
   const baseFont = "'Inter', 'Helvetica Neue', Arial, sans-serif";
   const serifFont = "'Cormorant Garamond', Georgia, 'Times New Roman', serif";
   const baseColor = '#243A5E';
@@ -152,7 +154,9 @@ export function renderOrderConfirmationEmailHtml(params: OrderConfirmationEmailP
     .total-row td { padding-top:10px; font-size:16px; font-weight:700; color:${baseColor}; }
     .info-title { font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:${mutedColor}; margin:0 0 6px; white-space:nowrap; }
     .info { font-size:14px; color:${baseColor}; line-height:1.5; margin:0; }
-    .footer { padding-top:16px; font-size:12px; color:${mutedColor}; line-height:1.6; }
+    .footer { padding-top:16px; font-size:12px; color:${mutedColor}; line-height:1.8; text-align:center; }
+    .footer-brand { color:${baseColor}; font-family:${serifFont}; letter-spacing:0.08em; }
+    .footer-link { color:${baseColor}; text-decoration:underline; }
     @media screen and (max-width: 640px) {
       .pad { padding:24px 16px 30px; }
       .inner-pad { padding:24px 18px 28px; }
@@ -175,8 +179,8 @@ export function renderOrderConfirmationEmailHtml(params: OrderConfirmationEmailP
                 </tr>
                 <tr>
                   <td class="section" colspan="2">
-                    <p class="title">Thank you for your Coastal Alchemy order</p>
-                    <p class="intro">Thank you for your order. We're so excited to make these coastal pieces for you. You'll receive another note once your order is on its way.</p>
+                    <p class="title">Thank you for your order!</p>
+                    <p class="intro">We're so excited to make these coastal pieces for you.</p>
                     <a href="${escapeHtml(params.primaryCtaUrl)}" class="button" style="display:inline-block; padding:12px 20px; background:${baseColor}; color:#ffffff !important; text-decoration:none !important; border-radius:9999px; font-size:13px; font-weight:600; letter-spacing:0.14em; text-transform:uppercase;">${escapeHtml(primaryCtaLabel)}</a>
                   </td>
                 </tr>
@@ -210,10 +214,9 @@ export function renderOrderConfirmationEmailHtml(params: OrderConfirmationEmailP
                 </tr>
                 <tr>
                   <td class="footer" colspan="2">
-                    If you have any questions, reply to this email.<br/>
-                    <strong style="color:${baseColor}; font-family:${serifFont}; letter-spacing:0.08em;">Coastal Alchemy</strong><br/>
-                    Naples, Florida<br/>
-                    Thank you for supporting handmade work.
+                    <strong class="footer-brand">Coastal Alchemy</strong><br/>
+                    If you have any questions, click <a href="${escapeHtml(contactUrl)}" class="footer-link">here</a><br/>
+                    Thank you for supporting handmade work
                   </td>
                 </tr>
               </table>
@@ -256,9 +259,9 @@ export function renderOrderConfirmationEmailText(params: OrderConfirmationEmailP
     `Total: ${formatMoney(params.total)}`,
     '',
     `${primaryCtaLabel}: ${params.primaryCtaUrl}`,
-    'If you have any questions, reply to this email.',
-    'Coastal Alchemy - Naples, Florida',
-    'Thank you for supporting handmade work.',
+    'Coastal Alchemy',
+    `If you have any questions, click here: ${params.contactUrl || '/contact'}`,
+    'Thank you for supporting handmade work',
   ].filter(Boolean) as string[];
 
   return lines.join('\n');

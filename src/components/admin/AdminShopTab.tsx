@@ -1351,9 +1351,6 @@ export const AdminShopTab: React.FC<AdminShopTabProps> = ({
         <div className="mb-4 flex flex-col gap-3">
           <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
             <h3 className="lux-eyebrow">Edit Current Products</h3>
-            <p className="text-[10px] uppercase tracking-[0.18em] text-charcoal/60">
-              Storefront-inspired view, compact for admin editing.
-            </p>
           </div>
 
           <div className="flex flex-wrap gap-2">

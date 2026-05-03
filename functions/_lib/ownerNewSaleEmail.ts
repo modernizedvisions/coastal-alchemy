@@ -159,7 +159,6 @@ export function renderOwnerNewSaleEmailHtml(params: OwnerNewSaleParams): string 
     .total-row td { padding-top:10px; font-size:16px; font-weight:700; color:${baseColor}; }
     .info-title { font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:${mutedColor}; margin:0 0 6px; white-space:nowrap; }
     .info { font-size:14px; color:${baseColor}; line-height:1.5; margin:0; }
-    .footer { padding-top:16px; font-size:12px; color:${mutedColor}; line-height:1.6; }
     @media screen and (max-width: 640px) {
       .pad { padding:24px 16px 30px; }
       .inner-pad { padding:24px 18px 28px; }
@@ -224,13 +223,6 @@ export function renderOwnerNewSaleEmailHtml(params: OwnerNewSaleParams): string 
                     <p class="info">${escapeHtml(paymentMethod)}</p>
                   </td>
                 </tr>
-                <tr>
-                  <td class="footer" colspan="2">
-                    Coastal Alchemy<br/>
-                    Naples, Florida<br/>
-                    Thank you for supporting handmade work.
-                  </td>
-                </tr>
               </table>
             </td>
           </tr>
@@ -274,7 +266,6 @@ export function renderOwnerNewSaleEmailText(params: OwnerNewSaleParams): string 
     '',
     `Admin: ${params.adminUrl}`,
     params.stripeUrl ? `Stripe: ${params.stripeUrl}` : null,
-    'Coastal Alchemy - Naples, Florida',
   ].filter(Boolean) as string[];
 
   return lines.join('\n');

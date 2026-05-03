@@ -31,11 +31,12 @@ type BaseEmailModel = {
   adminUrl?: string | null;
   description?: string | null;
   note?: string | null;
+  suppressFooter?: boolean;
 };
 
 export function renderOwnerNewOrderEmail(model: BaseEmailModel) {
-  const subject = `New Coastal Alchemy order received (${model.orderLabel})`;
-  return buildEmail({ ...model, title: 'New Order Received', subject });
+  const subject = `Coastal Alchemy - Order Received ${model.orderLabel || ''}`.trim();
+  return buildEmail({ ...model, title: 'New Order Received', subject, suppressFooter: true });
 }
 
 export function renderOwnerCustomOrderPaidEmail(model: BaseEmailModel) {
@@ -142,11 +143,15 @@ function buildEmail(model: BaseEmailModel & { subject: string }) {
           </div>
         ` : ''}
       </div>
-      <div style="text-align:center; color:#5B6470; font-size:12px; line-height:1.6; padding:18px 8px 0;">
+      ${
+        model.suppressFooter
+          ? ''
+          : `<div style="text-align:center; color:#5B6470; font-size:12px; line-height:1.6; padding:18px 8px 0;">
         <div style="font-family: Georgia, 'Times New Roman', serif; color:#243A5E; letter-spacing:0.1em;">Coastal Alchemy</div>
         <div>Naples, Florida</div>
         <div>Thank you for supporting handmade work.</div>
-      </div>
+      </div>`
+      }
       </div>
     </div>
   `;
@@ -173,8 +178,8 @@ function buildEmail(model: BaseEmailModel & { subject: string }) {
     `Total: ${formatAmount(totalCents, currency)}`,
     `Time: ${formatDate(createdAt)}`,
     model.adminUrl ? `Admin: ${model.adminUrl}` : null,
-    'Coastal Alchemy - Naples, Florida',
-    'Thank you for supporting handmade work.',
+    model.suppressFooter ? null : 'Coastal Alchemy - Naples, Florida',
+    model.suppressFooter ? null : 'Thank you for supporting handmade work.',
   ].filter(Boolean) as string[];
 
   return {

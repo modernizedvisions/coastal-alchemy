@@ -173,7 +173,7 @@ const buildRateRequest = (
     rateRequest: {
       origin: {
         name: shipFrom.shipFromName,
-        companyName: shipFrom.shipFromCompany || 'Dover Designs',
+        companyName: shipFrom.shipFromCompany || 'Coastal Alchemy',
         phone: trimOrNull(shipFrom.shipFromPhone),
         addressLine1: shipFrom.shipFromAddress1,
         addressLine2: trimOrNull(shipFrom.shipFromAddress2),
@@ -303,4 +303,3 @@ export async function onRequest(
   }
   return onRequestPost(context);
 }
-

@@ -25,6 +25,7 @@ export function AboutPage() {
   }, []);
 
   const aboutImage = homeContent?.aboutImages?.about || '/images/shell-detail-pearls.png';
+  const aboutImage2 = homeContent?.aboutImages?.aboutPage2 || '/images/shell-frame-staged.png';
 
   return (
     <div className="ca-page">
@@ -87,7 +88,7 @@ export function AboutPage() {
             </p>
           </div>
           <div className="ca-media">
-            <img src="/images/shell-frame-staged.png" alt="A styled console with a framed shell piece" loading="lazy" />
+            <img src={aboutImage2} alt="A styled console with a framed shell piece" loading="lazy" />
           </div>
         </div>
       </section>

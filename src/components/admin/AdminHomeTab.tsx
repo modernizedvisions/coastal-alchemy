@@ -494,8 +494,21 @@ function FeaturedCategoryTilesAdmin({
 
 function AboutImagesAdmin({ images, onChange, onSave, saveState }: AboutImagesAdminProps) {
   const slots = [
-    { label: 'Home About Image', index: 0 },
-    { label: 'About Page Image', index: 1 },
+    {
+      label: 'Home About Image',
+      helper: 'Controls the image shown in the About section on the homepage.',
+      index: 0,
+    },
+    {
+      label: 'About Page Image 1',
+      helper: 'Controls the first image shown on the standalone About page.',
+      index: 1,
+    },
+    {
+      label: 'About Page Image 2',
+      helper: 'Controls the second image shown on the About page.',
+      index: 2,
+    },
   ];
 
   const handleFileSelect = async (index: number, file: File) => {
@@ -510,7 +523,7 @@ function AboutImagesAdmin({ images, onChange, onSave, saveState }: AboutImagesAd
         uploadError: undefined,
         previewUrl,
       };
-      return next.slice(0, 2);
+      return next.slice(0, 3);
     });
 
     try {
@@ -527,7 +540,7 @@ function AboutImagesAdmin({ images, onChange, onSave, saveState }: AboutImagesAd
                 uploading: true,
               };
             }
-            return updated.slice(0, 2);
+            return updated.slice(0, 3);
           });
         },
       });
@@ -542,7 +555,7 @@ function AboutImagesAdmin({ images, onChange, onSave, saveState }: AboutImagesAd
           uploadError: undefined,
           previewUrl: undefined,
         };
-        return updated.slice(0, 2);
+        return updated.slice(0, 3);
       });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Upload failed';
@@ -554,7 +567,7 @@ function AboutImagesAdmin({ images, onChange, onSave, saveState }: AboutImagesAd
           optimizing: false,
           uploadError: message,
         };
-        return updated.slice(0, 2);
+        return updated.slice(0, 3);
       });
     }
   };
@@ -563,7 +576,7 @@ function AboutImagesAdmin({ images, onChange, onSave, saveState }: AboutImagesAd
     onChange((prev) => {
       const next = [...prev];
       next[index] = { ...(next[index] || { imageUrl: '' }), imageUrl: '' };
-      return next.slice(0, 2);
+      return next.slice(0, 3);
     });
   };
 
@@ -572,14 +585,14 @@ function AboutImagesAdmin({ images, onChange, onSave, saveState }: AboutImagesAd
       <div className="space-y-2">
         <AdminSectionHeader
           title="About Images"
-          subtitle="Home About Image appears on the homepage. About Page Image appears on the standalone About page."
+          subtitle="Manage the homepage About image and both standalone About page images."
         />
         <div className="w-full sm:flex sm:justify-end">
           <AdminSaveButton saveState={saveState} onClick={onSave} className="w-full sm:w-auto" />
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {slots.map((slot) => {
           const image = images[slot.index];
           const inputId = `about-image-${slot.index}`;
@@ -595,7 +608,10 @@ function AboutImagesAdmin({ images, onChange, onSave, saveState }: AboutImagesAd
               }}
             >
               <div className="flex items-center justify-between">
-                <span className="text-[11px] uppercase tracking-[0.22em] font-semibold text-charcoal">{slot.label.toUpperCase()}</span>
+                <div>
+                  <span className="text-[11px] uppercase tracking-[0.22em] font-semibold text-charcoal">{slot.label.toUpperCase()}</span>
+                  <p className="mt-1 text-xs leading-5 text-charcoal/60">{slot.helper}</p>
+                </div>
                 <div className="flex items-center gap-2">
                   {image?.imageUrl && (
                     <button type="button" onClick={() => handleRemove(slot.index)} className="lux-button--ghost px-3 py-1 text-[10px] !text-rose-700">
@@ -668,9 +684,10 @@ const normalizeSiteContent = (content: HomeSiteContent) => {
   if (content.heroImages?.middle) hero[1] = { id: 'hero-middle', imageUrl: content.heroImages.middle };
   if (content.heroImages?.right) hero[2] = { id: 'hero-right', imageUrl: content.heroImages.right };
 
-  const aboutImages = Array.from({ length: 2 }, () => ({ imageUrl: '' }));
+  const aboutImages = Array.from({ length: 3 }, () => ({ imageUrl: '' }));
   if (content.aboutImages?.home) aboutImages[0] = { imageUrl: content.aboutImages.home };
   if (content.aboutImages?.about) aboutImages[1] = { imageUrl: content.aboutImages.about };
+  if (content.aboutImages?.aboutPage2) aboutImages[2] = { imageUrl: content.aboutImages.aboutPage2 };
 
   return {
     hero,
@@ -708,6 +725,7 @@ const buildSiteContent = (
   const aboutImageUrls = {
     home: aboutImages[0]?.imageUrl || '',
     about: aboutImages[1]?.imageUrl || '',
+    aboutPage2: aboutImages[2]?.imageUrl || '',
   };
   return { heroImages, heroRotationEnabled, aboutImages: aboutImageUrls };
 };

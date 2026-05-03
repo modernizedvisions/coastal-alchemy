@@ -89,7 +89,7 @@ export async function onRequest(context: { env: { DB: D1Database }; request: Req
       const featuredTileUrls = featuredCategoryTiles
         .map((item: any) => item?.imageUrl)
         .filter(Boolean) as string[];
-      const aboutUrls = [aboutImages.home, aboutImages.about].filter(Boolean) as string[];
+      const aboutUrls = [aboutImages.home, aboutImages.about, aboutImages.aboutPage2].filter(Boolean) as string[];
       const customOrdersMainImage = incomingJson?.customOrdersMainImage;
 
       const urlValues = [

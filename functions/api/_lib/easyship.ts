@@ -91,7 +91,7 @@ export type EasyshipRateRequest = {
 
 // Easyship v2024-09 docs include "fashion" in the official Rates request example.
 const DEFAULT_EASYSHIP_ITEM_CATEGORY = 'fashion';
-const DEFAULT_ORIGIN_COMPANY_NAME = 'Dover Designs';
+const DEFAULT_ORIGIN_COMPANY_NAME = 'Coastal Alchemy';
 
 export type EasyshipCreateShipmentRequest = EasyshipRateRequest & {
   courierServiceId: string;

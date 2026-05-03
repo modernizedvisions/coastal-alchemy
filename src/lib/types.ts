@@ -136,6 +136,7 @@ export interface HomeGalleryItem {
 export type AboutImages = {
   home?: string;
   about?: string;
+  aboutPage2?: string;
 };
 
 export type HomeFeaturedCategoryTile = {

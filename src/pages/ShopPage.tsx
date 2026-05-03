@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { fetchCategories, fetchProducts } from '../lib/publicApi';
 import { Category, Product } from '../lib/types';
-import { buildCategoryOptionLookup, normalizeCategoryKey } from '../lib/categoryOptions';
+import { normalizeCategoryKey } from '../lib/categoryOptions';
 import { ProductGrid } from '../components/ProductGrid';
 import { mapProductToAnalyticsItem, trackViewItemList } from '../lib/analytics';
 
@@ -12,8 +12,23 @@ const ensureCategoryDefaults = (category: Category): Category => ({
   ...category,
   name: category.name || category.slug,
   slug: category.slug || toSlug(category.name || ''),
+  subtitle: category.subtitle || '',
   showOnHomePage: category.showOnHomePage ?? true,
 });
+
+const getCategorySortOrder = (category: Category) =>
+  Number.isFinite(category.sortOrder as number) ? Number(category.sortOrder) : Number.MAX_SAFE_INTEGER;
+
+const sortCategoriesByAdminOrder = (categories: Category[]): Category[] =>
+  categories
+    .map((category, index) => ({ category, index }))
+    .sort((a, b) => {
+      const orderDelta = getCategorySortOrder(a.category) - getCategorySortOrder(b.category);
+      if (orderDelta !== 0) return orderDelta;
+      if (getCategorySortOrder(a.category) !== Number.MAX_SAFE_INTEGER) return a.index - b.index;
+      return a.category.name.localeCompare(b.category.name);
+    })
+    .map(({ category }) => category);
 
 const dedupeCategories = (categories: Category[]): Category[] => {
   const seen = new Set<string>();
@@ -115,11 +130,13 @@ export function ShopPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [activeCategorySlug, setActiveCategorySlug] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const navigate = useNavigate();
   const isDev = import.meta.env?.DEV;
 
   const categoryList = useMemo(() => {
-    return dedupeCategories(categories);
+    return sortCategoriesByAdminOrder(dedupeCategories(categories));
   }, [categories]);
 
   useEffect(() => {
@@ -197,45 +214,55 @@ export function ShopPage() {
     return groups;
   }, [categoryList, products]);
 
-  const optionLookup = useMemo(() => buildCategoryOptionLookup(categoryList), [categoryList]);
+  const uncategorizedProducts = useMemo(() => {
+    if (!products.length) return [];
+    const visibleProductIds = new Set(
+      Object.values(groupedProducts)
+        .flat()
+        .map((product) => product.id)
+    );
+    return products.filter((product) => !visibleProductIds.has(product.id));
+  }, [groupedProducts, products]);
 
-  const visibleCategories = useMemo(
-    () => categoryList.filter((category) => (groupedProducts[category.slug] || []).length > 0),
+  const visibleCategorySections = useMemo(
+    () =>
+      categoryList
+        .map((category) => ({
+          category,
+          products: groupedProducts[category.slug] || [],
+        }))
+        .filter((section) => section.products.length > 0),
     [categoryList, groupedProducts]
   );
 
-  const displayedProducts = useMemo(() => {
-    if (!activeCategorySlug) return products;
-    return groupedProducts[activeCategorySlug] || [];
-  }, [activeCategorySlug, groupedProducts, products]);
+  const visibleCategories = useMemo(
+    () => visibleCategorySections.map((section) => section.category),
+    [visibleCategorySections]
+  );
 
-  const activeCategoryName = useMemo(() => {
-    if (!activeCategorySlug) return 'All Products';
-    return visibleCategories.find((category) => category.slug === activeCategorySlug)?.name || 'Shop Products';
-  }, [activeCategorySlug, visibleCategories]);
+  const requestedCategorySlug = useMemo(() => {
+    const queryValue = searchParams.get('category') || searchParams.get('type') || '';
+    const hashValue = location.hash ? decodeURIComponent(location.hash.replace(/^#/, '')) : '';
+    const normalized = toSlug(queryValue || hashValue);
+    return normalized === 'all' ? '' : normalized;
+  }, [location.hash, searchParams]);
 
   useEffect(() => {
     if (!visibleCategories.length) return;
-    const typeParam = searchParams.get('category') || searchParams.get('type');
-    const normalized = typeParam ? toSlug(typeParam) : '';
-    if (!normalized || normalized === 'all') {
-      if (activeCategorySlug) setActiveCategorySlug('');
-      return;
-    }
     const match = visibleCategories.find(
-      (c) => toSlug(c.slug) === normalized || toSlug(c.name) === normalized
+      (c) => toSlug(c.slug) === requestedCategorySlug || toSlug(c.name) === requestedCategorySlug
     );
 
     if (match) {
       if (activeCategorySlug !== match.slug) setActiveCategorySlug(match.slug);
+      window.requestAnimationFrame(() => {
+        document.getElementById(match.slug)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
       return;
     }
 
-    if (activeCategorySlug) setActiveCategorySlug('');
-    const nextParams = new URLSearchParams(searchParams);
-    nextParams.delete('type');
-    setSearchParams(nextParams, { replace: true });
-  }, [searchParams, visibleCategories, activeCategorySlug, setSearchParams]);
+    if (requestedCategorySlug && activeCategorySlug) setActiveCategorySlug('');
+  }, [requestedCategorySlug, visibleCategories, activeCategorySlug]);
 
   useEffect(() => {
     if (!categoryList.length) return;
@@ -249,31 +276,36 @@ export function ShopPage() {
 
   useEffect(() => {
     if (isLoading) return;
-    if (!displayedProducts.length) return;
+    visibleCategorySections.forEach(({ category, products: sectionProducts }) => {
+      if (!sectionProducts.length) return;
       trackViewItemList(
-        activeCategoryName,
-        displayedProducts.map((item) =>
+        category.name,
+        sectionProducts.map((item) =>
           mapProductToAnalyticsItem(item, {
-            itemListName: activeCategoryName,
+            itemListName: category.name,
           })
         )
       );
-  }, [activeCategoryName, displayedProducts, isLoading]);
+    });
+  }, [visibleCategorySections, isLoading]);
 
-  const handleCategorySelect = (slug?: string) => {
-    const nextParams = new URLSearchParams(searchParams);
-    if (!slug) {
-      if (activeCategorySlug) setActiveCategorySlug('');
-      nextParams.delete('type');
-      nextParams.delete('category');
-      setSearchParams(nextParams, { replace: true });
-      return;
-    }
+  const handleCategorySelect = (slug: string) => {
     if (activeCategorySlug !== slug) setActiveCategorySlug(slug);
+    const nextParams = new URLSearchParams(searchParams);
     nextParams.delete('type');
     nextParams.set('category', slug);
-    setSearchParams(nextParams, { replace: true });
+    navigate(
+      {
+        pathname: location.pathname,
+        search: `?${nextParams.toString()}`,
+        hash: `#${slug}`,
+      },
+      { replace: true }
+    );
+    document.getElementById(slug)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
+
+  const hasVisibleProducts = visibleCategorySections.length > 0 || uncategorizedProducts.length > 0;
 
   return (
     <div className="ca-page min-h-screen">
@@ -287,14 +319,8 @@ export function ShopPage() {
 
       <section className="ca-section">
         <div className="ca-container">
-          <div className="ca-tag-row">
-            <button
-              type="button"
-              onClick={() => handleCategorySelect(undefined)}
-              className={`ca-tag ${!activeCategorySlug ? 'is-active' : ''}`}
-            >
-              All
-            </button>
+          {visibleCategories.length > 0 && (
+          <nav className="ca-tag-row" aria-label="Shop categories">
             {visibleCategories.map((category) => {
               const isActive = activeCategorySlug === category.slug;
               return (
@@ -307,26 +333,45 @@ export function ShopPage() {
                 </button>
               );
             })}
-          </div>
+          </nav>
+          )}
 
           {isLoading ? (
             <div className="py-12 text-center">
               <p className="ca-copy">Loading products...</p>
             </div>
-          ) : visibleCategories.length === 0 ? (
+          ) : !hasVisibleProducts ? (
             <div className="border border-dashed border-[var(--ca-border)] bg-white py-12 text-center">
-              <p className="ca-copy">No categories yet.</p>
-            </div>
-          ) : displayedProducts.length === 0 ? (
-            <div className="border border-dashed border-[var(--ca-border)] bg-white py-12 text-center">
-              <p className="ca-copy">No products found.</p>
+              <p className="ca-copy">New pieces are coming soon.</p>
             </div>
           ) : (
-            <ProductGrid
-              products={displayedProducts}
-              categoryOptionLookup={optionLookup}
-              itemListName={activeCategoryName}
-            />
+            <div className="ca-shop-sections">
+              {visibleCategorySections.map(({ category, products: sectionProducts }) => (
+                <section id={category.slug} key={category.slug} className="ca-shop-category-section scroll-mt-24">
+                  <div className="ca-shop-category-head">
+                    <div className="ca-eyebrow mb-3">Collection</div>
+                    <h2 className="ca-shop-category-title">{category.name}</h2>
+                    {category.subtitle ? (
+                      <p className="ca-shop-category-subtitle">{category.subtitle}</p>
+                    ) : null}
+                  </div>
+                  <ProductGrid
+                    products={sectionProducts}
+                    itemListName={category.name}
+                  />
+                </section>
+              ))}
+
+              {uncategorizedProducts.length > 0 && (
+                <section className="ca-shop-category-section">
+                  <div className="ca-shop-category-head">
+                    <div className="ca-eyebrow mb-3">Collection</div>
+                    <h2 className="ca-shop-category-title">More Pieces</h2>
+                  </div>
+                  <ProductGrid products={uncategorizedProducts} itemListName="More Pieces" />
+                </section>
+              )}
+            </div>
           )}
         </div>
       </section>

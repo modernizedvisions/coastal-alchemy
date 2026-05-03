@@ -139,7 +139,7 @@ const US_STATE_CODES = new Set<string>([
 const normalizeCountryCode = (value: string): string => value.trim().toUpperCase().slice(0, 2);
 
 const isValidUSStateCode = (value: string): boolean => US_STATE_CODES.has(value.trim().toUpperCase());
-const DEFAULT_SHIP_FROM_COMPANY = 'Dover Designs';
+const DEFAULT_SHIP_FROM_COMPANY = 'Coastal Alchemy';
 
 const toFiniteNumberOrNull = (value: unknown): number | null => {
   if (value === null || value === undefined || value === '') return null;

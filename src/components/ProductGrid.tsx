@@ -1,14 +1,12 @@
 import { Product } from '../lib/types';
-import type { CategoryOptionGroup } from '../lib/categoryOptions';
 import { ProductCard } from './ProductCard';
 
 interface ProductGridProps {
   products: Product[];
-  categoryOptionLookup?: Map<string, CategoryOptionGroup>;
   itemListName?: string;
 }
 
-export function ProductGrid({ products, categoryOptionLookup, itemListName }: ProductGridProps) {
+export function ProductGrid({ products, itemListName }: ProductGridProps) {
   if (products.length === 0) {
     return (
       <div className="text-center py-12">
@@ -23,7 +21,6 @@ export function ProductGrid({ products, categoryOptionLookup, itemListName }: Pr
         <ProductCard
           key={product.id}
           product={product}
-          categoryOptionLookup={categoryOptionLookup}
           itemListName={itemListName}
         />
       ))}

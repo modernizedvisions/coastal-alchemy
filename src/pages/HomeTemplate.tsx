@@ -119,11 +119,12 @@ export default function HomeTemplate({
                 : `/shop?category=${encodeURIComponent(categorySlug)}`;
               return (
               <article className="ca-card ca-feature-tile" key={`${tile.categorySlug || 'all'}-${index}`}>
-                <Link to={href} className="ca-card-media" aria-label={`Shop ${tile.title}`}>
+                <Link to={href} className="ca-card-media ca-feature-card-media" aria-label={`Shop ${tile.title}`}>
                   <img src={tile.imageUrl || '/images/shell-frame-detail.png'} alt={tile.title || 'Featured category'} loading="lazy" />
+                  <span className="ca-feature-card-overlay">{tile.title}</span>
                 </Link>
                 <div className="ca-card-body">
-                  <div className="ca-card-meta">Shop Category</div>
+                  <div className="ca-card-meta">Category</div>
                   <Link to={href} className="ca-card-title transition hover:text-[var(--ca-navy)]">{tile.title}</Link>
                 </div>
               </article>

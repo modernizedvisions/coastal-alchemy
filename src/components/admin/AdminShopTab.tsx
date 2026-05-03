@@ -437,8 +437,6 @@ export const AdminShopTab: React.FC<AdminShopTabProps> = ({
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [autoDescriptionEnabled, setAutoDescriptionEnabled] = useState(true);
   const [lastAutoDescription, setLastAutoDescription] = useState('');
-  const [editAutoDescriptionEnabled, setEditAutoDescriptionEnabled] = useState(false);
-  const [lastEditAutoDescription, setLastEditAutoDescription] = useState('');
   const [activeDragProductId, setActiveDragProductId] = useState<string | null>(null);
   const [togglingActiveProductId, setTogglingActiveProductId] = useState<string | null>(null);
   const [isReordering, setIsReordering] = useState(false);
@@ -515,7 +513,6 @@ export const AdminShopTab: React.FC<AdminShopTabProps> = ({
   );
 
   const createCategorySampleDescription = (createSelectedCategory?.sampleDescription || '').trim();
-  const editCategorySampleDescription = (editSelectedCategory?.sampleDescription || '').trim();
 
   const addProductStatusMessages = useMemo(() => {
     const messages: string[] = [];
@@ -650,33 +647,6 @@ export const AdminShopTab: React.FC<AdminShopTabProps> = ({
     productForm.description,
   ]);
 
-  useEffect(() => {
-    if (!editAutoDescriptionEnabled || !editProductForm) return;
-    const currentDescription = editProductForm.description || '';
-    if (!editCategorySampleDescription) {
-      if (lastEditAutoDescription && currentDescription === lastEditAutoDescription) {
-        onEditFormChange('description', '');
-        setLastEditAutoDescription('');
-      }
-      return;
-    }
-    if (!currentDescription.trim() || currentDescription === lastEditAutoDescription) {
-      if (currentDescription !== editCategorySampleDescription) {
-        onEditFormChange('description', editCategorySampleDescription);
-      }
-      if (lastEditAutoDescription !== editCategorySampleDescription) {
-        setLastEditAutoDescription(editCategorySampleDescription);
-      }
-    }
-  }, [
-    editAutoDescriptionEnabled,
-    editCategorySampleDescription,
-    editProductForm,
-    editProductForm?.description,
-    lastEditAutoDescription,
-    onEditFormChange,
-  ]);
-
   const handleCreateAutoDescriptionToggle = (enabled: boolean) => {
     setAutoDescriptionEnabled(enabled);
     const currentDescription = productForm.description || '';
@@ -693,26 +663,7 @@ export const AdminShopTab: React.FC<AdminShopTabProps> = ({
     }
   };
 
-  const handleEditAutoDescriptionToggle = (enabled: boolean) => {
-    setEditAutoDescriptionEnabled(enabled);
-    if (!editProductForm) return;
-    const currentDescription = editProductForm.description || '';
-    if (!enabled) {
-      if (lastEditAutoDescription && currentDescription === lastEditAutoDescription) {
-        onEditFormChange('description', '');
-        setLastEditAutoDescription('');
-      }
-      return;
-    }
-    if (editCategorySampleDescription && (!currentDescription.trim() || currentDescription === lastEditAutoDescription)) {
-      onEditFormChange('description', editCategorySampleDescription);
-      setLastEditAutoDescription(editCategorySampleDescription);
-    }
-  };
-
   const handleStartEditProduct = (product: Product) => {
-    setEditAutoDescriptionEnabled(false);
-    setLastEditAutoDescription('');
     setIsEditModalOpen(true);
     onStartEditProduct(product);
   };
@@ -1625,14 +1576,7 @@ export const AdminShopTab: React.FC<AdminShopTabProps> = ({
                   />
                 </div>
                 <div>
-                  <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <label className="lux-label block">Category</label>
-                    <ToggleSwitchSmall
-                      label="Auto Description"
-                      checked={editAutoDescriptionEnabled}
-                      onChange={handleEditAutoDescriptionToggle}
-                    />
-                  </div>
+                  <label className="lux-label mb-2 block">Category</label>
                   <select
                     value={editProductForm?.category}
                     onChange={(e) => onEditFormChange('category', e.target.value)}
@@ -1870,17 +1814,16 @@ interface ToggleSwitchProps {
 }
 
 function ToggleSwitch({ label, description, checked, onChange }: ToggleSwitchProps) {
-  const trackClasses = checked ? 'bg-deep-ocean border-deep-ocean' : 'bg-sea-glass/30 border-driftwood/70';
-  const thumbClasses = checked ? 'translate-x-5' : 'translate-x-1';
-
   return (
-    <button type="button" onClick={() => onChange(!checked)} className="flex items-center gap-3">
-      <span
-        className={`relative inline-flex h-6 w-11 items-center rounded-full rounded-ui border transition-colors ${trackClasses}`}
-      >
-        <span
-          className={`inline-block h-4 w-4 rounded-full rounded-ui bg-white shadow transform transition-transform ${thumbClasses}`}
-        />
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      className="ca-admin-toggle"
+    >
+      <span className={`ca-admin-toggle-track ${checked ? 'is-checked' : ''}`}>
+        <span className="ca-admin-toggle-thumb" />
       </span>
       <div className="flex flex-col text-left">
         <span className="text-[11px] uppercase tracking-[0.22em] font-semibold text-charcoal">{label}</span>
@@ -1899,17 +1842,16 @@ function ToggleSwitchSmall({
   checked: boolean;
   onChange: (value: boolean) => void;
 }) {
-  const trackClasses = checked ? 'bg-deep-ocean border-deep-ocean' : 'bg-sea-glass/30 border-driftwood/70';
-  const thumbClasses = checked ? 'translate-x-4' : 'translate-x-0.5';
-
   return (
-    <button type="button" onClick={() => onChange(!checked)} className="flex items-center gap-2">
-      <span
-        className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full rounded-ui border transition-colors ${trackClasses}`}
-      >
-        <span
-          className={`inline-block h-4 w-4 rounded-full rounded-ui bg-white shadow transform transition-transform ${thumbClasses}`}
-        />
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      className="ca-admin-toggle gap-2"
+    >
+      <span className={`ca-admin-toggle-track is-small ${checked ? 'is-checked' : ''}`}>
+        <span className="ca-admin-toggle-thumb" />
       </span>
       <span className="text-[11px] uppercase tracking-[0.22em] font-semibold text-charcoal/80">{label}</span>
     </button>
@@ -1929,9 +1871,6 @@ function ToggleSwitchWithSubtext({
   onChange: (value: boolean) => void;
   small?: boolean;
 }) {
-  const trackClasses = checked ? 'bg-deep-ocean border-deep-ocean' : 'bg-sea-glass/30 border-driftwood/70';
-  const thumbClasses = small ? (checked ? 'translate-x-4' : 'translate-x-0.5') : checked ? 'translate-x-5' : 'translate-x-1';
-  const trackSizeClasses = small ? 'h-5 w-9' : 'h-6 w-11';
   const labelClasses = small
     ? 'text-[11px] uppercase tracking-[0.22em] font-semibold text-charcoal/80'
     : 'text-[11px] uppercase tracking-[0.22em] font-semibold text-charcoal';
@@ -1939,15 +1878,13 @@ function ToggleSwitchWithSubtext({
   return (
     <button
       type="button"
+      role="switch"
+      aria-checked={checked}
       onClick={() => onChange(!checked)}
-      className={`w-full text-left ${small ? 'flex items-start gap-2' : 'flex items-start gap-3'}`}
+      className={`ca-admin-toggle w-full items-start text-left ${small ? 'gap-2' : 'gap-3'}`}
     >
-      <span
-        className={`relative inline-flex ${trackSizeClasses} items-center rounded-full rounded-ui border transition-colors shrink-0 ${trackClasses}`}
-      >
-        <span
-          className={`inline-block h-4 w-4 rounded-full rounded-ui bg-white shadow transform transition-transform ${thumbClasses}`}
-        />
+      <span className={`ca-admin-toggle-track ${small ? 'is-small' : ''} ${checked ? 'is-checked' : ''}`}>
+        <span className="ca-admin-toggle-thumb" />
       </span>
       <span className="min-w-0 flex-1">
         <span className={`block ${labelClasses}`}>{label}</span>

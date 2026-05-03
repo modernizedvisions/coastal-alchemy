@@ -243,11 +243,11 @@ export function CartDrawer() {
             <div className="space-y-2 text-sm">
               <div className="flex justify-between text-[var(--ca-muted)]">
                 <span>Subtotal</span>
-                <span className="font-medium text-[var(--ca-ink)]">${(effectiveSubtotal / 100).toFixed(2)}</span>
+                <span className="font-serif text-xl text-[var(--ca-ink)]">${(effectiveSubtotal / 100).toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-[var(--ca-muted)]">
                 <span>Shipping</span>
-                <span className="font-medium text-[var(--ca-ink)]">{formatShipping(shippingCents)}</span>
+                <span className="font-serif text-xl text-[var(--ca-ink)]">{formatShipping(shippingCents)}</span>
               </div>
               <div className="border-t border-[var(--ca-border)] pt-3 flex justify-between font-serif text-xl text-[var(--ca-ink)]">
                 <span>Total</span>

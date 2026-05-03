@@ -658,7 +658,7 @@ export function AdminPromotionsTab() {
                     type="checkbox"
                     checked={promotionForm.bannerEnabled}
                     onChange={(e) => handlePromotionFormChange('bannerEnabled', e.target.checked)}
-                    className="h-4 w-4 rounded-[4px] border-driftwood/70 text-deep-ocean"
+                    className="ca-admin-toggle-checkbox"
                   />
                   <span className="text-[11px] uppercase tracking-[0.22em] font-semibold text-charcoal/80">Show banner</span>
                 </div>
@@ -690,7 +690,7 @@ export function AdminPromotionsTab() {
                     type="checkbox"
                     checked={promotionForm.enabled}
                     onChange={(e) => handlePromotionFormChange('enabled', e.target.checked)}
-                    className="h-4 w-4 rounded-[4px] border-driftwood/70 text-deep-ocean"
+                    className="ca-admin-toggle-checkbox"
                   />
                   Enabled
                 </label>
@@ -801,7 +801,7 @@ export function AdminPromotionsTab() {
                     type="checkbox"
                     checked={promoCodeForm.freeShipping}
                     onChange={(e) => handlePromoCodeFormChange('freeShipping', e.target.checked)}
-                    className="h-4 w-4 rounded-[4px] border-driftwood/70 text-deep-ocean"
+                    className="ca-admin-toggle-checkbox"
                   />
                   Free shipping
                 </label>
@@ -861,7 +861,7 @@ export function AdminPromotionsTab() {
                     type="checkbox"
                     checked={promoCodeForm.enabled}
                     onChange={(e) => handlePromoCodeFormChange('enabled', e.target.checked)}
-                    className="h-4 w-4 rounded-[4px] border-driftwood/70 text-deep-ocean"
+                    className="ca-admin-toggle-checkbox"
                   />
                   Enabled
                 </label>
@@ -1095,7 +1095,7 @@ export function AdminPromotionsTab() {
                     type="checkbox"
                     checked={giftPromotionForm.bannerEnabled}
                     onChange={(e) => handleGiftPromotionFormChange('bannerEnabled', e.target.checked)}
-                    className="h-4 w-4 border-driftwood/70 text-deep-ocean"
+                    className="ca-admin-toggle-checkbox"
                   />
                   Show Banner
                 </label>
@@ -1119,7 +1119,7 @@ export function AdminPromotionsTab() {
                     type="checkbox"
                     checked={giftPromotionForm.popupEnabled}
                     onChange={(e) => handleGiftPromotionFormChange('popupEnabled', e.target.checked)}
-                    className="h-4 w-4 border-driftwood/70 text-deep-ocean"
+                    className="ca-admin-toggle-checkbox"
                   />
                   Show Homepage Popup
                 </label>
@@ -1182,7 +1182,7 @@ export function AdminPromotionsTab() {
                     type="checkbox"
                     checked={giftPromotionForm.enabled}
                     onChange={(e) => handleGiftPromotionFormChange('enabled', e.target.checked)}
-                    className="h-4 w-4 rounded-[4px] border-driftwood/70 text-deep-ocean"
+                    className="ca-admin-toggle-checkbox"
                   />
                   Make This Gift Promotion Active
                 </label>
@@ -1265,4 +1265,3 @@ export function AdminPromotionsTab() {
     </div>
   );
 }
-

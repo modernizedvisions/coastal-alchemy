@@ -1580,14 +1580,10 @@ function ChoiceBuilder({
         <div>
           <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <label className="lux-label block">Choice Name</label>
-            <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-charcoal/65">
-              <input
-                type="checkbox"
-                checked={draft.required}
-                onChange={(e) => onDraftChange({ ...draft, required: e.target.checked })}
-              />
-              Mandatory Choice
-            </label>
+            <AdminChoiceRequiredSwitch
+              checked={draft.required}
+              onChange={(required) => onDraftChange({ ...draft, required })}
+            />
           </div>
           <input
             value={draft.label}
@@ -1648,6 +1644,31 @@ function ChoiceBuilder({
         </div>
       </div>
     </div>
+  );
+}
+
+function AdminChoiceRequiredSwitch({
+  checked,
+  onChange,
+}: {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      className="ca-admin-toggle gap-2"
+    >
+      <span className={`ca-admin-toggle-track is-small ${checked ? 'is-checked' : ''}`}>
+        <span className="ca-admin-toggle-thumb" />
+      </span>
+      <span className="text-xs font-semibold uppercase tracking-[0.18em] text-charcoal/65">
+        Mandatory Choice
+      </span>
+    </button>
   );
 }
 

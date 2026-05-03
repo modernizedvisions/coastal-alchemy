@@ -718,7 +718,7 @@ export const AdminCustomOrdersTab: React.FC<AdminCustomOrdersTabProps> = ({
                       checked={viewShowOnSoldProducts}
                       onChange={(e) => setViewShowOnSoldProducts(e.target.checked)}
                       disabled={!viewImage.url}
-                      className="h-4 w-4 rounded-[4px] border-driftwood/70 text-deep-ocean disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="ca-admin-toggle-checkbox disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                     <span className={viewImage.url ? '' : 'opacity-50'}>Display Custom Order On Sold Products</span>
                   </label>
@@ -968,7 +968,7 @@ export const AdminCustomOrdersTab: React.FC<AdminCustomOrdersTabProps> = ({
                     type="checkbox"
                     {...register('showOnSoldProducts')}
                     disabled={!draftImage.url}
-                    className="h-4 w-4 rounded-[4px] border-driftwood/70 text-deep-ocean disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="ca-admin-toggle-checkbox disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                   <span className={draftImage.url ? '' : 'opacity-50'}>Display Custom Order On Sold Products</span>
                 </label>
@@ -1022,7 +1022,6 @@ export const AdminCustomOrdersTab: React.FC<AdminCustomOrdersTabProps> = ({
     </div>
   );
 };
-
 
 
 

@@ -241,7 +241,7 @@ function HeroCollageAdmin({
           <label className="flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] font-semibold text-charcoal">
             <input
               type="checkbox"
-              className="h-4 w-4 rounded-[4px] border-driftwood/70 text-deep-ocean"
+              className="ca-admin-toggle-checkbox"
               checked={!!heroRotationEnabled}
               onChange={(e) => onHeroRotationToggle?.(e.target.checked)}
             />

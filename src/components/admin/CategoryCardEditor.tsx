@@ -123,7 +123,7 @@ export function CategoryCardEditor({ category, onUpdate, onDelete, isBusy }: Cat
                 checked={!!category.showOnHomePage}
                 onChange={handleToggleHome}
                 disabled={isBusy}
-                className="h-4 w-4 rounded-[4px] border-driftwood/70 text-deep-ocean"
+                className="ca-admin-toggle-checkbox"
               />
               Show on Home Page
             </label>
@@ -165,4 +165,3 @@ export function CategoryCardSkeleton() {
     </div>
   );
 }
-

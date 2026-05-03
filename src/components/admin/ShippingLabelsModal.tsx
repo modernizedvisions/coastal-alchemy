@@ -846,6 +846,7 @@ export function ShippingLabelsModal({ open, order, onClose, onOpenSettings, onOr
                                   type="checkbox"
                                   checked={draft.useCustom}
                                   onChange={(e) => toggleCustomDimensions(shipment.id, e.target.checked)}
+                                  className="ca-admin-toggle-checkbox"
                                 />
                                 Use Custom Dimensions
                               </label>
@@ -1005,4 +1006,3 @@ export function ShippingLabelsModal({ open, order, onClose, onOpenSettings, onOr
     </div>
   );
 }
-

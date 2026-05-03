@@ -272,7 +272,7 @@ function SiteLayoutInner() {
 
       <footer className="bg-white border-t border-[var(--ca-border)] py-14 text-[var(--ca-ink)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-10 md:grid-cols-[1.4fr_0.8fr_0.9fr_0.9fr]">
+          <div className="grid gap-10 md:grid-cols-[2fr_1fr_1fr] md:items-start">
             <div className="max-w-sm">
               <div className="font-serif text-2xl uppercase tracking-[0.22em]">COASTAL ALCHEMY</div>
               <p className="ca-copy mt-4 text-sm">
@@ -288,15 +288,6 @@ function SiteLayoutInner() {
                 <Link to="/custom-orders" className="hover:text-[var(--ca-ink)] transition-colors">Custom Orders</Link>
                 <Link to="/about" className="hover:text-[var(--ca-ink)] transition-colors">About</Link>
               </nav>
-            </div>
-
-            <div>
-              <h2 className="mb-4 text-[0.68rem] font-semibold uppercase tracking-[0.28em] text-[var(--ca-navy)]">Visit</h2>
-              <div className="space-y-2 text-sm text-[var(--ca-muted)]">
-                <p>Naples, Florida</p>
-                <p>By appointment only</p>
-                <Link to="/contact" className="inline-block hover:text-[var(--ca-ink)] transition-colors">Get in touch</Link>
-              </div>
             </div>
 
             <div>
